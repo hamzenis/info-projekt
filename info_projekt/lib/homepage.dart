@@ -46,7 +46,10 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SearchPage()),
+                MaterialPageRoute(
+                    builder: (context) => SearchPage(
+                          title: 'Search Page',
+                        )),
               );
             },
             icon: const Icon(Icons.search),
