@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:info_projekt/auth/loginScreen.dart';
 import 'firebase_options.dart';
+import 'package:info_projekt/auth/registerScreen.dart'; // Import RegisterScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,16 +11,16 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      home: RegisterScreen(), // Start with LoginScreen
+      routes: {
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+      },
     );
   }
 }
