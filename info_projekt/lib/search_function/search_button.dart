@@ -41,7 +41,7 @@ class _SearchPage extends State<SearchPage> {
   Widget _searchTextField() {
     return TextField(
       onChanged: (String s) {
-        fetchSearchResults(s);
+        fetchSearchResults(s.trim());
       },
       autofocus: true,
       cursorColor: Colors.white,
@@ -66,12 +66,18 @@ class _SearchPage extends State<SearchPage> {
 
   Widget _searchListView() {
     return ListView.builder(
-        itemCount: _searchResults.length,
-        itemBuilder: (context, index) {
-          return Card(
-              child:
-                  ListTile(title: Text(_searchResults[index]['description'])));
-        });
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        return Card(
+          child: ListTile(
+            title: Text(_searchResults[index]['description']),
+            onTap: () {
+              print(_searchResults[index]['displaySymbol']);
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
