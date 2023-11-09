@@ -55,7 +55,7 @@ class _SearchPage extends State<SearchPage> {
             UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
         focusedBorder:
             UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-        hintText: 'Search Stocks',
+        hintText: 'Stock Symbol, Isin, or Cusip',
         hintStyle: TextStyle(
           color: Colors.white60,
           fontSize: 20,
