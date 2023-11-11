@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -41,32 +42,37 @@ class _SearchPage extends State<SearchPage> {
 
   final TextEditingController _searchController = TextEditingController();
 
+  Timer? _debounce;
+
   Widget _searchTextField() {
     return TextField(
       controller: _searchController,
       onChanged: (String s) {
-        if (s.trim().isEmpty) {
-          setState(() {
-            _searchResults = [];
-          });
-        } else {
-          fetchSearchResults(s.trim());
-        }
+        if (_debounce?.isActive ?? false) _debounce?.cancel();
+        _debounce = Timer(const Duration(seconds: 1), () {
+          if (s.trim().isEmpty) {
+            setState(() {
+              _searchResults = [];
+            });
+          } else {
+            fetchSearchResults(s.trim());
+          }
+        });
       },
       autofocus: true,
       cursorColor: Colors.white,
-      style: TextStyle(
+      style: const TextStyle(
         color: Colors.white,
         fontSize: 20,
       ),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        enabledBorder:
-            UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-        focusedBorder:
-            UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+        enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white)),
+        focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white)),
         hintText: 'Stock Symbol, Isin, or Cusip',
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           color: Colors.white60,
           fontSize: 20,
         ),
@@ -78,7 +84,7 @@ class _SearchPage extends State<SearchPage> {
                     _searchResults = [];
                   });
                 },
-                icon: Icon(
+                icon: const Icon(
                   Icons.clear,
                   color: Colors.white, // Change this to the color you want
                 ),
@@ -104,7 +110,10 @@ class _SearchPage extends State<SearchPage> {
     );
   }
 
-  List<String> _popularStocks = ['AAPL', 'AMZN']; // Add more stock symbols here
+  final List<String> _popularStocks = [
+    'AAPL',
+    'AMZN'
+  ]; // Add more stock symbols here
 
   Future<Map<String, dynamic>> fetchStock(String symbol) async {
     final response = await http.get(Uri.parse(
@@ -138,7 +147,7 @@ class _SearchPage extends State<SearchPage> {
             } else if (snapshot.hasError) {
               return Text("${snapshot.error}");
             }
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           },
         );
       },
@@ -153,8 +162,8 @@ class _SearchPage extends State<SearchPage> {
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Text(
                     'Popular Stocks',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
