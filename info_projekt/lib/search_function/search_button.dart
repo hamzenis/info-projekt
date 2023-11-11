@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SearchPage extends StatefulWidget {
   final String title;
@@ -112,7 +113,15 @@ class _SearchPage extends State<SearchPage> {
 
   final List<String> _popularStocks = [
     'AAPL',
-    'AMZN'
+    'MSFT',
+    'AMZN',
+    'GOOGL',
+    'TCEHY',
+    'TSLA',
+    'WMT',
+    'META',
+    'SSNLF',
+    'JNJ'
   ]; // Add more stock symbols here
 
   Future<Map<String, dynamic>> fetchStock(String symbol) async {
@@ -165,7 +174,7 @@ class _SearchPage extends State<SearchPage> {
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    'Popular Stocks',
+                    'Top 10 Stocks of all time',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
