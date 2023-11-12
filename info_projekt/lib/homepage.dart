@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-<<<<<<< Updated upstream
-import 'search_function/search_button.dart';
-import 'chart/charts_view.dart';
-=======
 import 'search_function.dart';
->>>>>>> Stashed changes
+import 'chart/charts_view.dart';
 
 class HomePage extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile'];
