@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'search_function/search_button.dart';
+import 'chart/charts_view.dart';
 
 class HomePage extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile'];
@@ -59,7 +60,12 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.newspaper),
           ),
           ActionButton(
-            onPressed: () => _showAction(context, 2),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ChartStock()),
+              );
+            },
             icon: const Icon(Icons.person),
           ),
         ],
