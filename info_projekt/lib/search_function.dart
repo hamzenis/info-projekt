@@ -27,34 +27,10 @@ class _SearchPage extends State<SearchPage> {
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       var results = data['result'] ?? [];
-
-      Set<String> stockSymbols = {};
-      List<dynamic> filteredResults = [];
-      Set<String> stockDescription = {};
-
-      // Algorithm to remove duplicate stock symbols
-      // and prefer stocks without dots in their symbol
-      for (var result in results) {
-        if (result['type'] == 'Common Stock') {
-          String displaySymbol = result['displaySymbol'];
-          String description = result['description'];
-          if (displaySymbol.contains('.')) {
-            String displaySymbolWithoutDot = displaySymbol.split('.')[0];
-            if (stockSymbols.contains(displaySymbolWithoutDot) ||
-                stockDescription.contains(description)) {
-              continue;
-            }
-            stockSymbols.add(displaySymbol);
-            filteredResults.add(result);
-            stockDescription.add(description);
-          } else if (!displaySymbol.contains('.')) {
-            stockSymbols.add(displaySymbol);
-            filteredResults.add(result);
-            stockDescription.add(description);
-          }
-        }
-      }
-
+      var filteredResults = results.where((result) {
+        return result['type'] == 'Common Stock' &&
+            !result['displaySymbol'].contains('.');
+      }).toList();
       if (mounted) {
         setState(() {
           _searchResults = filteredResults;
