@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'search_function.dart';
 import 'chart/charts_view.dart';
 
 class HomePage extends StatelessWidget {
