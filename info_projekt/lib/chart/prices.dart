@@ -77,8 +77,38 @@ Future<String> extractRealTimeQuote(String stockSymbol) async {
     print(realTimeQuote);
   } catch (e) {
     // Handle the exception
-    print('Error parsing JSON: $e');
+    print(
+        'Error parsing JSON: $e'); // TODO: Remove and replace with error handling
   }
 
   return realTimeQuote.toString();
+}
+
+/*
+*
+*
+*   Gets the company name from the API and returns a String
+*/
+Future<String> getCompanyName(String stockSymbol) async {
+  String companyName = "";
+
+  try {
+    // Send a GET request to the API
+    String apiKey = 'cl6hd6hr01qvnck9ogjgcl6hd6hr01qvnck9ogk0';
+    String url =
+        'https://finnhub.io/api/v1/stock/profile2?symbol=$stockSymbol&token=$apiKey';
+    http.Response response = await http
+        .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
+
+    // Decode the response body
+    Map<String, dynamic> jsonData = json.decode(response.body);
+
+    // Extract the real-time quote
+    companyName = jsonData['name'].toString();
+    print(companyName);
+  } catch (e) {
+    // Handle the exception
+    print('Error parsing JSON: $e');
+  }
+  return companyName;
 }

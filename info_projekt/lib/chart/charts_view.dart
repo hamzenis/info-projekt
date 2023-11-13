@@ -28,6 +28,7 @@ class _ChartStockState extends State<ChartStock> {
 */
   late ZoomPanBehavior _zoomPanBehavior;
   late String realTimeQuote;
+  late String companyName;
 
 /*
 *  
@@ -40,6 +41,7 @@ class _ChartStockState extends State<ChartStock> {
         enablePinching: true);
     super.initState();
     fetchRealTimeQuote(widget.title);
+    fetchCompanyName(widget.title);
   }
 
 /*
@@ -47,6 +49,13 @@ class _ChartStockState extends State<ChartStock> {
 */
   Future<void> fetchRealTimeQuote(String title) async {
     realTimeQuote = await extractRealTimeQuote(title);
+  }
+
+/*
+*   Fetches the real-time quote from the API
+*/
+  Future<void> fetchCompanyName(String title) async {
+    companyName = await getCompanyName(title);
   }
 
 /*
@@ -61,9 +70,7 @@ class _ChartStockState extends State<ChartStock> {
 */
   Widget buildChart(List<ChartData> spotList) {
     return SfCartesianChart(
-      primaryXAxis: DateTimeCategoryAxis(
-          // plotBands: plotBands,
-          ), // Date axis
+      primaryXAxis: DateTimeCategoryAxis(), // Date axis
       primaryYAxis: NumericAxis(
         // Applies currency format for y axis labels and also for data labels
         numberFormat: NumberFormat.simpleCurrency(),
@@ -81,7 +88,7 @@ class _ChartStockState extends State<ChartStock> {
 
 /*
 *
-*   Build price container
+*   Build price container under chart
 */
   Widget buildPriceContainer() {
     return Container(
@@ -128,16 +135,14 @@ class _ChartStockState extends State<ChartStock> {
               appBar: AppBar(
                 title: Text(widget.title),
               ),
-              body: Container(
-                height: 700,
+              body: SizedBox(
                 child: Column(
                   children: [
                     Container(
                       padding: EdgeInsets.all(40),
                       child: Text(
-                        widget.title +
-                            ' Aktienkurs', // TODO: Replace with Firmen name
-                        style: TextStyle(
+                        companyName,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
