@@ -21,7 +21,7 @@ class FirestoreService {
       return userSnapshot;
     } catch (e) {
       print('Error getting user from Firestore: $e');
-      throw e;
+      rethrow;
     }
   }
 }
