@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'search_function/search_button.dart';
 import 'chart/charts_view.dart';
 
 class HomePage extends StatelessWidget {
@@ -44,15 +43,7 @@ class HomePage extends StatelessWidget {
         distance: 80,
         children: [
           ActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SearchPage(
-                          title: 'Search Page',
-                        )),
-              );
-            },
+            onPressed: () {},
             icon: const Icon(Icons.search),
           ),
           ActionButton(
