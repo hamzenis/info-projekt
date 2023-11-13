@@ -10,6 +10,11 @@ dependencies:
   cloud_firestore: ^4.12.2
   firebase_auth: ^4.12.1
   firebase_core: ^2.21.0
+  firebase_storage: ^11.2.4
+  fluttertoast: ^8.2.2
+  font_awesome_flutter: ^10.6.0
+  google_sign_in: ^6.1.5
+  cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
 
