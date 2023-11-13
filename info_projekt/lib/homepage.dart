@@ -44,15 +44,7 @@ class HomePage extends StatelessWidget {
         distance: 80,
         children: [
           ActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SearchPage(
-                          title: 'Search Page',
-                        )),
-              );
-            },
+            onPressed: () {},
             icon: const Icon(Icons.search),
           ),
           ActionButton(
@@ -61,9 +53,13 @@ class HomePage extends StatelessWidget {
           ),
           ActionButton(
             onPressed: () {
+              // TODO: Remove shortcut to chart
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ChartStock()),
+                MaterialPageRoute(
+                    builder: (context) => ChartStock(
+                          title: "AAPL",
+                        )),
               );
             },
             icon: const Icon(Icons.person),

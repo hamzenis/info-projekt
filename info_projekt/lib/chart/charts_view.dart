@@ -4,7 +4,11 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'prices.dart';
 
 class ChartStock extends StatefulWidget {
-  const ChartStock({super.key});
+  final String title;
+  const ChartStock({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
 
   @override
   State<ChartStock> createState() => _ChartStockState();
@@ -20,15 +24,15 @@ class ChartStock extends StatefulWidget {
 class _ChartStockState extends State<ChartStock> {
 /*
 *  
-*   Zooming Feature 
+*   
 */
   late ZoomPanBehavior _zoomPanBehavior;
+  late String realTimeQuote;
+  late String companyName;
+
 /*
 *  
 *
-*
-*
-*   Chart Featuress
 */
   @override
   void initState() {
@@ -36,6 +40,67 @@ class _ChartStockState extends State<ChartStock> {
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
+    fetchRealTimeQuote(widget.title);
+    fetchCompanyName(widget.title);
+  }
+
+/*
+*   Fetches the real-time quote from the API
+*/
+  Future<void> fetchRealTimeQuote(String title) async {
+    realTimeQuote = await extractRealTimeQuote(title);
+  }
+
+/*
+*   Fetches the real-time quote from the API
+*/
+  Future<void> fetchCompanyName(String title) async {
+    companyName = await getCompanyName(title);
+  }
+
+/*
+*
+*   Fetches monthly data from prices.dart
+*/
+  // FutureBuilder<List<ChartData>> buildMonthly() {}
+
+/* 
+*   Builds the chart
+*
+*/
+  Widget buildChart(List<ChartData> spotList) {
+    return SfCartesianChart(
+      primaryXAxis: DateTimeCategoryAxis(), // Date axis
+      primaryYAxis: NumericAxis(
+        // Applies currency format for y axis labels and also for data labels
+        numberFormat: NumberFormat.simpleCurrency(),
+      ),
+      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
+      series: <ChartSeries<ChartData, DateTime>>[
+        // Renders line chart
+        LineSeries<ChartData, DateTime>(
+            dataSource: spotList,
+            xValueMapper: (ChartData data, _) => data.time,
+            yValueMapper: (ChartData data, _) => data.price)
+      ],
+    );
+  }
+
+/*
+*
+*   Build price container under chart
+*/
+  Widget buildPriceContainer() {
+    return Container(
+      padding: EdgeInsets.all(40),
+      child: Text(
+        realTimeQuote + '\$',
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
 /*
@@ -47,32 +112,7 @@ class _ChartStockState extends State<ChartStock> {
 */
   @override
   Widget build(BuildContext context) {
-    /*
-    *
-    *   If it's weekend, the chart will be 'greyed out'
-    */
-    List<PlotBand> plotBands = [];
-    for (int year = 2023; year <= 2025; year++) {
-      // TODO: Replace with year of first data point
-      for (int month = 1; month <= 12; month++) {
-        for (int day = 1; day <= DateTime(year, month + 1, 0).day; day++) {
-          DateTime date = DateTime(year, month, day);
-          if (date.weekday == DateTime.saturday ||
-              date.weekday == DateTime.sunday) {
-            plotBands.add(
-              PlotBand(
-                isVisible: true,
-                opacity: 0.5,
-                start: date,
-                end: date.add(Duration(days: 1)),
-                color: Color.fromARGB(128, 73, 148, 236),
-              ),
-            );
-          }
-        }
-      }
-    }
-
+    List<ChartData> spotList = [];
     /*
     *
     *
@@ -80,10 +120,12 @@ class _ChartStockState extends State<ChartStock> {
     *
     */
     return FutureBuilder<List<ChartData>>(
-      future: extractDataFromJson(),
+      future: extractDataFromJson(widget.title),
       builder: (BuildContext context, AsyncSnapshot<List<ChartData>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(); // TODO: Fix show a loading spinner while waiting
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
@@ -91,50 +133,47 @@ class _ChartStockState extends State<ChartStock> {
             List<ChartData> spotList = snapshot.data!;
             return Scaffold(
               appBar: AppBar(
-                title: Text('Aktie'), // TODO: Replace with Aktiennamen
+                title: Text(widget.title),
               ),
-              body: Container(
-                height: 700,
+              body: SizedBox(
                 child: Column(
                   children: [
                     Container(
                       padding: EdgeInsets.all(40),
-                      child: const Text(
-                        // TODO: Replace with Aktiennamen from search
-                        'AAPL - Apple Inc.',
-                        style: TextStyle(
+                      child: Text(
+                        companyName,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    SfCartesianChart(
-                      primaryXAxis:
-                          DateTimeAxis(plotBands: plotBands), // Date axis
-                      primaryYAxis: NumericAxis(
-                        // Applies currency format for y axis labels and also for data labels
-                        numberFormat: NumberFormat.simpleCurrency(),
-                      ),
-                      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
-                      series: <ChartSeries<ChartData, DateTime>>[
-                        // Renders line chart
-                        LineSeries<ChartData, DateTime>(
-                            dataSource: spotList,
-                            xValueMapper: (ChartData data, _) => data.time,
-                            yValueMapper: (ChartData data, _) => data.price)
+                    Row(
+                      // TODO: Add functionality to buttons
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            // Handle Button Press
+                          },
+                          child: const Text('Year'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Handle button press
+                          },
+                          child: const Text('Month'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Handle button press
+                          },
+                          child: const Text('Day'),
+                        ),
                       ],
                     ),
-                    Container(
-                      padding: EdgeInsets.all(40),
-                      child: const Text(
-                        // TODO: Replace with current price
-                        '180,56\$',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    buildChart(spotList),
+                    buildPriceContainer(),
                   ],
                 ),
               ),
