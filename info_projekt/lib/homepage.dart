@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'search_function.dart';
 import 'chart/charts_view.dart';
+import 'views/newspage.dart';
 
-class HomePage extends StatelessWidget {
+class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile'];
 
-  const HomePage({super.key});
+  const HomePageNew({super.key});
 
   /// Filler code for the action buttons
   /// Remove this when implementing the actual functionality
@@ -44,11 +45,24 @@ class HomePage extends StatelessWidget {
         distance: 80,
         children: [
           ActionButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SearchPage(
+                          title: 'Search Page',
+                        )),
+              );
+            },
             icon: const Icon(Icons.search),
           ),
           ActionButton(
-            onPressed: () => _showAction(context, 1),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NewsPage()),
+              );
+            },
             icon: const Icon(Icons.newspaper),
           ),
           ActionButton(

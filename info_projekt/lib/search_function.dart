@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'chart/charts_view.dart';
 
 class SearchPage extends StatefulWidget {
   final String title;
@@ -104,6 +105,14 @@ class _SearchPage extends State<SearchPage> {
             title: Text(_searchResults[index]['description']),
             onTap: () {
               print(_searchResults[index]['displaySymbol']);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChartStock(
+                    title: _searchResults[index]['displaySymbol'],
+                  ),
+                ),
+              );
             },
           ),
         );
@@ -150,6 +159,14 @@ class _SearchPage extends State<SearchPage> {
                   subtitle: Text(snapshot.data!['ticker']),
                   onTap: () {
                     print(snapshot.data!['ticker']);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChartStock(
+                          title: snapshot.data!['ticker'],
+                        ),
+                      ),
+                    );
                   },
                 ),
               );
