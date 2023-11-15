@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:info_projekt/features/splashScreen.dart';
-import 'package:info_projekt/pages/home_page.dart';
-import 'package:info_projekt/pages/login_page.dart';
-import 'package:info_projekt/pages/sign_up_page.dart'; // Import RegisterScreen
+import 'package:info_projekt/views/splashScreen.dart';
+import 'package:info_projekt/homepage.dart';
+import 'package:info_projekt/views/home_page.dart';
+import 'package:info_projekt/views/login_page.dart';
+import 'package:info_projekt/views/sign_up_page.dart'; // Import RegisterScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,17 +18,20 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Firebase',
-      routes: {
-        '/': (context) => SplashScreen(
-              // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
-              child: LoginPage(),
-            ),
-        '/login': (context) => LoginPage(),
-        '/signUp': (context) => SignUpPage(),
-        '/home': (context) => HomePage(),
-      },
+      // go to homepage.dart
+      home: HomePageNew(),
+
+      // debugShowCheckedModeBanner: false,
+      // title: 'Flutter Firebase',
+      // routes: {
+      //   '/': (context) => SplashScreen(
+      //         // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
+      //         child: LoginPage(),
+      //       ),
+      //   '/login': (context) => LoginPage(),
+      //   '/signUp': (context) => SignUpPage(),
+      //   '/home': (context) => HomePage(),
+      // },
     );
   }
 }

@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1078843075023:android:ecd8d2afc9ce0cdd200aba",
+        "mobilesdk_app_id": "1:1078843075023:android:cc7bc2d5c0b0b282200aba",
         "android_client_info": {
-          "package_name": "com.example.info_projekt"
+          "package_name": "com.example.firstproject"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg"
@@ -20,7 +25,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.infoProjekt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078843075023:android:ecd8d2afc9ce0cdd200aba",
+        "android_client_info": {
+          "package_name": "com.example.info_projekt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.info_projekt",
+            "certificate_hash": "3b90d70b9e57948eb8acac86112edf840e6dd0f2"
+          }
+        },
+        {
+          "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.infoProjekt"
+              }
+            }
+          ]
         }
       }
     }
