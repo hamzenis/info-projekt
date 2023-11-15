@@ -4,7 +4,10 @@ import 'package:info_projekt/views/splashScreen.dart';
 import 'package:info_projekt/homepage.dart';
 import 'package:info_projekt/views/home_page.dart';
 import 'package:info_projekt/views/login_page.dart';
-import 'package:info_projekt/views/sign_up_page.dart'; // Import RegisterScreen
+import 'package:info_projekt/views/sign_up_page.dart';
+
+import 'package:stripe_payment/stripe_payment.dart';
+// Import RegisterScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

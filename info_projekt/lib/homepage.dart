@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
 import 'search_function.dart';
 import 'views/charts_view.dart';
 import 'views/newspage.dart';
 
 class HomePageNew extends StatelessWidget {
-  static const _actionTitles = ['Search', 'News', 'Profile'];
+  static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
 
   const HomePageNew({super.key});
 
@@ -42,7 +43,7 @@ class HomePageNew extends StatelessWidget {
         },
       ),
       floatingActionButton: ExpandableFab(
-        distance: 80,
+        distance: 100,
         children: [
           ActionButton(
             onPressed: () {
@@ -77,6 +78,16 @@ class HomePageNew extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.person),
+          ),
+          ActionButton(
+            onPressed: () {
+              // TODO: Remove shortcut to chart
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => WalletScreen()),
+              );
+            },
+            icon: const Icon(Icons.wallet),
           ),
         ],
       ),
