@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_braintree/flutter_braintree.dart';
 
 class WalletScreen extends StatefulWidget {
   @override
@@ -9,6 +13,56 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   double _balance = 0.0;
   List<Transaction> _transactions = [];
+
+  Future<void> startDepositFlow() async {
+    // Request a client token from your server
+    var clientTokenURL = Uri.parse("http://127.0.0.1:5000/client_token");
+    var response = await http.get(clientTokenURL);
+    var clientToken = jsonDecode(response.body)['clientToken'];
+
+    // Start the Braintree payment flow
+    var request = BraintreeDropInRequest(
+      clientToken: clientToken,
+      collectDeviceData: true,
+      amount: '1.0',
+    );
+    var result = await BraintreeDropIn.start(request);
+
+    // If the payment was successful, send the nonce to your server
+    if (result != null) {
+      var response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/checkout'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'payment_method_nonce': result.paymentMethodNonce.nonce,
+          'amount': '1.0',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var result = jsonDecode(response.body);
+        if (result['result'] == 'success') {
+          setState(() {
+            if (request.amount != null) {
+              _balance += double.parse(request.amount!);
+              _transactions.add(Transaction(
+                description: 'Deposit',
+                amount: double.parse(request.amount!),
+                date: DateTime.now(),
+                type: TransactionType.deposit,
+              ));
+            }
+          });
+        } else {
+          print('Transaction failed: ${result['message']}');
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +88,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: Text('Withdraw'),
               ),
               ElevatedButton(
-                onPressed: () async {
-                  const url = 'https://buy.stripe.com/test_14kaIbceEgNP3p63cc';
-                  if (await canLaunch(url)) {
-                    await launch(url);
-                  } else {
-                    throw 'Could not launch $url';
-                  }
-                },
+                onPressed: startDepositFlow,
                 child: Text('Deposit'),
               ),
             ],
