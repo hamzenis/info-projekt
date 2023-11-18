@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:info_projekt/common/toast.dart';
 import '../homepage.dart';
 
@@ -17,24 +16,24 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text("HomePage"),
+          title: const Text("HomePage"),
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(
+            const Center(
                 child: Text(
               "Welcome Home buddy!",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
             )),
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePageNew()),
+                  MaterialPageRoute(builder: (context) => const HomePageNew()),
                 );
               },
               child: Container(
@@ -43,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                     color: Colors.blue,
                     borderRadius: BorderRadius.circular(10)),
-                child: Center(
+                child: const Center(
                   child: Text(
                     "HomePage",
                     style: TextStyle(
@@ -66,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                     color: Colors.blue,
                     borderRadius: BorderRadius.circular(10)),
-                child: Center(
+                child: const Center(
                   child: Text(
                     "Sign out",
                     style: TextStyle(

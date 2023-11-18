@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:info_projekt/models/news.dart';
 
 class RemoteService {
-  // Replace 'YOUR_API_KEY' with your actual Finnhub API key.
   final String apiKey = 'cl7rdopr01qqqm01c250cl7rdopr01qqqm01c25g';
 
   Future<List<News>?> getNews() async {
