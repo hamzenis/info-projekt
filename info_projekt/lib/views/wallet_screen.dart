@@ -1,9 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_braintree/flutter_braintree.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 class WalletScreen extends StatefulWidget {
   @override
@@ -14,53 +12,75 @@ class _WalletScreenState extends State<WalletScreen> {
   double _balance = 0.0;
   List<Transaction> _transactions = [];
 
-  Future<void> startDepositFlow() async {
-    // Request a client token from your server
-    var clientTokenURL = Uri.parse("http://127.0.0.1:5000/client_token");
-    var response = await http.get(clientTokenURL);
-    var clientToken = jsonDecode(response.body)['clientToken'];
-
-    // Start the Braintree payment flow
-    var request = BraintreeDropInRequest(
-      clientToken: clientToken,
-      collectDeviceData: true,
-      amount: '1.0',
+  Future<double?> getUserInput() async {
+    final controller = TextEditingController();
+    return showDialog<double>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter deposit amount'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(hintText: 'Amount'),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                double? amount = double.tryParse(controller.text);
+                Navigator.of(context).pop(amount);
+              },
+            ),
+          ],
+        );
+      },
     );
-    var result = await BraintreeDropIn.start(request);
+  }
 
-    // If the payment was successful, send the nonce to your server
-    if (result != null) {
+  Future<void> startDepositFlow(double amount) async {
+    var paymentIntentURL =
+        Uri.parse("http://localhost:5000/create-payment-intent");
+
+    // Convert the amount from dollars to cents
+    int amountInCents = (amount * 100).round();
+
+    try {
       var response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/checkout'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'payment_method_nonce': result.paymentMethodNonce.nonce,
-          'amount': '1.0',
-        }),
+        paymentIntentURL,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'amount': amountInCents}),
       );
 
-      if (response.statusCode == 200) {
-        var result = jsonDecode(response.body);
-        if (result['result'] == 'success') {
-          setState(() {
-            if (request.amount != null) {
-              _balance += double.parse(request.amount!);
-              _transactions.add(Transaction(
-                description: 'Deposit',
-                amount: double.parse(request.amount!),
-                date: DateTime.now(),
-                type: TransactionType.deposit,
-              ));
-            }
-          });
-        } else {
-          print('Transaction failed: ${result['message']}');
-        }
-      } else {
-        print('Request failed with status: ${response.statusCode}.');
-      }
+      var jsonResponse = jsonDecode(response.body);
+      var paymentIntentClientSecret = jsonResponse['paymentIntent'];
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntentClientSecret,
+          merchantDisplayName: 'TradeMate',
+        ),
+      );
+
+      await Stripe.instance.presentPaymentSheet();
+
+      setState(() {
+        _balance += amount;
+        _transactions.add(Transaction(
+          description: 'Deposit',
+          amount: amount,
+          date: DateTime.now(),
+          type: TransactionType.deposit,
+        ));
+      });
+    } on Exception catch (e) {
+      print('Payment failed: $e');
     }
   }
 
@@ -88,7 +108,12 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: Text('Withdraw'),
               ),
               ElevatedButton(
-                onPressed: startDepositFlow,
+                onPressed: () async {
+                  double? depositAmount = await getUserInput();
+                  if (depositAmount != null) {
+                    await startDepositFlow(depositAmount);
+                  }
+                },
                 child: Text('Deposit'),
               ),
             ],
@@ -98,13 +123,16 @@ class _WalletScreenState extends State<WalletScreen> {
             child: ListView.builder(
               itemCount: _transactions.length,
               itemBuilder: (BuildContext context, int index) {
+                // Reverse the list
+                var reversedTransactions = _transactions.reversed.toList();
+
                 return ListTile(
-                  title: Text(_transactions[index].description),
-                  subtitle: Text(_transactions[index].date.toString()),
+                  title: Text(reversedTransactions[index].description),
+                  subtitle: Text(reversedTransactions[index].date.toString()),
                   trailing: Text(
-                    '\$${_transactions[index].amount.toStringAsFixed(2)}',
+                    '\$${reversedTransactions[index].amount.toStringAsFixed(2)}',
                     style: TextStyle(
-                      color: _transactions[index].type ==
+                      color: reversedTransactions[index].type ==
                               TransactionType.withdrawal
                           ? Colors.red
                           : Colors.green,

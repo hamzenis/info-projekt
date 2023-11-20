@@ -1,37 +1,22 @@
 from flask import Flask, request
-import braintree
+import stripe
 
 app = Flask(__name__)
 
-gateway = braintree.BraintreeGateway(
-    braintree.Configuration(
-        braintree.Environment.Sandbox,
-        merchant_id="xj464bssjbsr4nfv",
-        public_key="4z7yc5qmwb43p83z",
-        private_key="ec2c63ae8a1de165bafe4eb36fc8a997"
-    )
-)
+stripe.api_key = "sk_test_51OCfrgEFCGzXnEeOkDMh5AQmfgV1Q94pGy4DHIWu5hDcI03qXIlmX9Vmw3ULYp57yg8EGDqHml2fIe2RBZXtSqRD00s4Z5nD0I"
 
-@app.route("/client_token", methods=["GET"])
-def client_token():
-    return {"clientToken": gateway.client_token.generate()}
-
-@app.route("/checkout", methods=["POST"])
-def create_purchase():
-    nonce_from_the_client = request.json.get("payment_method_nonce")
-    amount = request.json.get("amount")
-    result = gateway.transaction.sale({
-        "amount": amount,
-        "payment_method_nonce": nonce_from_the_client,
-        "options": {
-            "submit_for_settlement": True
-        }
-    })
-
-    if result.is_success:
-        return {"result": "success"}, 200
-    else:
-        return {"result": "error", "message": result.message}, 400
+@app.route("/create-payment-intent", methods=["POST"])
+def create_payment_intent():
+    try:
+        data = request.get_json()
+        amount = data.get('amount', 1000)  # default to 1000 if not provided
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+        )
+        return {"paymentIntent": payment_intent.client_secret}
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     app.run(port=5000)

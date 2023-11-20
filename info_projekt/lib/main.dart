@@ -5,12 +5,14 @@ import 'package:info_projekt/homepage.dart';
 import 'package:info_projekt/views/home_page.dart';
 import 'package:info_projekt/views/login_page.dart';
 import 'package:info_projekt/views/sign_up_page.dart';
-
-// Import RegisterScreen
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  Stripe.publishableKey =
+      "pk_test_51OCfrgEFCGzXnEeOd1oT0r7x9bEhxiXxXv6VJyf6LWO1E8ZMtwx7cWjVdlidFPnRo4aG3xF5bTpsk5iOPe3toFmZ00MXrBqrOa";
+  Stripe.merchantIdentifier = 'MerchantIdentifier';
   runApp(const MyApp());
 }
 
