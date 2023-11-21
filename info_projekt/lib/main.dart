@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:info_projekt/views/splashScreen.dart';
 import 'package:info_projekt/homepage.dart';
 import 'package:info_projekt/views/home_page.dart';
-import 'package:info_projekt/views/login_page.dart';
-import 'package:info_projekt/views/sign_up_page.dart';
+import 'package:info_projekt/pages/login_page.dart';
+import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
