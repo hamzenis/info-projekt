@@ -123,7 +123,6 @@ class _WalletScreenState extends State<WalletScreen> {
             child: ListView.builder(
               itemCount: _transactions.length,
               itemBuilder: (BuildContext context, int index) {
-                // Reverse the list
                 var reversedTransactions = _transactions.reversed.toList();
 
                 return ListTile(

@@ -23,19 +23,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       // go to homepage.dart
-      home: HomePageNew(),
+      // home: HomePageNew(),
 
-      // debugShowCheckedModeBanner: false,
-      // title: 'Flutter Firebase',
-      // routes: {
-      //   '/': (context) => SplashScreen(
-      //         // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
-      //         child: LoginPage(),
-      //       ),
-      //   '/login': (context) => LoginPage(),
-      //   '/signUp': (context) => SignUpPage(),
-      //   '/home': (context) => HomePage(),
-      // },
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Firebase',
+      routes: {
+        '/': (context) => SplashScreen(
+              // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
+              child: LoginPage(),
+            ),
+        '/login': (context) => LoginPage(),
+        '/signUp': (context) => SignUpPage(),
+        '/home': (context) => HomePage(),
+      },
     );
   }
 }
