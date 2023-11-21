@@ -73,8 +73,6 @@ Future<String> extractRealTimeQuote(String stockSymbol) async {
 
     // Extract the real-time quote
     realTimeQuote = double.parse(jsonData['c'].toString());
-
-    print(realTimeQuote);
   } catch (e) {
     // Handle the exception
     print(
@@ -105,7 +103,6 @@ Future<String> getCompanyName(String stockSymbol) async {
 
     // Extract the real-time quote
     companyName = jsonData['name'].toString();
-    print(companyName);
   } catch (e) {
     // Handle the exception
     print('Error parsing JSON: $e');

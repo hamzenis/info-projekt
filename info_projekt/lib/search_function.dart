@@ -104,7 +104,6 @@ class _SearchPage extends State<SearchPage> {
           child: ListTile(
             title: Text(_searchResults[index]['description']),
             onTap: () {
-              print(_searchResults[index]['displaySymbol']);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -158,7 +157,6 @@ class _SearchPage extends State<SearchPage> {
                   title: Text(snapshot.data!['name']),
                   subtitle: Text(snapshot.data!['ticker']),
                   onTap: () {
-                    print(snapshot.data!['ticker']);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
