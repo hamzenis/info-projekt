@@ -92,10 +92,10 @@ class _ChartStockState extends State<ChartStock> {
 */
   Widget buildPriceContainer() {
     return Container(
-      padding: EdgeInsets.all(40),
+      padding: const EdgeInsets.all(40),
       child: Text(
-        realTimeQuote + '\$',
-        style: TextStyle(
+        '$realTimeQuote\$',
+        style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
@@ -139,7 +139,7 @@ class _ChartStockState extends State<ChartStock> {
                 child: Column(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(40),
+                      padding: const EdgeInsets.all(40),
                       child: Text(
                         companyName,
                         style: const TextStyle(
@@ -179,7 +179,7 @@ class _ChartStockState extends State<ChartStock> {
               ),
             );
           } else {
-            return Text('No data'); // TODO: Replace with error handling
+            return const Text('No data'); // TODO: Replace with error handling
           }
         }
       },

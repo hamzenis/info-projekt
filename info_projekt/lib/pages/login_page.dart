@@ -4,10 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/widgets/toast.dart';
-import 'package:info_projekt/views/sign_up_page.dart';
+import 'package:info_projekt/auth/firebase_auth_services.dart';
+import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -78,26 +79,22 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: _isSigning
-                        ? CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    child: _isSigning ? CircularProgressIndicator(
+                      color: Colors.white,) : Text(
+                      "Login",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10,),
               GestureDetector(
                 onTap: () {
                   _signInWithGoogle();
+
                 },
                 child: Container(
                   width: double.infinity,
@@ -110,13 +107,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          FontAwesomeIcons.google,
-                          color: Colors.white,
-                        ),
-                        SizedBox(
-                          width: 5,
-                        ),
+                        Icon(FontAwesomeIcons.google, color: Colors.white,),
+                        SizedBox(width: 5,),
                         Text(
                           "Sign in with Google",
                           style: TextStyle(
@@ -129,9 +121,12 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
+
+
               SizedBox(
                 height: 20,
               ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -144,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => SignUpPage()),
-                        (route) => false,
+                            (route) => false,
                       );
                     },
                     child: Text(
@@ -186,18 +181,20 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  _signInWithGoogle() async {
-    await _signOutGoogle(); // Clear previous session
+
+  _signInWithGoogle()async{
+
+    await _signOutGoogle();  // Clear previous session
 
     final GoogleSignIn _googleSignIn = GoogleSignIn();
 
     try {
-      final GoogleSignInAccount? googleSignInAccount =
-          await _googleSignIn.signIn();
 
-      if (googleSignInAccount != null) {
-        final GoogleSignInAuthentication googleSignInAuthentication =
-            await googleSignInAccount.authentication;
+      final GoogleSignInAccount? googleSignInAccount = await _googleSignIn.signIn();
+
+      if(googleSignInAccount != null ){
+        final GoogleSignInAuthentication googleSignInAuthentication = await
+        googleSignInAccount.authentication;
 
         final AuthCredential credential = GoogleAuthProvider.credential(
           idToken: googleSignInAuthentication.idToken,
@@ -207,12 +204,16 @@ class _LoginPageState extends State<LoginPage> {
         await _firebaseAuth.signInWithCredential(credential);
         Navigator.pushNamed(context, "/home");
       }
-    } catch (e) {
-      showToast(message: "some error occured $e");
+
+    }catch(e) {
+showToast(message: "some error occured $e");
     }
+
+
   }
 
   Future<void> _signOutGoogle() async {
-    await GoogleSignIn().signOut();
-  }
+  await GoogleSignIn().signOut();
+}
+
 }
