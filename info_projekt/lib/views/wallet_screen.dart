@@ -14,6 +14,44 @@ class _WalletScreenState extends State<WalletScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
 
+  Future<double?> getUserWithdrawInput(String iban) async {
+    final controller = TextEditingController();
+    return showDialog<double>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter withdrawal amount'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Your IBAN: $iban'),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(hintText: 'Amount'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                double? amount = double.tryParse(controller.text);
+                Navigator.of(context).pop(amount);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<double?> getUserInput() async {
     final controller = TextEditingController();
     return showDialog<double>(
@@ -44,6 +82,83 @@ class _WalletScreenState extends State<WalletScreen> {
         );
       },
     );
+  }
+
+  Future<String?> getUserPassword() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter your password'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: InputDecoration(hintText: 'Password'),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(controller.text);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> startWithdrawFlow(double amount) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final querySnapshot = await _firestore
+          .collection('Users')
+          .where('UID', isEqualTo: user.uid)
+          .get();
+      final userDoc = querySnapshot.docs.first;
+      final userData = userDoc.data() as Map<String, dynamic>;
+      final balance = (userData['balance'] as num).toDouble();
+
+      if (balance < amount) {
+        print('Insufficient balance');
+        return;
+      }
+
+      String? password = await getUserPassword();
+      if (password != null) {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        try {
+          await user.reauthenticateWithCredential(credential);
+        } catch (e) {
+          print('Incorrect password');
+          return;
+        }
+
+        await _firestore.collection('Users').doc(userDoc.id).update({
+          'balance': FieldValue.increment(-amount),
+        });
+        await _firestore
+            .collection('Users')
+            .doc(userDoc.id)
+            .collection('balance_history')
+            .add({
+          'amount': amount,
+          'date': Timestamp.now(),
+          'description': 'Withdraw',
+          'withdraw': true,
+        });
+      }
+    }
   }
 
   Future<void> startDepositFlow(double amount) async {
@@ -132,8 +247,24 @@ class _WalletScreenState extends State<WalletScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement withdraw money functionality
+                    onPressed: () async {
+                      final user = _auth.currentUser;
+                      if (user != null) {
+                        final querySnapshot = await _firestore
+                            .collection('Users')
+                            .where('UID', isEqualTo: user.uid)
+                            .get();
+                        final userDoc = querySnapshot.docs.first;
+                        final userData = userDoc.data() as Map<String, dynamic>;
+                        final iban = userData['iban'] as String;
+
+                        double? withdrawAmount =
+                            await getUserWithdrawInput(iban);
+                        if (withdrawAmount != null) {
+                          await Future.delayed(Duration(milliseconds: 500));
+                          await startWithdrawFlow(withdrawAmount);
+                        }
+                      }
                     },
                     child: Text('Withdraw'),
                   ),
