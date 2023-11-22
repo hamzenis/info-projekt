@@ -23,14 +23,12 @@ class _SearchPage extends State<SearchPage> {
 
   Future<void> fetchSearchResults(String query) async {
     final response = await http.get(Uri.parse(
-        'https://finnhub.io/api/v1/search?q=$query&token=cl6fum1r01qvnck9n070cl6fum1r01qvnck9n07g'));
+        'https://financialmodelingprep.com/api/v3/search?query=$query&apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
 
     if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      var results = data['result'] ?? [];
+      var results = jsonDecode(response.body);
       var filteredResults = results.where((result) {
-        return result['type'] == 'Common Stock' &&
-            !result['displaySymbol'].contains('.');
+        return !result['symbol'].contains('.');
       }).toList();
       if (mounted) {
         setState(() {
@@ -88,7 +86,7 @@ class _SearchPage extends State<SearchPage> {
                 },
                 icon: const Icon(
                   Icons.clear,
-                  color: Colors.white, // Change this to the color you want
+                  color: Colors.white,
                 ),
               )
             : null,
@@ -102,13 +100,14 @@ class _SearchPage extends State<SearchPage> {
       itemBuilder: (context, index) {
         return Card(
           child: ListTile(
-            title: Text(_searchResults[index]['description']),
+            title: Text(_searchResults[index]['name']),
+            subtitle: Text(_searchResults[index]['symbol']),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChartStock(
-                    title: _searchResults[index]['displaySymbol'],
+                    title: _searchResults[index]['symbol'],
                   ),
                 ),
               );
@@ -124,20 +123,19 @@ class _SearchPage extends State<SearchPage> {
     'MSFT',
     'AMZN',
     'GOOGL',
-    'TCEHY',
     'TSLA',
     'WMT',
     'META',
-    'SSNLF',
     'JNJ'
-  ]; // Add more stock symbols here
+    // Add more stock symbols here
+  ];
 
   Future<Map<String, dynamic>> fetchStock(String symbol) async {
     final response = await http.get(Uri.parse(
-        'https://finnhub.io/api/v1/stock/profile2?symbol=$symbol&token=cl6fum1r01qvnck9n070cl6fum1r01qvnck9n07g'));
+        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return jsonDecode(response.body)[0];
     } else {
       throw Exception('Failed to load stock');
     }
@@ -153,15 +151,15 @@ class _SearchPage extends State<SearchPage> {
             if (snapshot.hasData) {
               return Card(
                 child: ListTile(
-                  leading: SvgPicture.network(snapshot.data!['logo']),
-                  title: Text(snapshot.data!['name']),
-                  subtitle: Text(snapshot.data!['ticker']),
+                  leading: Image.network(snapshot.data!['image']),
+                  title: Text(snapshot.data!['companyName']),
+                  subtitle: Text(snapshot.data!['symbol']),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChartStock(
-                          title: snapshot.data!['ticker'],
+                          title: snapshot.data!['symbol'],
                         ),
                       ),
                     );
