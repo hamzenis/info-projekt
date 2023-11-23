@@ -1,32 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:info_projekt/features/splashScreen.dart';
-import 'package:info_projekt/pages/home_page.dart';
+import 'package:info_projekt/views/splashScreen.dart';
+import 'package:info_projekt/homepage.dart';
+import 'package:info_projekt/views/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
-import 'package:info_projekt/pages/sign_up_page.dart'; // Import RegisterScreen
+import 'package:info_projekt/pages/sign_up_page.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MainApp());
+  Stripe.publishableKey =
+      "pk_test_51OCfrgEFCGzXnEeOd1oT0r7x9bEhxiXxXv6VJyf6LWO1E8ZMtwx7cWjVdlidFPnRo4aG3xF5bTpsk5iOPe3toFmZ00MXrBqrOa";
+  Stripe.merchantIdentifier = 'MerchantIdentifier';
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // go to homepage.dart
+      // home: HomePageNew(),
+
       debugShowCheckedModeBanner: false,
       title: 'Flutter Firebase',
       routes: {
-        '/': (context) => SplashScreen(
+        '/': (context) => const SplashScreen(
               // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
               child: LoginPage(),
             ),
-        '/login': (context) => LoginPage(),
-        '/signUp': (context) => SignUpPage(),
-        '/home': (context) => HomePage(),
+        '/login': (context) => const LoginPage(),
+        '/signUp': (context) => const SignUpPage(),
+        '/home': (context) => const HomePage(),
       },
     );
   }

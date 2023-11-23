@@ -66,6 +66,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
+    androidClientId: '1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com',
+    iosClientId: '1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com',
     iosBundleId: 'com.example.infoProjekt',
   );
 
@@ -75,6 +77,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
+    androidClientId: '1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com',
+    iosClientId: '1078843075023-f6kul7n54e0s04thdn732045pfdcn31a.apps.googleusercontent.com',
     iosBundleId: 'com.example.infoProjekt.RunnerTests',
   );
 }

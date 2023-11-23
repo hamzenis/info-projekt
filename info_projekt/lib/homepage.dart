@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
 import 'search_function.dart';
-import 'chart/charts_view.dart';
 import 'views/newspage.dart';
 
 class HomePageNew extends StatelessWidget {
-  static const _actionTitles = ['Search', 'News', 'Profile'];
+  static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
 
   const HomePageNew({super.key});
 
@@ -42,14 +43,14 @@ class HomePageNew extends StatelessWidget {
         },
       ),
       floatingActionButton: ExpandableFab(
-        distance: 80,
+        distance: 100,
         children: [
           ActionButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => SearchPage(
+                    builder: (context) => const SearchPage(
                           title: 'Search Page',
                         )),
               );
@@ -60,23 +61,32 @@ class HomePageNew extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NewsPage()),
+                MaterialPageRoute(builder: (context) => const NewsPage()),
               );
             },
             icon: const Icon(Icons.newspaper),
           ),
           ActionButton(
             onPressed: () {
-              // TODO: Remove shortcut to chart
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChartStock(
-                          title: "AAPL",
+                    builder: (context) => const ProfilePage(
+                        // title: "User Profile",
                         )),
               );
             },
             icon: const Icon(Icons.person),
+          ),
+          ActionButton(
+            onPressed: () {
+              // TODO: Remove shortcut to chart
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => WalletScreen()),
+              );
+            },
+            icon: const Icon(Icons.wallet),
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:info_projekt/auth/firebase_auth_services.dart';
-import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
+import 'package:info_projekt/widgets/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 
@@ -74,7 +74,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 height: 30,
               ),
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   _signUp();
                 },
                 child: Container(
@@ -85,11 +85,16 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                      child: isSigningUp ? CircularProgressIndicator(color: Colors.white,) : Text(
-                    "Sign Up",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  )),
+                      child: isSigningUp
+                          ? CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : Text(
+                              "Sign Up",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            )),
                 ),
               ),
               SizedBox(
@@ -128,10 +133,15 @@ class _SignUpPageState extends State<SignUpPage> {
     bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
     bool hasDigits = password.contains(RegExp(r'[0-9]'));
     bool hasLowercase = password.contains(RegExp(r'[a-z]'));
-    bool hasSpecialCharacters = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    bool hasSpecialCharacters =
+        password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
     bool hasMinLength = password.length >= 8;
 
-    return hasUppercase && hasDigits && hasLowercase && hasSpecialCharacters && hasMinLength;
+    return hasUppercase &&
+        hasDigits &&
+        hasLowercase &&
+        hasSpecialCharacters &&
+        hasMinLength;
   }
 
   void _signUp() async {
@@ -144,7 +154,9 @@ class _SignUpPageState extends State<SignUpPage> {
     String password = _passwordController.text;
 
     if (!isPasswordValid(password)) {
-      showToast(message: "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
+      showToast(
+          message:
+              "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
       setState(() {
         isSigningUp = false;
       });
