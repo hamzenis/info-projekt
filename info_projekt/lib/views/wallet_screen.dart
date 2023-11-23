@@ -6,6 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/services/wallet_services.dart';
 import 'package:info_projekt/models/transaction_history.dart';
 
+/// Class to create the Wallet Screen View on the TradeMate App.
+/// This class works with the [WalletServices] class to deposit and withdraw money.
+/// The Service functionality is in the folder info_projekt/services/wallet_services.dart.
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
 
@@ -17,13 +20,17 @@ class _WalletScreenState extends State<WalletScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   WalletServices walletServices = WalletServices();
-  double? balance;
+  ValueNotifier<double?> balance = ValueNotifier(null);
 
-  Stream<double> getBalanceStream() async* {
-    while (true) {
-      yield await walletServices.fetchBalance();
-      await Future.delayed(const Duration(seconds: 1));
-    }
+  @override
+  void initState() {
+    super.initState();
+    fetchInitialBalance();
+  }
+
+  Future<void> fetchInitialBalance() async {
+    double initialBalance = await walletServices.fetchBalance();
+    balance.value = initialBalance;
   }
 
   @override
@@ -35,20 +42,17 @@ class _WalletScreenState extends State<WalletScreen> {
       body: Column(
         children: [
           const SizedBox(height: 16.0),
-          StreamBuilder<double>(
-            stream: getBalanceStream(),
-            builder: (BuildContext context, AsyncSnapshot<double> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+          ValueListenableBuilder<double?>(
+            valueListenable: balance,
+            builder: (BuildContext context, double? value, Widget? child) {
+              if (value == null) {
+                return const CircularProgressIndicator();
+              } else {
+                return Text(
+                  'Balance: \$${value.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 24.0),
+                );
               }
-              if (!snapshot.hasData) {
-                return const Text('No data');
-              }
-              var balance = snapshot.data;
-              return Text(
-                'Balance: \$${balance?.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 24.0),
-              );
             },
           ),
           const SizedBox(height: 16.0),
@@ -73,7 +77,8 @@ class _WalletScreenState extends State<WalletScreen> {
                       await Future.delayed(const Duration(milliseconds: 500));
                       await walletServices.startWithdrawFlow(
                           context, withdrawAmount);
-                      balance = await walletServices.fetchBalance();
+                      double newBalance = await walletServices.fetchBalance();
+                      balance.value = newBalance;
                     }
                   }
                 },
@@ -86,7 +91,8 @@ class _WalletScreenState extends State<WalletScreen> {
                   if (depositAmount != null) {
                     await Future.delayed(const Duration(milliseconds: 500));
                     await walletServices.startDepositFlow(depositAmount);
-                    balance = await walletServices.fetchBalance();
+                    double newBalance = await walletServices.fetchBalance();
+                    balance.value = newBalance;
                   }
                 },
                 child: const Text('Deposit'),
@@ -126,29 +132,32 @@ class _WalletScreenState extends State<WalletScreen> {
                     final transactions = snapshot.data!.docs
                         .map((doc) => TransactionHistory.fromFirestore(doc))
                         .toList();
+                    transactions.sort((a, b) {
+                      var compareDate = b.date.compareTo(a.date);
+                      if (compareDate != 0) return compareDate;
+                      if (a.type == TransactionType.withdrawal) return -1;
+                      if (b.type == TransactionType.withdrawal) return 1;
+                      return 0;
+                    });
                     return ListView.builder(
                       itemCount: transactions.length,
                       itemBuilder: (BuildContext context, int index) {
-                        var sortedTransactions = transactions
-                          ..sort((a, b) {
-                            var compareDate = b.date.compareTo(a.date);
-                            if (compareDate != 0) return compareDate;
-                            if (a.type == TransactionType.withdrawal) return -1;
-                            if (b.type == TransactionType.withdrawal) return 1;
-                            return 0;
-                          });
+                        final transaction = transactions[index];
+                        final color =
+                            transaction.type == TransactionType.withdrawal
+                                ? Colors.red
+                                : Colors.green;
+                        final amountString =
+                            transaction.type == TransactionType.withdrawal
+                                ? '-\$${transaction.amount.toStringAsFixed(2)}'
+                                : '\$${transaction.amount.toStringAsFixed(2)}';
+
                         return ListTile(
-                          title: Text(sortedTransactions[index].description),
-                          subtitle:
-                              Text(sortedTransactions[index].date.toString()),
+                          title: Text(transaction.description),
+                          subtitle: Text(transaction.date.toString()),
                           trailing: Text(
-                            '\$${sortedTransactions[index].amount.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: sortedTransactions[index].type ==
-                                      TransactionType.withdrawal
-                                  ? Colors.red
-                                  : Colors.green,
-                            ),
+                            amountString,
+                            style: TextStyle(color: color),
                           ),
                         );
                       },
@@ -163,5 +172,3 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 }
-
-enum TransactionType { deposit, withdrawal }
