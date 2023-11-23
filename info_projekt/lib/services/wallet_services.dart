@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -16,7 +19,7 @@ class WalletServices {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter withdrawal amount'),
+          title: const Text('Enter withdrawal amount'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -24,19 +27,19 @@ class WalletServices {
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(hintText: 'Amount'),
+                decoration: const InputDecoration(hintText: 'Amount'),
               ),
             ],
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 double? amount = double.tryParse(controller.text);
                 Navigator.of(context).pop(amount);
@@ -54,21 +57,21 @@ class WalletServices {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter deposit amount'),
+          title: const Text('Enter deposit amount'),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: 'Amount'),
+            decoration: const InputDecoration(hintText: 'Amount'),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 double? amount = double.tryParse(controller.text);
                 Navigator.of(context).pop(amount);
@@ -86,21 +89,21 @@ class WalletServices {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter your password'),
+          title: const Text('Enter your password'),
           content: TextField(
             controller: controller,
             obscureText: true,
-            decoration: InputDecoration(hintText: 'Password'),
+            decoration: const InputDecoration(hintText: 'Password'),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop(controller.text);
               },
@@ -119,11 +122,13 @@ class WalletServices {
           .where('UID', isEqualTo: user.uid)
           .get();
       final userDoc = querySnapshot.docs.first;
-      final userData = userDoc.data() as Map<String, dynamic>;
+      final userData = userDoc.data();
       final balance = (userData['balance'] as num).toDouble();
 
       if (balance < amount) {
-        print('Insufficient balance');
+        if (kDebugMode) {
+          print('Insufficient balance');
+        }
         return;
       }
 
@@ -136,7 +141,9 @@ class WalletServices {
         try {
           await user.reauthenticateWithCredential(credential);
         } catch (e) {
-          print('Incorrect password');
+          if (kDebugMode) {
+            print('Incorrect password');
+          }
           return;
         }
 
@@ -209,10 +216,14 @@ class WalletServices {
           }
         }
       } else {
-        print('Failed to create payment intent: ${response.body}');
+        if (kDebugMode) {
+          print('Failed to create payment intent: ${response.body}');
+        }
       }
     } on Exception catch (e) {
-      print('Payment failed: $e');
+      if (kDebugMode) {
+        print('Payment failed: $e');
+      }
     }
   }
 
@@ -225,7 +236,7 @@ class WalletServices {
           .get();
       if (querySnapshot.docs.isNotEmpty) {
         final userDoc = querySnapshot.docs.first;
-        final userData = userDoc.data() as Map<String, dynamic>;
+        final userData = userDoc.data();
         if (userData.containsKey('balance')) {
           final balance = (userData['balance'] as num).toDouble();
           return balance;

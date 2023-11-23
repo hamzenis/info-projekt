@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +7,8 @@ import 'package:info_projekt/services/wallet_services.dart';
 import 'package:info_projekt/models/transaction_history.dart';
 
 class WalletScreen extends StatefulWidget {
+  const WalletScreen({super.key});
+
   @override
   _WalletScreenState createState() => _WalletScreenState();
 }
@@ -18,37 +22,36 @@ class _WalletScreenState extends State<WalletScreen> {
   Stream<double> getBalanceStream() async* {
     while (true) {
       yield await walletServices.fetchBalance();
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('User UID: ${_auth.currentUser?.uid}');
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Wallet'),
+        title: const Text('My Wallet'),
       ),
       body: Column(
         children: [
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           StreamBuilder<double>(
             stream: getBalanceStream(),
             builder: (BuildContext context, AsyncSnapshot<double> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (!snapshot.hasData) {
-                return Text('No data');
+                return const Text('No data');
               }
               var balance = snapshot.data;
               return Text(
                 'Balance: \$${balance?.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 24.0),
+                style: const TextStyle(fontSize: 24.0),
               );
             },
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -61,36 +64,36 @@ class _WalletScreenState extends State<WalletScreen> {
                         .where('UID', isEqualTo: user.uid)
                         .get();
                     final userDoc = querySnapshot.docs.first;
-                    final userData = userDoc.data() as Map<String, dynamic>;
+                    final userData = userDoc.data();
                     final iban = userData['iban'] as String;
 
                     double? withdrawAmount = await walletServices
                         .getUserWithdrawInput(context, iban);
                     if (withdrawAmount != null) {
-                      await Future.delayed(Duration(milliseconds: 500));
+                      await Future.delayed(const Duration(milliseconds: 500));
                       await walletServices.startWithdrawFlow(
                           context, withdrawAmount);
                       balance = await walletServices.fetchBalance();
                     }
                   }
                 },
-                child: Text('Withdraw'),
+                child: const Text('Withdraw'),
               ),
               ElevatedButton(
                 onPressed: () async {
                   double? depositAmount =
                       await walletServices.getUserInput(context);
                   if (depositAmount != null) {
-                    await Future.delayed(Duration(milliseconds: 500));
+                    await Future.delayed(const Duration(milliseconds: 500));
                     await walletServices.startDepositFlow(depositAmount);
                     balance = await walletServices.fetchBalance();
                   }
                 },
-                child: Text('Deposit'),
+                child: const Text('Deposit'),
               ),
             ],
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: _firestore
@@ -100,10 +103,10 @@ class _WalletScreenState extends State<WalletScreen> {
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> userSnapshot) {
                 if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
-                  return Text('No user data');
+                  return const Text('No user data');
                 }
                 final userDoc = userSnapshot.data!.docs.first;
                 return StreamBuilder<QuerySnapshot>(
@@ -115,10 +118,10 @@ class _WalletScreenState extends State<WalletScreen> {
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
                     if (!snapshot.hasData) {
-                      return Text('No transactions');
+                      return const Text('No transactions');
                     }
                     final transactions = snapshot.data!.docs
                         .map((doc) => TransactionHistory.fromFirestore(doc))
