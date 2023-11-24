@@ -20,7 +20,7 @@ Future<List<ChartData>> extractDataFromJson(String stockSymbol) async {
     // Send a GET request to the API
     String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'; // Replace with API key
     String url =
-        'https://financialmodelingprep.com/api/v3/historical-chart/1hour/AAPL?from=2023-10-24&to=2023-11-24&apikey=$apiKey';
+        'https://financialmodelingprep.com/api/v3/historical-chart/1hour/$stockSymbol?from=2023-10-24&to=2023-11-24&apikey=$apiKey';
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
 
