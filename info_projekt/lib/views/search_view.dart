@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'views/charts_view.dart';
+import 'package:info_projekt/services/search_service.dart';
+import 'charts_view.dart';
 
 class SearchPage extends StatefulWidget {
   final String title;
@@ -15,28 +13,25 @@ class SearchPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _SearchPage createState() => _SearchPage();
 }
 
 class _SearchPage extends State<SearchPage> {
   List<dynamic> _searchResults = [];
+  late final SearchService _searchService;
 
-  Future<void> fetchSearchResults(String query) async {
-    final response = await http.get(Uri.parse(
-        'https://financialmodelingprep.com/api/v3/search?query=$query&apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
+  @override
+  void initState() {
+    super.initState();
+    _searchService = SearchService(onSearchResults: updateSearchResults);
+  }
 
-    if (response.statusCode == 200) {
-      var results = jsonDecode(response.body);
-      var filteredResults = results.where((result) {
-        return !result['symbol'].contains('.');
-      }).toList();
-      if (mounted) {
-        setState(() {
-          _searchResults = filteredResults;
-        });
-      }
-    } else {
-      throw Exception('Failed to load search results');
+  void updateSearchResults(List<dynamic> results) {
+    if (mounted) {
+      setState(() {
+        _searchResults = results;
+      });
     }
   }
 
@@ -55,25 +50,25 @@ class _SearchPage extends State<SearchPage> {
               _searchResults = [];
             });
           } else {
-            fetchSearchResults(s.trim());
+            _searchService.fetchSearchResults(s.trim());
           }
         });
       },
       autofocus: true,
-      cursorColor: Colors.white,
+      cursorColor: Colors.black,
       style: const TextStyle(
-        color: Colors.white,
+        color: Colors.black,
         fontSize: 20,
       ),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white)),
+            borderSide: BorderSide(color: Colors.transparent)),
         focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white)),
+            borderSide: BorderSide(color: Colors.transparent)),
         hintText: 'Stock Symbol, Isin, or Cusip',
         hintStyle: const TextStyle(
-          color: Colors.white60,
+          color: Colors.black54,
           fontSize: 20,
         ),
         suffixIcon: _searchController.text.isNotEmpty
@@ -86,7 +81,7 @@ class _SearchPage extends State<SearchPage> {
                 },
                 icon: const Icon(
                   Icons.clear,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               )
             : null,
@@ -124,34 +119,29 @@ class _SearchPage extends State<SearchPage> {
     'AMZN',
     'GOOGL',
     'TSLA',
+    'KO',
     'WMT',
     'META',
-    'JNJ'
+    'JNJ',
+    'NFLX'
     // Add more stock symbols here
   ];
-
-  Future<Map<String, dynamic>> fetchStock(String symbol) async {
-    final response = await http.get(Uri.parse(
-        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)[0];
-    } else {
-      throw Exception('Failed to load stock');
-    }
-  }
 
   Widget _featuredStocks() {
     return ListView.builder(
       itemCount: _popularStocks.length,
       itemBuilder: (context, index) {
         return FutureBuilder<Map<String, dynamic>>(
-          future: fetchStock(_popularStocks[index]),
+          future: _searchService.fetchStock(_popularStocks[index]),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return Card(
                 child: ListTile(
-                  leading: Image.network(snapshot.data!['image']),
+                  leading: CachedNetworkImage(
+                    imageUrl: snapshot.data!['image'],
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  ),
                   title: Text(snapshot.data!['companyName']),
                   subtitle: Text(snapshot.data!['symbol']),
                   onTap: () {
@@ -178,6 +168,8 @@ class _SearchPage extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final searchService = SearchService(onSearchResults: updateSearchResults);
+
     return Scaffold(
       appBar: AppBar(title: _searchTextField()),
       body: _searchResults.isEmpty
