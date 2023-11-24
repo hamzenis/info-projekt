@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class SearchService {
   void Function(List<dynamic>) onSearchResults;
@@ -24,13 +25,14 @@ class SearchService {
   }
 
   Future<Map<String, dynamic>> fetchStock(String symbol) async {
-    final response = await http.get(Uri.parse(
-        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)[0];
-    } else {
-      throw Exception('Failed to load stock');
+    final cacheManager = DefaultCacheManager();
+    final file = await cacheManager.getSingleFile(
+        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X');
+    if (file != null && await file.exists()) {
+      var res = await file.readAsString();
+      var jsonResponse = jsonDecode(res);
+      return jsonResponse[0];
     }
+    throw Exception('Failed to load stock');
   }
 }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:info_projekt/services/search_service.dart';
 import 'charts_view.dart';
 
@@ -121,9 +122,11 @@ class _SearchPage extends State<SearchPage> {
     'AMZN',
     'GOOGL',
     'TSLA',
+    'KO',
     'WMT',
     'META',
-    'JNJ'
+    'JNJ',
+    'NFLX'
     // Add more stock symbols here
   ];
 
@@ -137,7 +140,11 @@ class _SearchPage extends State<SearchPage> {
             if (snapshot.hasData) {
               return Card(
                 child: ListTile(
-                  leading: Image.network(snapshot.data!['image']),
+                  leading: CachedNetworkImage(
+                    imageUrl: snapshot.data!['image'],
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  ),
                   title: Text(snapshot.data!['companyName']),
                   subtitle: Text(snapshot.data!['symbol']),
                   onTap: () {
