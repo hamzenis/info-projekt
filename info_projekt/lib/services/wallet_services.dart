@@ -8,10 +8,17 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// This is the Brain of the Wallet Screen.
+/// This class works with the [WalletScreen] class to deposit and withdraw money.
+/// The frontend is in the folder info_projekt/views/wallet_screen.dart.
+/// This File have every functions that the Wallet Screen needs.
 class WalletServices {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
 
+  /// Function that was created for the withdraw button.
+  /// It creates a popup with the amount of money that the user wants to withdraw and the IBAN of the user.
+  /// It gets the IBAN of the user from the database and shows it to the user.
   Future<double?> getUserWithdrawInput(
       BuildContext context, String iban) async {
     final controller = TextEditingController();
@@ -51,6 +58,8 @@ class WalletServices {
     );
   }
 
+  /// Function that was created for the deposit button.
+  /// It creates a popup only with the amount of money that the user wants to deposit.
   Future<double?> getUserInput(BuildContext context) async {
     final controller = TextEditingController();
     return showDialog<double>(
@@ -83,6 +92,9 @@ class WalletServices {
     );
   }
 
+  /// Function that was created for the withdraw button.
+  /// It creates a popup with the password of the user.
+  /// It acts as security feature, so that only the user that knows the password can withdraw money.
   Future<String?> getUserPassword(BuildContext context) async {
     final controller = TextEditingController();
     return showDialog<String>(
@@ -114,6 +126,11 @@ class WalletServices {
     );
   }
 
+  /// This function starts the withdraw process.
+  /// It checks if the user has enough money to withdraw the amount that he wants to withdraw.
+  /// If the user has enough money, it checks if the password is correct.
+  /// If the password is correct, it withdraws the money from the user and updates the balance in the database.
+  /// It also adds the transaction to the balance history.
   Future<void> startWithdrawFlow(BuildContext context, double amount) async {
     final user = _auth.currentUser;
     if (user != null) {
@@ -164,6 +181,10 @@ class WalletServices {
     }
   }
 
+  /// This function starts the deposit process.
+  /// It creates a payment intent and shows the payment sheet to the user.
+  /// If the payment was successful, it updates the balance in the database.
+  /// It also adds the transaction to the balance history.
   Future<void> startDepositFlow(double amount) async {
     var paymentIntentURL =
         Uri.parse("http://localhost:5000/create-payment-intent");
@@ -227,7 +248,11 @@ class WalletServices {
     }
   }
 
-  Future<double> fetchBalance() async {
+  /// This function fetches the balance of the user from the database.
+  /// It returns the balance as a double.
+  /// If the user is not logged in, it returns null or
+  /// If the user is logged in, but the balance is not in the database, it returns null.
+  Future<double?> fetchBalance() async {
     final user = _auth.currentUser;
     if (user != null) {
       final querySnapshot = await _firestore
@@ -243,6 +268,6 @@ class WalletServices {
         }
       }
     }
-    return 0.0;
+    return null;
   }
 }

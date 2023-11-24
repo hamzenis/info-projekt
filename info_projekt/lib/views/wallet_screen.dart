@@ -32,7 +32,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
   /// Function to fetch the initial balance of the user.
   Future<void> fetchInitialBalance() async {
-    double initialBalance = await walletServices.fetchBalance();
+    double? initialBalance = await walletServices.fetchBalance();
     balance.value = initialBalance;
   }
 
@@ -82,7 +82,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       await Future.delayed(const Duration(milliseconds: 500));
                       await walletServices.startWithdrawFlow(
                           context, withdrawAmount);
-                      double newBalance = await walletServices.fetchBalance();
+                      double? newBalance = await walletServices.fetchBalance();
                       balance.value = newBalance;
                     }
                   }
@@ -97,7 +97,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   if (depositAmount != null) {
                     await Future.delayed(const Duration(milliseconds: 500));
                     await walletServices.startDepositFlow(depositAmount);
-                    double newBalance = await walletServices.fetchBalance();
+                    double? newBalance = await walletServices.fetchBalance();
                     balance.value = newBalance;
                   }
                 },
