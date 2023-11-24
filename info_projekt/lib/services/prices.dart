@@ -18,31 +18,25 @@ Future<List<ChartData>> extractDataFromJson(String stockSymbol) async {
 
   try {
     // Send a GET request to the API
-    String apiKey =
-        'cl6hd6hr01qvnck9ogjgcl6hd6hr01qvnck9ogk0'; // Replace with API key
+    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'; // Replace with API key
     String url =
-        'https://finnhub.io/api/v1/stock/candle?symbol=$stockSymbol&resolution=15&from=1696946340&to=1699714740&token=$apiKey';
+        'https://financialmodelingprep.com/api/v3/historical-chart/1hour/AAPL?from=2023-10-24&to=2023-11-24&apikey=$apiKey';
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
 
     // Decode the response body
-    Map<String, dynamic> jsonData = json.decode(response.body);
+    List<dynamic> jsonDataList = json.decode(response.body);
 
-    // [DEBUG ONLY] Load JSON data from the "assets/data.json" file
-    // String jsonString = await rootBundle.loadString('assets/data.json');
-    // Map<String, dynamic> jsonData = json.decode(jsonString);
+    // Reverse the list, because the API returns the data in descending order
+    jsonDataList = jsonDataList.reversed.toList();
 
-    // Extract the Close Prices(Sanitizing INTs) and Timestamps from the JSON data
-    List<double> prices = (jsonData["c"] as List)
-        .map((item) => double.parse(item.toString()))
-        .toList();
+    for (var jsonData in jsonDataList) {
+      // Extract the Close Price and Timestamp from the JSON data
+      double price = double.parse(jsonData["close"].toString());
+      String timeString = jsonData["date"].toString();
 
-    List<int> timestamps = List<int>.from(jsonData["t"] ?? []);
-
-    for (int i = 0; i < prices.length; i++) {
-      spotList.add(ChartData(
-          DateTime.fromMillisecondsSinceEpoch(timestamps[i] * 1000),
-          prices[i]));
+      // Add the data to the spotList
+      spotList.add(ChartData(DateTime.parse(timeString), price));
     }
   } catch (e) {
     print(
