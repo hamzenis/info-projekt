@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
-import 'search_function.dart';
+import 'views/search_view.dart';
 import 'views/newspage.dart';
 
 class HomePageNew extends StatelessWidget {
