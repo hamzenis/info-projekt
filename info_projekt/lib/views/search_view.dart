@@ -1,10 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:info_projekt/services/search_service.dart';
 import 'charts_view.dart';
 
@@ -17,6 +13,7 @@ class SearchPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _SearchPage createState() => _SearchPage();
 }
 
