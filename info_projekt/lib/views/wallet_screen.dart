@@ -20,14 +20,17 @@ class _WalletScreenState extends State<WalletScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   WalletServices walletServices = WalletServices();
+  // Balance is choose to be a ValueNotifier to be able to update ONLY the balance
   ValueNotifier<double?> balance = ValueNotifier(null);
 
+  /// Function to refresh the balance of the user.
   @override
   void initState() {
     super.initState();
     fetchInitialBalance();
   }
 
+  /// Function to fetch the initial balance of the user.
   Future<void> fetchInitialBalance() async {
     double initialBalance = await walletServices.fetchBalance();
     balance.value = initialBalance;
@@ -42,6 +45,7 @@ class _WalletScreenState extends State<WalletScreen> {
       body: Column(
         children: [
           const SizedBox(height: 16.0),
+          // ValueListenableBuilder is used to update the balance when the user deposits or withdraws money.
           ValueListenableBuilder<double?>(
             valueListenable: balance,
             builder: (BuildContext context, double? value, Widget? child) {
@@ -59,6 +63,7 @@ class _WalletScreenState extends State<WalletScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              /// The Functionality of the buttons is in the [WalletServices] class.
               ElevatedButton(
                 onPressed: () async {
                   final user = _auth.currentUser;
@@ -85,6 +90,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: const Text('Withdraw'),
               ),
               ElevatedButton(
+                /// The Functionality of the buttons is in the [WalletServices] class.
                 onPressed: () async {
                   double? depositAmount =
                       await walletServices.getUserInput(context);
@@ -100,6 +106,11 @@ class _WalletScreenState extends State<WalletScreen> {
             ],
           ),
           const SizedBox(height: 16.0),
+
+          /// Transaction History of the User.
+          /// The data is fetched from the Firestore Database.
+          /// The data is sorted by date and type of transaction.
+          /// The data is displayed in a ListView.
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: _firestore
@@ -143,14 +154,17 @@ class _WalletScreenState extends State<WalletScreen> {
                       itemCount: transactions.length,
                       itemBuilder: (BuildContext context, int index) {
                         final transaction = transactions[index];
-                        final color =
-                            transaction.type == TransactionType.withdrawal
-                                ? Colors.red
-                                : Colors.green;
-                        final amountString =
-                            transaction.type == TransactionType.withdrawal
-                                ? '-\$${transaction.amount.toStringAsFixed(2)}'
-                                : '\$${transaction.amount.toStringAsFixed(2)}';
+
+                        final color = transaction.type ==
+                                TransactionType
+                                    .withdrawal // Color is changed depending on the type of transaction.
+                            ? Colors.red
+                            : Colors.green;
+                        final amountString = transaction.type ==
+                                TransactionType
+                                    .withdrawal // A '-' is added to the amount if the transaction is a withdrawal.
+                            ? '-\$${transaction.amount.toStringAsFixed(2)}'
+                            : '\$${transaction.amount.toStringAsFixed(2)}';
 
                         return ListTile(
                           title: Text(transaction.description),
