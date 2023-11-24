@@ -1,11 +1,17 @@
-import 'dart:convert';
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/services/wallet_services.dart';
+import 'package:info_projekt/models/transaction_history.dart';
 
+/// Class to create the Wallet Screen View on the TradeMate App.
+/// This class works with the [WalletServices] class to deposit and withdraw money.
+/// The Service functionality is in the folder info_projekt/services/wallet_services.dart.
 class WalletScreen extends StatefulWidget {
+  const WalletScreen({super.key});
+
   @override
   _WalletScreenState createState() => _WalletScreenState();
 }
@@ -13,242 +19,170 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  WalletServices walletServices = WalletServices();
+  // Balance is choose to be a ValueNotifier to be able to update ONLY the balance
+  ValueNotifier<double?> balance = ValueNotifier(null);
 
-  Future<double?> getUserInput() async {
-    final controller = TextEditingController();
-    return showDialog<double>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Enter deposit amount'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: 'Amount'),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                double? amount = double.tryParse(controller.text);
-                Navigator.of(context).pop(amount);
-              },
-            ),
-          ],
-        );
-      },
-    );
+  /// Function to refresh the balance of the user.
+  @override
+  void initState() {
+    super.initState();
+    fetchInitialBalance();
   }
 
-  Future<void> startDepositFlow(double amount) async {
-    var paymentIntentURL =
-        Uri.parse("http://localhost:5000/create-payment-intent");
-
-    // Convert the amount from dollars to cents
-    int amountInCents = (amount * 100).round();
-
-    try {
-      var response = await http.post(
-        paymentIntentURL,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'amount': amountInCents}),
-      );
-
-      var jsonResponse = jsonDecode(response.body);
-      var paymentIntentClientSecret = jsonResponse['paymentIntent'];
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntentClientSecret,
-          merchantDisplayName: 'TradeMate',
-        ),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      final user = _auth.currentUser;
-      if (user != null) {
-        final querySnapshot = await _firestore
-            .collection('Users')
-            .where('UID', isEqualTo: user.uid)
-            .get();
-        final userDoc = querySnapshot.docs.first;
-
-        await _firestore.collection('Users').doc(userDoc.id).update({
-          'balance': FieldValue.increment(amount),
-        });
-        await _firestore
-            .collection('Users')
-            .doc(userDoc.id)
-            .collection('balance_history')
-            .add({
-          'amount': amount,
-          'date': Timestamp.now(),
-          'description': 'Deposit',
-          'withdraw': false,
-        });
-      }
-    } on Exception catch (e) {
-      print('Payment failed: $e');
-    }
+  /// Function to fetch the initial balance of the user.
+  Future<void> fetchInitialBalance() async {
+    double? initialBalance = await walletServices.fetchBalance();
+    balance.value = initialBalance;
   }
 
   @override
   Widget build(BuildContext context) {
-    print('User UID: ${_auth.currentUser?.uid}');
-    return FutureBuilder<QuerySnapshot>(
-      future: _firestore
-          .collection('Users')
-          .where('UID', isEqualTo: _auth.currentUser?.uid)
-          .get(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Text('No data');
-        }
-        final data = snapshot.data!.docs.first.data() as Map<String, dynamic>;
-        final balance = (data['balance'] as num).toDouble();
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('My Wallet'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Wallet'),
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 16.0),
+          // ValueListenableBuilder is used to update the balance when the user deposits or withdraws money.
+          ValueListenableBuilder<double?>(
+            valueListenable: balance,
+            builder: (BuildContext context, double? value, Widget? child) {
+              if (value == null) {
+                return const CircularProgressIndicator();
+              } else {
+                return Text(
+                  'Balance: \$${value.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 24.0),
+                );
+              }
+            },
           ),
-          body: Column(
+          const SizedBox(height: 16.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              SizedBox(height: 16.0),
-              Text(
-                'Balance: \$${balance.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 24.0),
+              /// The Functionality of the buttons is in the [WalletServices] class.
+              ElevatedButton(
+                onPressed: () async {
+                  final user = _auth.currentUser;
+                  if (user != null) {
+                    final querySnapshot = await _firestore
+                        .collection('Users')
+                        .where('UID', isEqualTo: user.uid)
+                        .get();
+                    final userDoc = querySnapshot.docs.first;
+                    final userData = userDoc.data();
+                    final iban = userData['iban'] as String;
+
+                    double? withdrawAmount = await walletServices
+                        .getUserWithdrawInput(context, iban);
+                    if (withdrawAmount != null) {
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      await walletServices.startWithdrawFlow(
+                          context, withdrawAmount);
+                      double? newBalance = await walletServices.fetchBalance();
+                      balance.value = newBalance;
+                    }
+                  }
+                },
+                child: const Text('Withdraw'),
               ),
-              SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement withdraw money functionality
-                    },
-                    child: Text('Withdraw'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      double? depositAmount = await getUserInput();
-                      if (depositAmount != null) {
-                        await Future.delayed(Duration(milliseconds: 500));
-                        await startDepositFlow(depositAmount);
-                      }
-                    },
-                    child: Text('Deposit'),
-                  ),
-                ],
+              ElevatedButton(
+                /// The Functionality of the buttons is in the [WalletServices] class.
+                onPressed: () async {
+                  double? depositAmount =
+                      await walletServices.getUserInput(context);
+                  if (depositAmount != null) {
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    await walletServices.startDepositFlow(depositAmount);
+                    double? newBalance = await walletServices.fetchBalance();
+                    balance.value = newBalance;
+                  }
+                },
+                child: const Text('Deposit'),
               ),
-              SizedBox(height: 16.0),
-              Expanded(
-                child: FutureBuilder<QuerySnapshot>(
-                  future: _firestore
+            ],
+          ),
+          const SizedBox(height: 16.0),
+
+          /// Transaction History of the User.
+          /// The data is fetched from the Firestore Database.
+          /// The data is sorted by date and type of transaction.
+          /// The data is displayed in a ListView.
+          Expanded(
+            child: FutureBuilder<QuerySnapshot>(
+              future: _firestore
+                  .collection('Users')
+                  .where('UID', isEqualTo: _auth.currentUser?.uid)
+                  .get(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
+                  return const Text('No user data');
+                }
+                final userDoc = userSnapshot.data!.docs.first;
+                return StreamBuilder<QuerySnapshot>(
+                  stream: _firestore
                       .collection('Users')
-                      .where('UID', isEqualTo: _auth.currentUser?.uid)
-                      .get(),
+                      .doc(userDoc.id)
+                      .collection('balance_history')
+                      .snapshots(),
                   builder: (BuildContext context,
-                      AsyncSnapshot<QuerySnapshot> userSnapshot) {
-                    if (userSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
                     }
-                    if (!userSnapshot.hasData ||
-                        userSnapshot.data!.docs.isEmpty) {
-                      return Text('No user data');
+                    if (!snapshot.hasData) {
+                      return const Text('No transactions');
                     }
-                    final userDoc = userSnapshot.data!.docs.first;
-                    return StreamBuilder<QuerySnapshot>(
-                      stream: _firestore
-                          .collection('Users')
-                          .doc(userDoc.id)
-                          .collection('balance_history')
-                          .snapshots(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<QuerySnapshot> snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                        if (!snapshot.hasData) {
-                          return Text('No transactions');
-                        }
-                        final transactions = snapshot.data!.docs
-                            .map((doc) => Transaction.fromFirestore(doc))
-                            .toList();
-                        return ListView.builder(
-                          itemCount: transactions.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            var reversedTransactions =
-                                transactions.reversed.toList();
-                            return ListTile(
-                              title:
-                                  Text(reversedTransactions[index].description),
-                              subtitle: Text(
-                                  reversedTransactions[index].date.toString()),
-                              trailing: Text(
-                                '\$${reversedTransactions[index].amount.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  color: reversedTransactions[index].type ==
-                                          TransactionType.withdrawal
-                                      ? Colors.red
-                                      : Colors.green,
-                                ),
-                              ),
-                            );
-                          },
+                    final transactions = snapshot.data!.docs
+                        .map((doc) => TransactionHistory.fromFirestore(doc))
+                        .toList();
+                    transactions.sort((a, b) {
+                      var compareDate = b.date.compareTo(a.date);
+                      if (compareDate != 0) return compareDate;
+                      if (a.type == TransactionType.withdrawal) return -1;
+                      if (b.type == TransactionType.withdrawal) return 1;
+                      return 0;
+                    });
+                    return ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final transaction = transactions[index];
+
+                        final color = transaction.type ==
+                                TransactionType
+                                    .withdrawal // Color is changed depending on the type of transaction.
+                            ? Colors.red
+                            : Colors.green;
+                        final amountString = transaction.type ==
+                                TransactionType
+                                    .withdrawal // A '-' is added to the amount if the transaction is a withdrawal.
+                            ? '-\$${transaction.amount.toStringAsFixed(2)}'
+                            : '\$${transaction.amount.toStringAsFixed(2)}';
+
+                        return ListTile(
+                          title: Text(transaction.description),
+                          subtitle: Text(transaction.date.toString()),
+                          trailing: Text(
+                            amountString,
+                            style: TextStyle(color: color),
+                          ),
                         );
                       },
                     );
                   },
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        );
-      },
-    );
-  }
-}
-
-enum TransactionType { deposit, withdrawal }
-
-class Transaction {
-  final double amount;
-  final DateTime date;
-  final String description;
-  final TransactionType type;
-
-  Transaction({
-    required this.amount,
-    required this.date,
-    required this.description,
-    required this.type,
-  });
-
-  factory Transaction.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    final amount = (data['amount'] as num).toDouble();
-    final date = (data['date'] as Timestamp).toDate();
-    final description = data['description'] as String;
-    final type = data['type'] == 'withdrawal'
-        ? TransactionType.withdrawal
-        : TransactionType.deposit;
-
-    return Transaction(
-      amount: amount,
-      date: date,
-      description: description,
-      type: type,
+        ],
+      ),
     );
   }
 }
