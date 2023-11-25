@@ -1,3 +1,5 @@
+// ignore_for_file: slash_for_doc_comments
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -17,80 +19,32 @@ class ChartStock extends StatefulWidget {
 /*
 *   Meine Augen brennen bitte nicht alles auf einen Fleck
 *
-*
-*
-*
+* TODO: Add error handling
+* TODO: Refactor for better readability
+* TODO: Add comments
 */
 class _ChartStockState extends State<ChartStock> {
-/*
-*  
-*   
-*/
   late ZoomPanBehavior _zoomPanBehavior;
-  late String realTimeQuote;
-  late String companyName;
+  List<ChartData>? currentData;
+  String selectedTimeRange = 'month'; // Default to 'month'
 
-/*
-*  
-*
-*/
+  /** 
+  *  
+  *
+  */
   @override
   void initState() {
     _zoomPanBehavior = ZoomPanBehavior(
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
-    fetchRealTimeQuote(widget.title);
-    fetchCompanyName(widget.title);
   }
 
-/*
-*   Fetches the real-time quote from the API
-*/
-  Future<void> fetchRealTimeQuote(String title) async {
-    realTimeQuote = await extractRealTimeQuote(title);
-  }
-
-/*
-*   Fetches the real-time quote from the API
-*/
-  Future<void> fetchCompanyName(String title) async {
-    companyName = await getCompanyName(title);
-  }
-
-/*
-*
-*   Fetches monthly data from prices.dart
-*/
-  // FutureBuilder<List<ChartData>> buildMonthly() {}
-
-/* 
-*   Builds the chart
-*
-*/
-  Widget buildChart(List<ChartData> spotList) {
-    return SfCartesianChart(
-      primaryXAxis: DateTimeCategoryAxis(), // Date axis
-      primaryYAxis: NumericAxis(
-        // Applies currency format for y axis labels and also for data labels
-        numberFormat: NumberFormat.simpleCurrency(),
-      ),
-      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
-      series: <ChartSeries<ChartData, DateTime>>[
-        // Renders line chart
-        LineSeries<ChartData, DateTime>(
-            dataSource: spotList,
-            xValueMapper: (ChartData data, _) => data.time,
-            yValueMapper: (ChartData data, _) => data.price)
-      ],
-    );
-  }
-
-/*
-*
-*   Build price container under chart
-*/
-  Widget buildPriceContainer() {
+  /**
+  *
+  *   Build price container under chart
+  */
+  Widget buildPriceContainer(String realTimeQuote) {
     return Container(
       padding: const EdgeInsets.all(40),
       child: Text(
@@ -103,34 +57,38 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-/*
-*
-*
-*
-*
-*   
-*/
+  /**
+  *
+  *
+  *
+  *
+  *   
+  */
   @override
   Widget build(BuildContext context) {
-    List<ChartData> spotList = [];
     /*
     *
     *
-    *
-    *
     */
-    return FutureBuilder<List<ChartData>>(
-      future: extractDataFromJson(widget.title),
-      builder: (BuildContext context, AsyncSnapshot<List<ChartData>> snapshot) {
+    return FutureBuilder<List<dynamic>>(
+      future: _getData(),
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return Container(
+            color: Colors.white,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
           if (snapshot.data != null) {
-            List<ChartData> spotList = snapshot.data!;
+            List<ChartData> spotListMonthly = snapshot.data![0];
+            String companyName = snapshot.data![1];
+            String realTimeQuote = snapshot.data![2];
+            currentData = spotListMonthly;
+
             return Scaffold(
               appBar: AppBar(
                 title: Text(widget.title),
@@ -139,6 +97,7 @@ class _ChartStockState extends State<ChartStock> {
                 child: Column(
                   children: [
                     Container(
+                      // Company name Container
                       padding: const EdgeInsets.all(40),
                       child: Text(
                         companyName,
@@ -148,32 +107,34 @@ class _ChartStockState extends State<ChartStock> {
                         ),
                       ),
                     ),
+                    Container(
+                      child: _buildChart(),
+                    ),
                     Row(
-                      // TODO: Add functionality to buttons
+                      // Buttons Row
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () async {
-                            // Handle Button Press
+                          onPressed: () {
+                            _updateChartData('year');
                           },
                           child: const Text('Year'),
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Handle button press
+                            _updateChartData('month');
                           },
                           child: const Text('Month'),
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Handle button press
+                            _updateChartData('day');
                           },
                           child: const Text('Day'),
                         ),
                       ],
                     ),
-                    buildChart(spotList),
-                    buildPriceContainer(),
+                    buildPriceContainer(realTimeQuote),
                   ],
                 ),
               ),
@@ -184,5 +145,100 @@ class _ChartStockState extends State<ChartStock> {
         }
       },
     );
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * 
+   * 
+   * 
+   * 
+   */
+  Future<List<dynamic>> _getData() async {
+    switch (selectedTimeRange) {
+      case 'year':
+        return Future.wait([
+          loadYearData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      case 'month':
+        return Future.wait([
+          loadMonthData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      case 'day':
+        return Future.wait([
+          loadDayData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * Function to call the API and get the data
+   * 
+   */
+  void _updateChartData(String timeRange) {
+    setState(() {
+      selectedTimeRange = timeRange;
+    });
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * 
+   * Builds the chart widget
+   */
+  SfCartesianChart _buildChart() {
+    return SfCartesianChart(
+      primaryXAxis: DateTimeCategoryAxis(), // Date axis
+      primaryYAxis: NumericAxis(
+        // Applies currency format for y axis labels and also for data labels
+        numberFormat: NumberFormat.simpleCurrency(),
+      ),
+      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
+      series: _getUpdateDataSourceSeries(),
+    );
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * Returns the list of chart series which need to render
+   * on the update data source chart.
+   */
+  List<ChartSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
+    return <ChartSeries<ChartData, DateTime>>[
+      // Renders line chart
+      LineSeries<ChartData, DateTime>(
+          dataSource: currentData!,
+          xValueMapper: (ChartData data, _) => data.time,
+          yValueMapper: (ChartData data, _) => data.price)
+    ];
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * 
+   */
+  @override
+  void dispose() {
+    currentData!.clear();
+    super.dispose();
   }
 }
