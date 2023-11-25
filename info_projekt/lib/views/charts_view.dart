@@ -28,6 +28,7 @@ class _ChartStockState extends State<ChartStock> {
 *   
 */
   late ZoomPanBehavior _zoomPanBehavior;
+  List<ChartData>? currentData;
 
 /*
 *  
@@ -40,28 +41,6 @@ class _ChartStockState extends State<ChartStock> {
         enablePinching: true);
     super.initState();
   }
-
-/* 
-*   Builds the chart
-*
-*/
-  // Widget buildChart(List<ChartData> spotList) {
-  //   return SfCartesianChart(
-  //     primaryXAxis: DateTimeCategoryAxis(), // Date axis
-  //     primaryYAxis: NumericAxis(
-  //       // Applies currency format for y axis labels and also for data labels
-  //       numberFormat: NumberFormat.simpleCurrency(),
-  //     ),
-  //     zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
-  //     series: <ChartSeries<ChartData, DateTime>>[
-  //       // Renders line chart
-  //       LineSeries<ChartData, DateTime>(
-  //           dataSource: spotList,
-  //           xValueMapper: (ChartData data, _) => data.time,
-  //           yValueMapper: (ChartData data, _) => data.price)
-  //     ],
-  //   );
-  // }
 
 /*
 *
@@ -115,8 +94,7 @@ class _ChartStockState extends State<ChartStock> {
             List<ChartData> spotListMonthly = snapshot.data![0];
             String companyName = snapshot.data![1];
             String realTimeQuote = snapshot.data![2];
-            List<ChartData> spotListDaily = snapshot.data![3];
-            List<ChartData> currentData = spotListMonthly;
+            currentData = spotListMonthly;
 
             return Scaffold(
               appBar: AppBar(
@@ -136,6 +114,9 @@ class _ChartStockState extends State<ChartStock> {
                         ),
                       ),
                     ),
+                    Container(
+                      child: _buildChart(),
+                    ),
                     Row(
                       // Buttons Row
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -149,29 +130,11 @@ class _ChartStockState extends State<ChartStock> {
                           child: const Text('Month'),
                         ),
                         ElevatedButton(
-                          onPressed: () async {
-                            setState(() {
-                              currentData = spotListDaily;
-                            });
-                            print(spotListDaily[1].time);
+                          onPressed: () {
+                            // Press this button to update the chart data source and display new chart
                           },
                           child: const Text('Day'),
                         ),
-                      ],
-                    ),
-                    SfCartesianChart(
-                      primaryXAxis: DateTimeCategoryAxis(), // Date axis
-                      primaryYAxis: NumericAxis(
-                        // Applies currency format for y axis labels and also for data labels
-                        numberFormat: NumberFormat.simpleCurrency(),
-                      ),
-                      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
-                      series: <ChartSeries<ChartData, DateTime>>[
-                        // Renders line chart
-                        LineSeries<ChartData, DateTime>(
-                            dataSource: currentData,
-                            xValueMapper: (ChartData data, _) => data.time,
-                            yValueMapper: (ChartData data, _) => data.price)
                       ],
                     ),
                     buildPriceContainer(realTimeQuote),
@@ -198,4 +161,48 @@ class _ChartStockState extends State<ChartStock> {
  * 
  * 
  */
+
+/**
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+  SfCartesianChart _buildChart() {
+    return SfCartesianChart(
+      primaryXAxis: DateTimeCategoryAxis(), // Date axis
+      primaryYAxis: NumericAxis(
+        // Applies currency format for y axis labels and also for data labels
+        numberFormat: NumberFormat.simpleCurrency(),
+      ),
+      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
+      series: _getUpdateDataSourceSeries(),
+    );
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * Returns the list of chart series which need to render
+   * on the update data source chart.
+   */
+  List<ChartSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
+    return <ChartSeries<ChartData, DateTime>>[
+      // Renders line chart
+      LineSeries<ChartData, DateTime>(
+          dataSource: currentData!,
+          xValueMapper: (ChartData data, _) => data.time,
+          yValueMapper: (ChartData data, _) => data.price)
+    ];
+  }
+
+  @override
+  void dispose() {
+    currentData!.clear();
+    super.dispose();
+  }
 }
