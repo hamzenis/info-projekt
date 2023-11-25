@@ -1,5 +1,6 @@
+// ignore_for_file: slash_for_doc_comments
+
 import 'package:flutter/material.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../services/prices.dart';
@@ -18,22 +19,19 @@ class ChartStock extends StatefulWidget {
 /*
 *   Meine Augen brennen bitte nicht alles auf einen Fleck
 *
-*
-*
-*
+* TODO: Add error handling
+* TODO: Refactor for better readability
+* TODO: Add comments
 */
 class _ChartStockState extends State<ChartStock> {
-/*
-*  
-*   
-*/
   late ZoomPanBehavior _zoomPanBehavior;
   List<ChartData>? currentData;
+  String selectedTimeRange = 'month'; // Default to 'month'
 
-/*
-*  
-*
-*/
+  /** 
+  *  
+  *
+  */
   @override
   void initState() {
     _zoomPanBehavior = ZoomPanBehavior(
@@ -42,10 +40,10 @@ class _ChartStockState extends State<ChartStock> {
     super.initState();
   }
 
-/*
-*
-*   Build price container under chart
-*/
+  /**
+  *
+  *   Build price container under chart
+  */
   Widget buildPriceContainer(String realTimeQuote) {
     return Container(
       padding: const EdgeInsets.all(40),
@@ -59,13 +57,13 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-/*
-*
-*
-*
-*
-*   
-*/
+  /**
+  *
+  *
+  *
+  *
+  *   
+  */
   @override
   Widget build(BuildContext context) {
     /*
@@ -73,12 +71,7 @@ class _ChartStockState extends State<ChartStock> {
     *
     */
     return FutureBuilder<List<dynamic>>(
-      future: Future.wait([
-        extractDataFromJson(widget.title),
-        getCompanyName(widget.title),
-        extractRealTimeQuote(widget.title),
-        loadDayData(widget.title),
-      ]),
+      future: _getData(),
       builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -122,16 +115,20 @@ class _ChartStockState extends State<ChartStock> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _updateChartData('year');
+                          },
                           child: const Text('Year'),
                         ),
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _updateChartData('month');
+                          },
                           child: const Text('Month'),
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Press this button to update the chart data source and display new chart
+                            _updateChartData('day');
                           },
                           child: const Text('Day'),
                         ),
@@ -149,28 +146,61 @@ class _ChartStockState extends State<ChartStock> {
       },
     );
   }
-/**
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- */
 
-/**
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- */
+  /**
+   * 
+   * 
+   * 
+   * 
+   * 
+   * 
+   * 
+   */
+  Future<List<dynamic>> _getData() async {
+    switch (selectedTimeRange) {
+      case 'year':
+        return Future.wait([
+          loadYearData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      case 'month':
+        return Future.wait([
+          loadMonthData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      case 'day':
+        return Future.wait([
+          loadDayData(widget.title),
+          getCompanyName(widget.title),
+          getCurrentPrice(widget.title),
+        ]);
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * Function to call the API and get the data
+   * 
+   */
+  void _updateChartData(String timeRange) {
+    setState(() {
+      selectedTimeRange = timeRange;
+    });
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * 
+   * Builds the chart widget
+   */
   SfCartesianChart _buildChart() {
     return SfCartesianChart(
       primaryXAxis: DateTimeCategoryAxis(), // Date axis
@@ -200,6 +230,12 @@ class _ChartStockState extends State<ChartStock> {
     ];
   }
 
+  /**
+   * 
+   * 
+   * 
+   * 
+   */
   @override
   void dispose() {
     currentData!.clear();
