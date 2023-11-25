@@ -8,7 +8,6 @@ import 'package:info_projekt/models/transaction_history.dart';
 
 /// Class to create the Wallet Screen View on the TradeMate App.
 /// This class works with the [WalletServices] class to deposit and withdraw money.
-/// The Service functionality is in the folder info_projekt/services/wallet_services.dart.
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
 
