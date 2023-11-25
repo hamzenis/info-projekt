@@ -10,7 +10,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// This is the Brain of the Wallet Screen.
 /// This class works with the [WalletScreen] class to deposit and withdraw money.
-/// The frontend is in the folder info_projekt/views/wallet_screen.dart.
 /// This File have every functions that the Wallet Screen needs.
 class WalletServices {
   final _auth = FirebaseAuth.instance;
