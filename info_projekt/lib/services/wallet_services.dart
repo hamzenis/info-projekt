@@ -126,6 +126,42 @@ class WalletServices {
     );
   }
 
+  /// Function that alerts the user via a popup that the withdraw amount is higher than the balance he have.
+  void errorDialogWithdrawAmount(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+              title: const Text('Insufficient balance'),
+              actions: [
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ]);
+        });
+  }
+
+  /// Function that alerts the user via a popup that the password he entered is incorrect.
+  void errorDialogWrongPassword(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Incorrect password'),
+            actions: [
+              TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  })
+            ],
+          );
+        });
+  }
+
   /// This function starts the withdraw process.
   /// It checks if the user has enough money to withdraw the amount that he wants to withdraw.
   /// If the user has enough money, it checks if the password is correct.
@@ -144,7 +180,7 @@ class WalletServices {
 
       if (balance < amount) {
         if (kDebugMode) {
-          print('Insufficient balance');
+          errorDialogWithdrawAmount(context);
         }
         return;
       }
@@ -158,12 +194,9 @@ class WalletServices {
         try {
           await user.reauthenticateWithCredential(credential);
         } catch (e) {
-          if (kDebugMode) {
-            print('Incorrect password');
-          }
+          errorDialogWrongPassword(context);
           return;
         }
-
         await _firestore.collection('Users').doc(userDoc.id).update({
           'balance': FieldValue.increment(-amount),
         });
