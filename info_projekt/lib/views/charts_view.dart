@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../services/prices.dart';
@@ -27,8 +28,6 @@ class _ChartStockState extends State<ChartStock> {
 *   
 */
   late ZoomPanBehavior _zoomPanBehavior;
-  late String realTimeQuote;
-  late String companyName;
 
 /*
 *  
@@ -40,57 +39,35 @@ class _ChartStockState extends State<ChartStock> {
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
-    fetchRealTimeQuote(widget.title);
-    fetchCompanyName(widget.title);
   }
-
-/*
-*   Fetches the real-time quote from the API
-*/
-  Future<void> fetchRealTimeQuote(String title) async {
-    realTimeQuote = await extractRealTimeQuote(title);
-  }
-
-/*
-*   Fetches the real-time quote from the API
-*/
-  Future<void> fetchCompanyName(String title) async {
-    companyName = await getCompanyName(title);
-  }
-
-/*
-*
-*   Fetches monthly data from prices.dart
-*/
-  // FutureBuilder<List<ChartData>> buildMonthly() {}
 
 /* 
 *   Builds the chart
 *
 */
-  Widget buildChart(List<ChartData> spotList) {
-    return SfCartesianChart(
-      primaryXAxis: DateTimeCategoryAxis(), // Date axis
-      primaryYAxis: NumericAxis(
-        // Applies currency format for y axis labels and also for data labels
-        numberFormat: NumberFormat.simpleCurrency(),
-      ),
-      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
-      series: <ChartSeries<ChartData, DateTime>>[
-        // Renders line chart
-        LineSeries<ChartData, DateTime>(
-            dataSource: spotList,
-            xValueMapper: (ChartData data, _) => data.time,
-            yValueMapper: (ChartData data, _) => data.price)
-      ],
-    );
-  }
+  // Widget buildChart(List<ChartData> spotList) {
+  //   return SfCartesianChart(
+  //     primaryXAxis: DateTimeCategoryAxis(), // Date axis
+  //     primaryYAxis: NumericAxis(
+  //       // Applies currency format for y axis labels and also for data labels
+  //       numberFormat: NumberFormat.simpleCurrency(),
+  //     ),
+  //     zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
+  //     series: <ChartSeries<ChartData, DateTime>>[
+  //       // Renders line chart
+  //       LineSeries<ChartData, DateTime>(
+  //           dataSource: spotList,
+  //           xValueMapper: (ChartData data, _) => data.time,
+  //           yValueMapper: (ChartData data, _) => data.price)
+  //     ],
+  //   );
+  // }
 
 /*
 *
 *   Build price container under chart
 */
-  Widget buildPriceContainer() {
+  Widget buildPriceContainer(String realTimeQuote) {
     return Container(
       padding: const EdgeInsets.all(40),
       child: Text(
@@ -112,25 +89,35 @@ class _ChartStockState extends State<ChartStock> {
 */
   @override
   Widget build(BuildContext context) {
-    List<ChartData> spotList = [];
     /*
     *
     *
-    *
-    *
     */
-    return FutureBuilder<List<ChartData>>(
-      future: extractDataFromJson(widget.title),
-      builder: (BuildContext context, AsyncSnapshot<List<ChartData>> snapshot) {
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        extractDataFromJson(widget.title),
+        getCompanyName(widget.title),
+        extractRealTimeQuote(widget.title),
+        loadDayData(widget.title),
+      ]),
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return Container(
+            color: Colors.white,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
           if (snapshot.data != null) {
-            List<ChartData> spotList = snapshot.data!;
+            List<ChartData> spotListMonthly = snapshot.data![0];
+            String companyName = snapshot.data![1];
+            String realTimeQuote = snapshot.data![2];
+            List<ChartData> spotListDaily = snapshot.data![3];
+            List<ChartData> currentData = spotListMonthly;
+
             return Scaffold(
               appBar: AppBar(
                 title: Text(widget.title),
@@ -139,6 +126,7 @@ class _ChartStockState extends State<ChartStock> {
                 child: Column(
                   children: [
                     Container(
+                      // Company name Container
                       padding: const EdgeInsets.all(40),
                       child: Text(
                         companyName,
@@ -149,31 +137,44 @@ class _ChartStockState extends State<ChartStock> {
                       ),
                     ),
                     Row(
-                      // TODO: Add functionality to buttons
+                      // Buttons Row
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () async {
-                            // Handle Button Press
-                          },
+                          onPressed: () {},
                           child: const Text('Year'),
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            // Handle button press
-                          },
+                          onPressed: () {},
                           child: const Text('Month'),
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            // Handle button press
+                          onPressed: () async {
+                            setState(() {
+                              currentData = spotListDaily;
+                            });
+                            print(spotListDaily[1].time);
                           },
                           child: const Text('Day'),
                         ),
                       ],
                     ),
-                    buildChart(spotList),
-                    buildPriceContainer(),
+                    SfCartesianChart(
+                      primaryXAxis: DateTimeCategoryAxis(), // Date axis
+                      primaryYAxis: NumericAxis(
+                        // Applies currency format for y axis labels and also for data labels
+                        numberFormat: NumberFormat.simpleCurrency(),
+                      ),
+                      zoomPanBehavior: _zoomPanBehavior, // Zoom and pan feature
+                      series: <ChartSeries<ChartData, DateTime>>[
+                        // Renders line chart
+                        LineSeries<ChartData, DateTime>(
+                            dataSource: currentData,
+                            xValueMapper: (ChartData data, _) => data.time,
+                            yValueMapper: (ChartData data, _) => data.price)
+                      ],
+                    ),
+                    buildPriceContainer(realTimeQuote),
                   ],
                 ),
               ),
@@ -185,4 +186,16 @@ class _ChartStockState extends State<ChartStock> {
       },
     );
   }
+/**
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
 }
