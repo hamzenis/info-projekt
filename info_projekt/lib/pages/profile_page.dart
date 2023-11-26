@@ -1,4 +1,4 @@
-import 'dart:js_interop';
+//import 'dart:js_interop';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:flutter/material.dart';
