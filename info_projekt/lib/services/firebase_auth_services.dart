@@ -1,15 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:info_projekt/widgets/toast.dart';
+import 'package:info_projekt/common/toast.dart';
 
 class FirebaseAuthService {
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? userEmail; // Variable to store the user's email
 
   Future<User?> signUpWithEmailAndPassword(
       String email, String password) async {
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
-      return credential.user;
+        email: email,
+        password: password,
+      );
+      //access user object from outside
+      User? user = credential.user;
+      return user;
+      //return credential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         showToast(message: 'The email address is already in use.');
@@ -24,7 +30,10 @@ class FirebaseAuthService {
       String email, String password) async {
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
+        email: email,
+        password: password,
+      );
+      userEmail = email; // Store the email when user signs in
       return credential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {

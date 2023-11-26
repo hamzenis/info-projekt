@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:info_projekt/models/news.dart';
 
 class RemoteService {
-  final String apiKey = 'cl7rdopr01qqqm01c250cl7rdopr01qqqm01c25g';
+  final String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
 
   Future<List<News>?> getNews() async {
     var client = http.Client();
 
     var uri = Uri.parse(
-        'https://finnhub.io/api/v1/news?category=forex&token=$apiKey');
+        'https://financialmodelingprep.com/api/v3/stock_news?page=0&apikey=$apiKey');
 
     var response = await client.get(uri);
 
@@ -17,11 +17,17 @@ class RemoteService {
       var jsonResponse = json.decode(response.body);
       List<News> newsList = [];
 
-      for (var newsItem in jsonResponse) {
-        newsList.add(News.fromJson(newsItem));
+      if (jsonResponse is Map<String, dynamic>) {
+        var articles = jsonResponse['News'] as List<dynamic>?;
+        if (articles != null) {
+          newsList = postFromJson(jsonEncode(articles));
+        }
+      } else if (jsonResponse is List<dynamic>) {
+        newsList = postFromJson(jsonEncode(jsonResponse));
       }
-
       return newsList;
+      //for (var newsItem in jsonResponse) {
+      //newsList.add(News.fromJson(newsItem));
     } else {
       throw Exception('Failed to load market news');
     }

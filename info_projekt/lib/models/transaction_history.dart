@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 
-/// This class create a transaction history object.
+/// This class creates a transaction history object.
 /// [amount] is the amount that the user deposited or withdrew.
 /// [date] is the time when the transaction was made.
 /// [description] display the type of transaction.
