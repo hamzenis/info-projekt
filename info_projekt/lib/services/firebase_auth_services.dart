@@ -13,25 +13,31 @@ Future<User?> signUpWithEmailAndPassword(String email, String password) async {
     }
     return user;
   } on FirebaseAuthException catch (e) {
-    // Handle exceptions
+    showToast(message: 'An error occurred: ${e.code}');
+    return null; // Immediately return to avoid executing further lines
   }
-  return null;
 }
-
 
 Future<User?> signInWithEmailAndPassword(String email, String password) async {
   try {
     UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
     User? user = credential.user;
+
+    // Check if the user's email is verified
     if (user != null && !user.emailVerified) {
       showToast(message: 'Please verify your email address.');
-      return null; // Prevent login if not verified
+      return null; // Stop further execution
     }
-    return user;
+
+    return user; // Email is verified, return the user
   } on FirebaseAuthException catch (e) {
-    // Handle exceptions
+    if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      showToast(message: 'Invalid email or password.');
+    } else {
+      showToast(message: 'An error occurred: ${e.code}');
+    }
+    return null; // Stop further execution after handling the exception
   }
-  return null;
 }
 
 }
