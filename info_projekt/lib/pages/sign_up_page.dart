@@ -170,8 +170,8 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     if (user != null) {
-      showToast(message: "User is successfully created");
-      Navigator.pushNamed(context, "/home");
+      showToast(message: "Registration successful! Please check your email to verify your account.");
+      Navigator.pushNamed(context, "/login");
     } else {
       showToast(message: "Some error happened");
     }
