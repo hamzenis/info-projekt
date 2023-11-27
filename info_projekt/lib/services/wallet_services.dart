@@ -218,8 +218,11 @@ class WalletServices {
   /// If the payment was successful, it updates the balance in the database.
   /// It also adds the transaction to the balance history.
   Future<void> startDepositFlow(double amount) async {
+    /// the ip: 134.119.216.59 is the ip of the server
+    /// if you want to run it on your local machine,
+    /// you have to change the ip to localhost (ios) or 10.0.2.2 (android)
     var paymentIntentURL =
-        Uri.parse("http://localhost:5000/create-payment-intent");
+        Uri.parse("http://134.119.216.59:5000/create-payment-intent");
 
     // Convert the amount from dollars to cents
     int amountInCents = (amount * 100).round();
