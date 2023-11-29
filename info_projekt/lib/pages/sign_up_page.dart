@@ -21,7 +21,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  TextEditingController _confirmPasswordController = TextEditingController(); // New controller
+  TextEditingController _confirmPasswordController =
+      TextEditingController(); // New controller
 
   bool isSigningUp = false;
 
@@ -67,7 +68,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 isPasswordField: true,
               ),
               const SizedBox(
-                height: 10,              
+                height: 10,
               ),
               FormContainerWidget(
                 controller: _confirmPasswordController,
@@ -164,7 +165,6 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     Map<String, dynamic> dataToSave = {
-      'username': _usernameController.text,
       'email': _emailController.text,
       'password': _passwordController.text
     };
@@ -178,7 +178,7 @@ class _SignUpPageState extends State<SignUpPage> {
       });
       return;
     }
-    
+
     /*
       Ab hier bis Schluss war ein großer Konflikt. Der Teil aus der alten Main wurde wieder übernommen. 
       @Jaqueline Dein Code aus dem Commit ist unten auskommentiert.
