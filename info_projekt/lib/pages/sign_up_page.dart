@@ -19,17 +19,17 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
 
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+  TextEditingController _confirmPasswordController = TextEditingController(); // New controller
 
   bool isSigningUp = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose(); // Dispose the new controller
     super.dispose();
   }
 
@@ -54,14 +54,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 height: 30,
               ),
               FormContainerWidget(
-                controller: _usernameController,
-                hintText: "Username",
-                isPasswordField: false,
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              FormContainerWidget(
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
@@ -75,8 +67,14 @@ class _SignUpPageState extends State<SignUpPage> {
                 isPasswordField: true,
               ),
               const SizedBox(
-                height: 30,
+                height: 10,              
               ),
+              FormContainerWidget(
+                controller: _confirmPasswordController,
+                hintText: "Confirm Password",
+                isPasswordField: true,
+              ),
+              SizedBox(height: 30),
               GestureDetector(
                 onTap: () {
                   _signUp();
@@ -153,9 +151,17 @@ class _SignUpPageState extends State<SignUpPage> {
       isSigningUp = true;
     });
 
-    String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
+    String confirmPassword = _confirmPasswordController.text;
+
+    if (password != confirmPassword) {
+      showToast(message: "Passwords do not match.");
+      setState(() {
+        isSigningUp = false;
+      });
+      return;
+    }
 
     Map<String, dynamic> dataToSave = {
       'username': _usernameController.text,
@@ -172,7 +178,38 @@ class _SignUpPageState extends State<SignUpPage> {
       });
       return;
     }
+    
+    /*
+      Ab hier bis Schluss war ein großer Konflikt. Der Teil aus der alten Main wurde wieder übernommen. 
+      @Jaqueline Dein Code aus dem Commit ist unten auskommentiert.
+    */
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
+    setState(() {
+      isSigningUp = false;
+    });
+
+    if (user != null) {
+      if (!user.emailVerified) {
+        showToast(
+            message:
+                "Registration successful! Please check your email to verify your account.");
+        Navigator.pushNamed(context, "/login");
+      } else {
+        // This could indicate the user had previously verified their email
+        showToast(message: "Email already verified. Please log in.");
+        Navigator.pushNamed(context, "/login");
+      }
+    } else {
+      // Error handling is already done in the signUpWithEmailAndPassword method.
+      // So, no need to show an additional error message here.
+    }
+  }
+}
+
+
+
+/* Erster Teil vom Konflikt
     User? firebaseUser =
         await _auth.signUpWithEmailAndPassword(email, password);
 
@@ -189,8 +226,11 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 }
+*/
 
-/*
+
+
+/* Zweiter Teil vom Konflikt
   void _signUp() async {
     setState(() {
       isSigningUp = true;
@@ -225,3 +265,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 */
+
+    
+    
+    
