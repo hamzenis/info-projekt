@@ -15,17 +15,17 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
 
-  TextEditingController _usernameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  TextEditingController _confirmPasswordController = TextEditingController(); // New controller
 
   bool isSigningUp = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose(); // Dispose the new controller
     super.dispose();
   }
 
@@ -46,33 +46,25 @@ class _SignUpPageState extends State<SignUpPage> {
                 "Sign Up",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
               ),
-              SizedBox(
-                height: 30,
-              ),
-              FormContainerWidget(
-                controller: _usernameController,
-                hintText: "Username",
-                isPasswordField: false,
-              ),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 30),
               FormContainerWidget(
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
               ),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10),
               FormContainerWidget(
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
               ),
-              SizedBox(
-                height: 30,
+              SizedBox(height: 10),
+              FormContainerWidget(
+                controller: _confirmPasswordController,
+                hintText: "Confirm Password",
+                isPasswordField: true,
               ),
+              SizedBox(height: 30),
               GestureDetector(
                 onTap: () {
                   _signUp();
@@ -85,10 +77,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                      child: isSigningUp
-                          ? CircularProgressIndicator(
-                              color: Colors.white,
-                            )
+                    child: isSigningUp
+                        ? CircularProgressIndicator(color: Colors.white)
                           : Text(
                               "Sign Up",
                               style: TextStyle(
@@ -149,9 +139,17 @@ class _SignUpPageState extends State<SignUpPage> {
       isSigningUp = true;
     });
 
-    String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
+    String confirmPassword = _confirmPasswordController.text;
+
+    if (password != confirmPassword) {
+      showToast(message: "Passwords do not match.");
+      setState(() {
+        isSigningUp = false;
+      });
+      return;
+    }
 
     if (!isPasswordValid(password)) {
       showToast(
