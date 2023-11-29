@@ -163,17 +163,24 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+  User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
-    setState(() {
-      isSigningUp = false;
-    });
+  setState(() {
+    isSigningUp = false;
+  });
 
-    if (user != null) {
+  if (user != null) {
+    if (!user.emailVerified) {
       showToast(message: "Registration successful! Please check your email to verify your account.");
       Navigator.pushNamed(context, "/login");
     } else {
-      showToast(message: "Some error happened");
+      // This could indicate the user had previously verified their email
+      showToast(message: "Email already verified. Please log in.");
+      Navigator.pushNamed(context, "/login");
     }
+  } else {
+    // Error handling is already done in the signUpWithEmailAndPassword method.
+    // So, no need to show an additional error message here.
   }
 }
+  }
