@@ -1,9 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+//import 'package:info_projekt/Repositories/user_repository.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/widgets/toast.dart';
+import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
+//import 'package:info_projekt/models/user_model.dart';
+//import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -34,7 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("SignUp"),
+        title: const Text("SignUp"),
       ),
       body: Center(
         child: Padding(
@@ -42,23 +46,29 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "Sign Up",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 30),
+              const SizedBox(
+                height: 30,
+              ),
               FormContainerWidget(
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
               ),
-              SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
               FormContainerWidget(
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
               ),
-              SizedBox(height: 10),
+              const SizedBox(
+                height: 10,              
+              ),
               FormContainerWidget(
                 controller: _confirmPasswordController,
                 hintText: "Confirm Password",
@@ -77,9 +87,11 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: isSigningUp
-                        ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
+                      child: isSigningUp
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text(
                               "Sign Up",
                               style: TextStyle(
                                   color: Colors.white,
@@ -87,14 +99,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             )),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Already have an account?"),
-                  SizedBox(
+                  const Text("Already have an account?"),
+                  const SizedBox(
                     width: 5,
                   ),
                   GestureDetector(
@@ -102,10 +114,10 @@ class _SignUpPageState extends State<SignUpPage> {
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => LoginPage()),
+                                builder: (context) => const LoginPage()),
                             (route) => false);
                       },
-                      child: Text(
+                      child: const Text(
                         "Login",
                         style: TextStyle(
                             color: Colors.blue, fontWeight: FontWeight.bold),
@@ -151,6 +163,12 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
+    Map<String, dynamic> dataToSave = {
+      'username': _usernameController.text,
+      'email': _emailController.text,
+      'password': _passwordController.text
+    };
+
     if (!isPasswordValid(password)) {
       showToast(
           message:
@@ -160,25 +178,94 @@ class _SignUpPageState extends State<SignUpPage> {
       });
       return;
     }
+    
+    /*
+      Ab hier bis Schluss war ein großer Konflikt. Der Teil aus der alten Main wurde wieder übernommen. 
+      @Jaqueline Dein Code aus dem Commit ist unten auskommentiert.
+    */
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
-  User? user = await _auth.signUpWithEmailAndPassword(email, password);
+    setState(() {
+      isSigningUp = false;
+    });
 
-  setState(() {
-    isSigningUp = false;
-  });
-
-  if (user != null) {
-    if (!user.emailVerified) {
-      showToast(message: "Registration successful! Please check your email to verify your account.");
-      Navigator.pushNamed(context, "/login");
+    if (user != null) {
+      if (!user.emailVerified) {
+        showToast(
+            message:
+                "Registration successful! Please check your email to verify your account.");
+        Navigator.pushNamed(context, "/login");
+      } else {
+        // This could indicate the user had previously verified their email
+        showToast(message: "Email already verified. Please log in.");
+        Navigator.pushNamed(context, "/login");
+      }
     } else {
-      // This could indicate the user had previously verified their email
-      showToast(message: "Email already verified. Please log in.");
-      Navigator.pushNamed(context, "/login");
+      // Error handling is already done in the signUpWithEmailAndPassword method.
+      // So, no need to show an additional error message here.
     }
-  } else {
-    // Error handling is already done in the signUpWithEmailAndPassword method.
-    // So, no need to show an additional error message here.
   }
 }
+
+
+
+/* Erster Teil vom Konflikt
+    User? firebaseUser =
+        await _auth.signUpWithEmailAndPassword(email, password);
+
+    setState(() {
+      isSigningUp = false;
+    });
+
+    if (firebaseUser != null) {
+      showToast(message: "User is successfully created");
+      FirebaseFirestore.instance.collection('Users').add(dataToSave);
+      Navigator.pushNamed(context, "/home");
+    } else {
+      showToast(message: "Some error happened");
+    }
   }
+}
+*/
+
+
+
+/* Zweiter Teil vom Konflikt
+  void _signUp() async {
+    setState(() {
+      isSigningUp = true;
+    });
+
+    String username = _usernameController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    if (!isPasswordValid(password)) {
+      showToast(message: "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
+      setState(() {
+        isSigningUp = false;
+      });
+      return;
+    }
+
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+
+    setState(() {
+      isSigningUp = false;
+    });
+
+    if (user != null) {
+      showToast(message: "User is successfully created");
+      Navigator.pushNamed(context, "/home");
+
+    
+    } else {
+      showToast(message: "Some error happened");
+    }
+  }
+}
+*/
+
+    
+    
+    

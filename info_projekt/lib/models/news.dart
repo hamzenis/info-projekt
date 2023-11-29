@@ -1,7 +1,3 @@
-// To parse this JSON data, do
-//
-//     final post = postFromJson(jsonString);
-
 import 'dart:convert';
 
 List<News> postFromJson(String str) =>
@@ -10,50 +6,43 @@ List<News> postFromJson(String str) =>
 String postToJson(List<News> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
+//late-Stichwort: Variablen werden hier nicht initialisiert
 class News {
-  String? category;
-  int datetime;
-  String headline;
-  int id;
+  String? symbol;
+  String publishedDate;
+  String title;
   String? image;
-  String? related;
-  String source;
-  String summary;
+  String site;
+  String text;
   String url;
 
   News({
-    this.category,
-    required this.datetime,
-    required this.headline,
-    required this.id,
+    this.symbol,
+    required this.publishedDate,
+    required this.title,
     this.image,
-    this.related,
-    required this.source,
-    required this.summary,
+    required this.site,
+    required this.text,
     required this.url,
   });
 
   factory News.fromJson(Map<String, dynamic> json) => News(
-        category: json["category"],
-        datetime: json["datetime"],
-        headline: json["headline"],
-        id: json["id"],
+        symbol: json["symbol"],
+        publishedDate: json["publishedDate"],
+        title: json["title"],
         image: json["image"],
-        related: json["related"],
-        source: json["source"],
-        summary: json["summary"],
+        site: json["site"],
+        text: json["text"],
         url: json["url"],
       );
 
   Map<String, dynamic> toJson() => {
-        "category": category,
-        "datetime": datetime,
-        "headline": headline,
-        "id": id,
+        "symbol": symbol,
+        "publishedDate": publishedDate,
+        "title": title,
         "image": image,
-        "related": related,
-        "source": source,
-        "summary": summary,
+        "site": site,
+        "text": text,
         "url": url,
       };
 }

@@ -1,69 +1,67 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import 'package:info_projekt/auth/firebase_auth_services.dart';
+import 'package:info_projekt/services/firestore_service.dart';
+import 'package:flutter/material.dart';
 
-class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({Key? key}) : super(key: key);
 
-  Future createUserInFirestore(User user, String username) async {
-    DocumentSnapshot doc =
-        await _firestore.collection('users').doc(user.uid).get();
+  Future<void> accessCreationDate() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? currentUser = auth.currentUser;
 
-    if (!doc.exists) {
-      _firestore.collection('users').doc(user.uid).set({
-        'username': username,
-        'email': user.email,
-        'createdOn': DateTime.now(),
-      });
-    }
-  }
-
-  /*Future<void> addUserToFirestore(String userId, String email) async {
-    DateTime creationDate = DateTime.now();
-    try {
-      await _firestore.collection('users').doc(userId).set({
-        'email': email,
-        'createdOn': creationDate,
-        // Add more user data as needed
-      });
-    } catch (e) {
-      print('Error adding user to Firestore: $e');
-    }
-  }
-  */
-
-  Future<DocumentSnapshot<Map<String, dynamic>>> getUserFromFirestore(
-      String userId) async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-          await _firestore.collection('users').doc(userId).get();
-      return userSnapshot;
-    } catch (e) {
-      print('Error getting user from Firestore: $e');
-      rethrow;
+    if (currentUser != null) {
+      String userId = currentUser.uid;
+      await getUserCreationDate(userId);
     }
   }
 
   Future<void> getUserCreationDate(String userId) async {
-    FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    // Your logic to retrieve creation date from Firestore
+    // ... (similar to the previous code provided)
+  }
 
-    try {
-      DocumentSnapshot userSnapshot =
-          await _firestore.collection('users').doc(userId).get();
+  @override
+  Widget build(BuildContext context) {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? currentUser = auth.currentUser;
+    String? userEmail = currentUser?.email;
 
-      if (userSnapshot.exists) {
-        // Accessing the 'createdOn' field from the document data
-        DateTime? createdOn = userSnapshot['createdOn'];
-        if (createdOn != null) {
-          print('User creation date: $createdOn');
-          // Use createdOn as needed
-        }
-      } else {
-        print('User document not found');
-      }
-    } catch (e) {
-      print('Error fetching user data: $e');
-      // Handle error
-    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('User Profile'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            color: Colors.blue, // Example color for the top section
+            child: const Text(
+              'User Profile: Work in Progress hihi',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.normal,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    userEmail ?? 'Email not available',
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
