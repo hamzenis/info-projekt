@@ -184,7 +184,7 @@ void _signIn() async {
           context: context,
           builder: (context) => AlertDialog(
             title: Text("Email not verified"),
-            content: Text("A verification email has been sent to your email address. Please verify your email."),
+            content: Text("A verification email has been sent to your email address. Please verify your email and try to login again."),
             actions: <Widget>[
               TextButton(
                 child: Text("Ok"),
