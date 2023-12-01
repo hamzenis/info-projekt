@@ -168,17 +168,9 @@ class _SignUpPageState extends State<SignUpPage> {
   });
 
   if (user != null) {
-    if (!user.emailVerified) {
-      showToast(message: "Registration successful! Please check your email to verify your account.");
-      Navigator.pushNamed(context, "/login");
-    } else {
-      // This could indicate the user had previously verified their email
-      showToast(message: "Email already verified. Please log in.");
-      Navigator.pushNamed(context, "/login");
-    }
-  } else {
-    // Error handling is already done in the signUpWithEmailAndPassword method.
-    // So, no need to show an additional error message here.
+    showToast(message: "Registration successful! Please check your email to verify your account.");
+    Navigator.pushNamed(context, "/verifyEmail");
   }
 }
   }
+
