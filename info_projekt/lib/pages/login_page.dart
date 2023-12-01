@@ -164,25 +164,53 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _signIn() async {
-    setState(() {
-      _isSigning = true;
-    });
+void _signIn() async {
+  setState(() {
+    _isSigning = true;
+  });
 
-    String email = _emailController.text;
-    String password = _passwordController.text;
+  String email = _emailController.text.trim();
+  String password = _passwordController.text.trim();
 
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
+  try {
+    UserCredential? credential = await _auth.signInWithEmailAndPassword(email, password);
 
+    if (credential != null && credential.user != null) {
+      final User user = credential.user!;
+
+      if (!user.emailVerified) {
+        // Email is not verified
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Email not verified"),
+            content: Text("A verification email has been sent to your email address. Please verify your email."),
+            actions: <Widget>[
+              TextButton(
+                child: Text("Ok"),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        );
+
+        await _auth.resendVerificationEmail();
+      } else {
+        Navigator.pushReplacementNamed(context, "/home");
+      }
+    }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      showToast(message: 'Invalid email or password.');
+    } else {
+      showToast(message: 'An error occurred: ${e.code}');
+    }
+  } finally {
     setState(() {
       _isSigning = false;
     });
-
-    if (user != null) {
-      showToast(message: "User is successfully signed in");
-      Navigator.pushNamed(context, "/home");
-    }
   }
+}
 
   _signInWithGoogle() async {
     await _signOutGoogle(); // Clear previous session
