@@ -1,45 +1,58 @@
-  import 'dart:async';  // Import for Timer
-  import 'package:flutter/material.dart';
-  import 'package:info_projekt/services/firebase_auth_services.dart';  // Import FirebaseAuthService
-  import 'package:info_projekt/widgets/toast.dart';  // Import showToast
+import 'dart:async'; // Import for Timer
+import 'package:flutter/material.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart'; // Import FirebaseAuthService
+import 'package:info_projekt/widgets/toast.dart'; // Import showToast
 
-  class VerifyEmailPage extends StatefulWidget {
-    @override
-    _VerifyEmailPageState createState() => _VerifyEmailPageState();
-  }
+class VerifyEmailPage extends StatefulWidget {
+  @override
+  _VerifyEmailPageState createState() => _VerifyEmailPageState();
+}
 
-  class _VerifyEmailPageState extends State<VerifyEmailPage> {
-    final FirebaseAuthService _auth = FirebaseAuthService();  // FirebaseAuthService instance
-    bool _isButtonDisabled = false;
+class _VerifyEmailPageState extends State<VerifyEmailPage> {
+  final FirebaseAuthService _auth = FirebaseAuthService(); // FirebaseAuthService instance
+  bool _isButtonDisabled = true; // Initially disable the button
 
-void _onResendEmail() async {
-  if (_isButtonDisabled) {
-    print("Button is currently disabled"); // Debug print
-    return;
-  }
-
-  setState(() {
-    _isButtonDisabled = true;
-  });
-
-  try {
-    await _auth.resendVerificationEmail();
-    showToast(message: "Verification email sent again and you can resend it again in 60 seconds",durationInSeconds: 5);
-  } catch (e) {
-    print("Error in sending email: $e"); // Log any exceptions
-  }
-
-  // Set a timer for 60 seconds
-  Timer(Duration(seconds: 60), () {
-    setState(() {
-      _isButtonDisabled = false;
+  @override
+  void initState() {
+    super.initState();
+    // Enable the button after 60 seconds
+    Timer(Duration(seconds: 60), () {
+      if (mounted) {
+        setState(() {
+          _isButtonDisabled = false;
+        });
+      }
     });
-    print("Button is re-enabled"); // Debug print
-  });
-} 
+  }
 
+  void _onResendEmail() async {
+    if (_isButtonDisabled) {
+      print("Button is currently disabled"); // Debug print
+      return;
+    }
 
-   @override
+    setState(() {
+      _isButtonDisabled = true;
+    });
+
+    try {
+      await _auth.resendVerificationEmail();
+      showToast(message: "Verification email sent again and you can resend it again in 60 seconds",durationInSeconds: 5);
+    } catch (e) {
+      print("Error in sending email: $e"); // Log any exceptions
+    }
+
+    // Re-enable the button after another 60 seconds
+    Timer(Duration(seconds: 60), () {
+      if (mounted) {
+        setState(() {
+          _isButtonDisabled = false;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Verify Email")),
@@ -67,7 +80,7 @@ void _onResendEmail() async {
                 onPressed: _isButtonDisabled ? null : _onResendEmail,
               ),
               SizedBox(height: 8),
-              TextButton(
+                TextButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size.fromHeight(50),
                 ),
