@@ -17,7 +17,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  TextEditingController _confirmPasswordController = TextEditingController(); // New controller
+  TextEditingController _confirmPasswordController =
+      TextEditingController(); // New controller
 
   bool isSigningUp = false;
 
@@ -77,8 +78,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: isSigningUp
-                        ? CircularProgressIndicator(color: Colors.white)
+                      child: isSigningUp
+                          ? CircularProgressIndicator(color: Colors.white)
                           : Text(
                               "Sign Up",
                               style: TextStyle(
@@ -161,16 +162,20 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-  User? user = await _auth.signUpWithEmailAndPassword(email, password);
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
-  setState(() {
-    isSigningUp = false;
-  });
+    setState(() {
+      isSigningUp = false;
+    });
 
-  if (user != null) {
-    showToast(message: "Registration successful! Please check your email to verify your account.");
-    Navigator.pushNamed(context, "/verifyEmail");
+    if (user != null) {
+      showToast(
+          message:
+              "Registration successful! Please check your email to verify your account.");
+      showToast(
+          message:
+              "The Resend Verification Email button is disabled for 60 seconds after each press.");
+      Navigator.pushNamed(context, "/verifyEmail");
+    }
   }
 }
-  }
-
