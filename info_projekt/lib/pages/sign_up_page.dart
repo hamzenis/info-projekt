@@ -179,10 +179,6 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    /*
-      Ab hier bis Schluss war ein großer Konflikt. Der Teil aus der alten Main wurde wieder übernommen. 
-      @Jaqueline Dein Code aus dem Commit ist unten auskommentiert.
-    */
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
     setState(() {
@@ -195,7 +191,14 @@ class _SignUpPageState extends State<SignUpPage> {
             message:
                 "Registration successful! Please check your email to verify your account.");
         Navigator.pushNamed(context, "/login");
-      } else {
+      }
+      //Neu von Jacky
+      else {
+        FirebaseFirestore.instance.collection('Users').add({
+          'email': email,
+          //hier kann man mehr Felder hinzufügen
+        });
+        //Navigator.pushNamed(context, "/home");
         // This could indicate the user had previously verified their email
         showToast(message: "Email already verified. Please log in.");
         Navigator.pushNamed(context, "/login");
@@ -206,66 +209,3 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 }
-
-
-
-/* Erster Teil vom Konflikt
-    User? firebaseUser =
-        await _auth.signUpWithEmailAndPassword(email, password);
-
-    setState(() {
-      isSigningUp = false;
-    });
-
-    if (firebaseUser != null) {
-      showToast(message: "User is successfully created");
-      FirebaseFirestore.instance.collection('Users').add(dataToSave);
-      Navigator.pushNamed(context, "/home");
-    } else {
-      showToast(message: "Some error happened");
-    }
-  }
-}
-*/
-
-
-
-/* Zweiter Teil vom Konflikt
-  void _signUp() async {
-    setState(() {
-      isSigningUp = true;
-    });
-
-    String username = _usernameController.text;
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    if (!isPasswordValid(password)) {
-      showToast(message: "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
-      setState(() {
-        isSigningUp = false;
-      });
-      return;
-    }
-
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-
-    setState(() {
-      isSigningUp = false;
-    });
-
-    if (user != null) {
-      showToast(message: "User is successfully created");
-      Navigator.pushNamed(context, "/home");
-
-    
-    } else {
-      showToast(message: "Some error happened");
-    }
-  }
-}
-*/
-
-    
-    
-    
