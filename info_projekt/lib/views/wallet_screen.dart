@@ -1,10 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/services/wallet_services.dart';
 import 'package:info_projekt/models/transaction_history.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Class to create the Wallet Screen View on the TradeMate App.
 /// This class works with the [WalletServices] class to deposit and withdraw money.
@@ -89,15 +91,31 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: const Text('Withdraw'),
               ),
               ElevatedButton(
-                /// The Functionality of the buttons is in the [WalletServices] class.
                 onPressed: () async {
-                  double? depositAmount =
-                      await walletServices.getUserInput(context);
-                  if (depositAmount != null) {
-                    await Future.delayed(const Duration(milliseconds: 500));
-                    await walletServices.startDepositFlow(depositAmount);
-                    double? newBalance = await walletServices.fetchBalance();
-                    balance.value = newBalance;
+                  if (kIsWeb) {
+                    // If the app is running on web, start the deposit flow for web
+                    double? depositAmount =
+                        await walletServices.getUserInput(context);
+                    if (depositAmount != null) {
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      String? userId = FirebaseAuth.instance.currentUser!.uid;
+                      String? paymentLink = await walletServices
+                          .startDepositFlowWeb(depositAmount, userId);
+                      if (paymentLink != null) {
+                        await launch(paymentLink,
+                            forceSafariVC: false, forceWebView: false);
+                      }
+                    }
+                  } else {
+                    // If the app is running on mobile, start the deposit flow
+                    double? depositAmount =
+                        await walletServices.getUserInput(context);
+                    if (depositAmount != null) {
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      await walletServices.startDepositFlow(depositAmount);
+                      double? newBalance = await walletServices.fetchBalance();
+                      balance.value = newBalance;
+                    }
                   }
                 },
                 child: const Text('Deposit'),
