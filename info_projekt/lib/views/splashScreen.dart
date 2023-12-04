@@ -6,6 +6,7 @@ import 'package:info_projekt/pages/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/services/uri_service.dart';
 
+// TODO Comment this class and the methods
 class SplashScreen extends StatelessWidget {
   final Widget child;
   final UriService uriService;

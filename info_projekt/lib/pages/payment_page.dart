@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/stripe_service.dart';
 
+/// This class takes a [clientSecret] as a parameter.
+/// The [clientSecret] is used to confirm card payments with the [StripeService].
+/// This class allows the execution of the [StripeService] on web plattforms.
 class PaymentPage extends StatefulWidget {
   final String? clientSecret;
 
