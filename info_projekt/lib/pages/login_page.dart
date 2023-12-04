@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/widgets/toast.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 

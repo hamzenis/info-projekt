@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/widgets/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
