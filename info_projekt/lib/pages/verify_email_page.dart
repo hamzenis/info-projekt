@@ -1,7 +1,7 @@
 import 'dart:async'; // Import for Timer
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart'; // Import FirebaseAuthService
-import 'package:info_projekt/widgets/toast.dart'; // Import showToast
+import 'package:info_projekt/common/toast.dart'; // Import showToast
 
 class VerifyEmailPage extends StatefulWidget {
   @override
@@ -9,7 +9,8 @@ class VerifyEmailPage extends StatefulWidget {
 }
 
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
-  final FirebaseAuthService _auth = FirebaseAuthService(); // FirebaseAuthService instance
+  final FirebaseAuthService _auth =
+      FirebaseAuthService(); // FirebaseAuthService instance
   bool _isButtonDisabled = true; // Initially disable the button
 
   @override
@@ -37,7 +38,10 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
     try {
       await _auth.resendVerificationEmail();
-      showToast(message: "Verification email sent again and you can resend it again in 60 seconds",durationInSeconds: 5);
+      showToast(
+          message:
+              "Verification email sent again and you can resend it again in 60 seconds",
+          durationInSeconds: 5);
     } catch (e) {
       print("Error in sending email: $e"); // Log any exceptions
     }
@@ -80,7 +84,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                 onPressed: _isButtonDisabled ? null : _onResendEmail,
               ),
               SizedBox(height: 8),
-                TextButton(
+              TextButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size.fromHeight(50),
                 ),

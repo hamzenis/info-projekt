@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/widgets/toast.dart';
+import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -47,19 +48,25 @@ class _SignUpPageState extends State<SignUpPage> {
                 "Sign Up",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 30),
+              SizedBox(
+                height: 30,
+              ),
               FormContainerWidget(
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
               ),
-              SizedBox(height: 10),
+              SizedBox(
+                height: 10,
+              ),
               FormContainerWidget(
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
               ),
-              SizedBox(height: 10),
+              SizedBox(
+                height: 10,
+              ),
               FormContainerWidget(
                 controller: _confirmPasswordController,
                 hintText: "Confirm Password",
@@ -78,14 +85,17 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                      child: isSigningUp
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            )),
+                    child: isSigningUp
+                        ? CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                  ),
                 ),
               ),
               SizedBox(
@@ -99,18 +109,19 @@ class _SignUpPageState extends State<SignUpPage> {
                     width: 5,
                   ),
                   GestureDetector(
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginPage()),
-                            (route) => false);
-                      },
-                      child: Text(
-                        "Login",
-                        style: TextStyle(
-                            color: Colors.blue, fontWeight: FontWeight.bold),
-                      ))
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()),
+                          (route) => false);
+                    },
+                    child: Text(
+                      "Login",
+                      style: TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                  )
                 ],
               )
             ],
@@ -154,8 +165,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (!isPasswordValid(password)) {
       showToast(
-          message:
-              "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
+        message:
+            "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.",
+      );
       setState(() {
         isSigningUp = false;
       });
@@ -169,13 +181,51 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     if (user != null) {
-      showToast(
+      if (!user.emailVerified) {
+        showToast(
           message:
-              "Registration successful! Please check your email to verify your account.");
-      showToast(
-          message:
-              "The Resend Verification Email button is disabled for 60 seconds after each press.");
-      Navigator.pushNamed(context, "/verifyEmail");
+              "Registration successful! Please check your email to verify your account.",
+        );
+        Navigator.pushNamed(context, "/login");
+      } else {
+        FirebaseFirestore firestore = FirebaseFirestore.instance;
+        DocumentReference userDocRef = await firestore.collection('Users').add({
+          'email': email,
+          'UID': user.uid,
+          'balance': '',
+          'iban': '',
+          'verified': true, // Update 'verified' to true upon email verification
+        });
+
+        CollectionReference transactionHistoryRef =
+            userDocRef.collection('transaction_history');
+        await transactionHistoryRef.add({
+          'price': 00.00,
+          'order_date': Timestamp.now(),
+          'name': '',
+          'symbol': '',
+          'buy': 'false',
+          'selling_price': 00.00,
+          'quantity': 0,
+          'total_cost': 0,
+          'transaction_fee': 0,
+        });
+
+        CollectionReference balanceHistoryRef =
+            userDocRef.collection('balance_history');
+        await balanceHistoryRef.add({
+          'amount': 00.00,
+          'date': Timestamp.now(),
+          'description': '',
+          'withdraw': false,
+        });
+
+        showToast(message: "Email already verified. Please log in.");
+        Navigator.pushNamed(context, "/login");
+      }
+    } else {
+      // Error handling is already done in the signUpWithEmailAndPassword method.
+      // So, no need to show an additional error message here.
     }
   }
 }

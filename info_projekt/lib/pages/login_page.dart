@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/widgets/toast.dart';
+import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 
@@ -164,53 +164,57 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-void _signIn() async {
-  setState(() {
-    _isSigning = true;
-  });
-
-  String email = _emailController.text.trim();
-  String password = _passwordController.text.trim();
-
-  try {
-    UserCredential? credential = await _auth.signInWithEmailAndPassword(email, password);
-
-    if (credential != null && credential.user != null) {
-      final User user = credential.user!;
-
-      if (!user.emailVerified) {
-        // Email is not verified
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Email not verified"),
-            content: Text("A verification email has been sent to your email address. Please verify your email and try to login again."),
-            actions: <Widget>[
-              TextButton(
-                child: Text("Ok"),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        );
-
-        await _auth.resendVerificationEmail();
-      } else {
-        Navigator.pushReplacementNamed(context, "/home");
-      }
-    }
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-      showToast(message: 'Invalid email or password.');
-    } else {
-      showToast(message: 'An error occurred: ${e.code}');
-    }
-  } finally {
+  void _signIn() async {
     setState(() {
-      _isSigning = false;
+      _isSigning = true;
     });
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    try {
+      UserCredential? credential =
+          await _auth.signInWithEmailAndPassword(email, password);
+
+      if (credential != null && credential.user != null) {
+        final User user = credential.user!;
+
+        if (!user.emailVerified) {
+          // Email is not verified
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Email not verified"),
+              content: Text(
+                  "A verification email has been sent to your email address. Please verify your email and try to login again."),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Ok"),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          );
+
+          await _auth.resendVerificationEmail();
+        } else {
+          Navigator.pushReplacementNamed(context, "/home");
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        showToast(message: 'Invalid email or password.');
+      } else {
+        showToast(message: 'An error occurred: ${e.code}');
+      }
+    } finally {
+      setState(() {
+        _isSigning = false;
+      });
+    }
   }
-}
 
   _signInWithGoogle() async {
     await _signOutGoogle(); // Clear previous session
