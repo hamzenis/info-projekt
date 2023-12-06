@@ -29,7 +29,7 @@ class FirebaseAuthService {
     }
   }
 
-  Future<User?> signInWithEmailAndPassword(
+  Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
@@ -44,7 +44,7 @@ class FirebaseAuthService {
         showToast(message: 'Please verify your email address.');
         return null; // Stop further execution
       }
-      return user; // Email is verified, return the user
+      return credential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||

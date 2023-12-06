@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:info_projekt/common/toast.dart';
 import '../homepage_new.dart';
 
@@ -37,7 +36,28 @@ class HomePage extends StatelessWidget {
                 'Sign Out',
                 style: TextStyle(fontSize: 24),
               ),
-              onPressed: () => FirebaseAuth.instance.signOut(),
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushNamed(context, "/login");
+                showToast(message: "Successfully signed out");
+              },
+            ),
+            SizedBox(height: 10),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size.fromHeight(50),
+              ),
+              icon: Icon(Icons.arrow_forward, size: 32),
+              label: Text(
+                'Other Homepage',
+                style: TextStyle(fontSize: 24),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePageNew()),
+                );
+              },
             ),
           ],
         ),
