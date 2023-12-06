@@ -188,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                   "A verification email has been sent to your email address. Please verify your email and try to login again."),
               actions: <Widget>[
                 TextButton(
-                  child: Text("Ok"),
+                  child: Text("Resend Email"),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],

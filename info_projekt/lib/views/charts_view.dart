@@ -41,7 +41,7 @@ class _ChartStockState extends State<ChartStock> {
   }
 
   /**
-  *
+  *   TODO: Rewrite as Container not Widget
   *   Build price container under chart
   */
   Widget buildPriceContainer(String realTimeQuote) {
@@ -88,57 +88,66 @@ class _ChartStockState extends State<ChartStock> {
             String companyName = snapshot.data![1];
             String realTimeQuote = snapshot.data![2];
             currentData = spotListMonthly;
+            String companyAbout = snapshot.data![3];
 
             return Scaffold(
-              appBar: AppBar(
-                title: Text(widget.title),
-              ),
-              body: SizedBox(
-                child: Column(
-                  children: [
-                    Container(
-                      // Company name Container
-                      padding: const EdgeInsets.all(40),
-                      child: Text(
-                        companyName,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                appBar: AppBar(
+                  title: Text(widget.title),
+                ),
+                body: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Container(
+                        // Company name Container
+                        padding: const EdgeInsets.all(40),
+                        child: Text(
+                          companyName,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      child: _buildChart(),
-                    ),
-                    Row(
-                      // Buttons Row
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            _updateChartData('year');
-                          },
-                          child: const Text('Year'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _updateChartData('month');
-                          },
-                          child: const Text('Month'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _updateChartData('day');
-                          },
-                          child: const Text('Day'),
-                        ),
-                      ],
-                    ),
-                    buildPriceContainer(realTimeQuote),
-                  ],
+                      Container(
+                        child: _buildChart(),
+                      ),
+                      Row(
+                        // Buttons Row
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              _updateChartData('year');
+                            },
+                            child: const Text('Year'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _updateChartData('month');
+                            },
+                            child: const Text('Month'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _updateChartData('day');
+                            },
+                            child: const Text('Day'),
+                          ),
+                        ],
+                      ),
+                      buildPriceContainer(realTimeQuote),
+                      buildAboutContainer(companyAbout),
+                    ],
+                  ),
                 ),
-              ),
-            );
+                floatingActionButton: FloatingActionButton.extended(
+                  onPressed: () {
+                    // TODO:Write Buy Action
+                  },
+                  backgroundColor: Colors.green,
+                  icon: const Icon(Icons.attach_money),
+                  label: const Text('Buy'),
+                ));
           } else {
             return const Text('No data'); // TODO: Replace with error handling
           }
@@ -163,18 +172,21 @@ class _ChartStockState extends State<ChartStock> {
           loadYearData(widget.title),
           getCompanyName(widget.title),
           getCurrentPrice(widget.title),
+          getCompanyAbout(widget.title),
         ]);
       case 'month':
         return Future.wait([
           loadMonthData(widget.title),
           getCompanyName(widget.title),
           getCurrentPrice(widget.title),
+          getCompanyAbout(widget.title),
         ]);
       case 'day':
         return Future.wait([
           loadDayData(widget.title),
           getCompanyName(widget.title),
           getCurrentPrice(widget.title),
+          getCompanyAbout(widget.title),
         ]);
       default:
         return [];
@@ -228,6 +240,35 @@ class _ChartStockState extends State<ChartStock> {
           xValueMapper: (ChartData data, _) => data.time,
           yValueMapper: (ChartData data, _) => data.price)
     ];
+  }
+
+/**
+ * 
+ * 
+ * 
+ */
+  Container buildAboutContainer(String companyAbout) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "About",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            companyAbout,
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /**
