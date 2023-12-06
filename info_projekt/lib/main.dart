@@ -5,6 +5,7 @@ import 'package:info_projekt/pages/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:info_projekt/pages/verify_email_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
             ),
         '/login': (context) => const LoginPage(),
         '/signUp': (context) => const SignUpPage(),
-        '/home': (context) => const HomePage(),
+        '/home': (context) => HomePage(),
+        '/verifyEmail': (context) => VerifyEmailPage(),
       },
     );
   }

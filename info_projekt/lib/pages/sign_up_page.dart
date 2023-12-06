@@ -86,10 +86,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   child: Center(
                     child: isSigningUp
-                        ? const CircularProgressIndicator(
+                        ? CircularProgressIndicator(
                             color: Colors.white,
                           )
-                        : const Text(
+                        : Text(
                             "Sign Up",
                             style: TextStyle(
                                 color: Colors.white,
@@ -116,7 +116,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               builder: (context) => const LoginPage()),
                           (route) => false);
                     },
-                    child: const Text(
+                    child: Text(
                       "Login",
                       style: TextStyle(
                           color: Colors.blue, fontWeight: FontWeight.bold),
