@@ -3,7 +3,7 @@ import 'package:info_projekt/common/toast.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String? userEmail; // Variable to store the user's email
+  String? userEmail; // Variable to store the user's email address
 
   Future<User?> signUpWithEmailAndPassword(
       String email, String password) async {
@@ -12,6 +12,7 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+
       //access user object from outside
       User? user = credential.user;
       if (user != null && !user.emailVerified) {
@@ -43,7 +44,6 @@ class FirebaseAuthService {
         showToast(message: 'Please verify your email address.');
         return null; // Stop further execution
       }
-
       return user; // Email is verified, return the user
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
@@ -54,6 +54,13 @@ class FirebaseAuthService {
         showToast(message: 'An error occurred: ${e.code}');
       }
       return null; // Stop further execution after handling the exception
+    }
+  }
+
+  Future<void> resendVerificationEmail() async {
+    User? user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
     }
   }
 }
