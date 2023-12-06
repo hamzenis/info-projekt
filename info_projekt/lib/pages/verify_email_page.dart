@@ -1,7 +1,7 @@
 import 'dart:async'; // Import for Timer
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart'; // Import FirebaseAuthService
-import 'package:info_projekt/widgets/toast.dart'; // Import showToast
+import 'package:info_projekt/common/toast.dart'; // Import showToast
 
 class VerifyEmailPage extends StatefulWidget {
   @override
