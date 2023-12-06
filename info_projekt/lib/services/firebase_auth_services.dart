@@ -37,19 +37,11 @@ class FirebaseAuthService {
         password: password,
       );
       userEmail = email; // Store the email when user signs in
-      User? user = credential.user;
 
-      // Check if the user's email is verified
-      if (user != null && !user.emailVerified) {
-        showToast(message: 'Please verify your email address.');
-        return null; // Stop further execution
-      }
       return credential;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' ||
-          e.code == 'wrong-password' ||
-          e.code == 'invalid-credential') {
-        showToast(message: 'Invalid email or password.');
+      if (e.code == 'email-already-in-use') {
+        showToast(message: 'The email address is already in use.');
       } else {
         showToast(message: 'An error occurred: ${e.code}');
       }

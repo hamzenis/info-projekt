@@ -186,7 +186,7 @@ class _SignUpPageState extends State<SignUpPage> {
           message:
               "Registration successful! Please check your email to verify your account.",
         );
-        Navigator.pushNamed(context, "/login");
+        Navigator.pushNamed(context, "/verifyEmail");
       } else {
         FirebaseFirestore firestore = FirebaseFirestore.instance;
         DocumentReference userDocRef = await firestore.collection('Users').add({
