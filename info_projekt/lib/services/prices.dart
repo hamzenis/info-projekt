@@ -188,3 +188,50 @@ Future<List<ChartData>> loadYearData(String stockSymbol) async {
 
   return spotList;
 }
+
+/**
+ * 
+ * 
+ * 
+ * 
+ */
+Future<String> getCompanyAbout(String stockSymbol) async {
+  String companyAbout = '';
+
+  try {
+    // Send a GET request to the API
+    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
+    String url =
+        'https://financialmodelingprep.com/api/v3/profile/$stockSymbol?apikey=$apiKey';
+    http.Response response = await http
+        .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
+
+    // Decode the response body
+    List<dynamic> jsonData = json.decode(response.body);
+
+    // Extract the company about description
+    companyAbout = jsonData[0]['description'].toString();
+  } catch (e) {
+    // Handle the exception
+    print('Error parsing JSON: $e');
+  }
+  // insertNewLine(companyAbout);
+  return companyAbout;
+}
+
+/**
+ * TODO: Check if this function is needed
+ * Helper for the About Container
+ * Inserts a new line after every ; char
+ */
+String insertNewLine(String companyAbout) {
+  String newText = '';
+  for (int i = 0; i < companyAbout.length; i++) {
+    if (companyAbout[i] == ';') {
+      newText += '\n';
+    } else {
+      newText += companyAbout[i];
+    }
+  }
+  return newText;
+}
