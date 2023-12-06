@@ -1,19 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-//import 'package:info_projekt/Repositories/user_repository.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
-//import 'package:info_projekt/models/user_model.dart';
-//import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+  const SignUpPage({Key? key}) : super(key: key);
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
@@ -88,16 +85,17 @@ class _SignUpPageState extends State<SignUpPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                      child: isSigningUp
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                          : const Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            )),
+                    child: isSigningUp
+                        ? CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                  ),
                 ),
               ),
               const SizedBox(
@@ -111,18 +109,19 @@ class _SignUpPageState extends State<SignUpPage> {
                     width: 5,
                   ),
                   GestureDetector(
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const LoginPage()),
-                            (route) => false);
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                            color: Colors.blue, fontWeight: FontWeight.bold),
-                      ))
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()),
+                          (route) => false);
+                    },
+                    child: Text(
+                      "Login",
+                      style: TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                  )
                 ],
               )
             ],
@@ -164,25 +163,17 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    Map<String, dynamic> dataToSave = {
-      'email': _emailController.text,
-      'password': _passwordController.text
-    };
-
     if (!isPasswordValid(password)) {
       showToast(
-          message:
-              "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
+        message:
+            "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.",
+      );
       setState(() {
         isSigningUp = false;
       });
       return;
     }
 
-    /*
-      Ab hier bis Schluss war ein großer Konflikt. Der Teil aus der alten Main wurde wieder übernommen. 
-      @Jaqueline Dein Code aus dem Commit ist unten auskommentiert.
-    */
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
     setState(() {
@@ -192,11 +183,43 @@ class _SignUpPageState extends State<SignUpPage> {
     if (user != null) {
       if (!user.emailVerified) {
         showToast(
-            message:
-                "Registration successful! Please check your email to verify your account.");
+          message:
+              "Registration successful! Please check your email to verify your account.",
+        );
         Navigator.pushNamed(context, "/login");
       } else {
-        // This could indicate the user had previously verified their email
+        FirebaseFirestore firestore = FirebaseFirestore.instance;
+        DocumentReference userDocRef = await firestore.collection('Users').add({
+          'email': email,
+          'UID': user.uid,
+          'balance': '',
+          'iban': '',
+          'verified': true, // Update 'verified' to true upon email verification
+        });
+
+        CollectionReference transactionHistoryRef =
+            userDocRef.collection('transaction_history');
+        await transactionHistoryRef.add({
+          'price': 00.00,
+          'order_date': Timestamp.now(),
+          'name': '',
+          'symbol': '',
+          'buy': 'false',
+          'selling_price': 00.00,
+          'quantity': 0,
+          'total_cost': 0,
+          'transaction_fee': 0,
+        });
+
+        CollectionReference balanceHistoryRef =
+            userDocRef.collection('balance_history');
+        await balanceHistoryRef.add({
+          'amount': 00.00,
+          'date': Timestamp.now(),
+          'description': '',
+          'withdraw': false,
+        });
+
         showToast(message: "Email already verified. Please log in.");
         Navigator.pushNamed(context, "/login");
       }
@@ -206,66 +229,3 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 }
-
-
-
-/* Erster Teil vom Konflikt
-    User? firebaseUser =
-        await _auth.signUpWithEmailAndPassword(email, password);
-
-    setState(() {
-      isSigningUp = false;
-    });
-
-    if (firebaseUser != null) {
-      showToast(message: "User is successfully created");
-      FirebaseFirestore.instance.collection('Users').add(dataToSave);
-      Navigator.pushNamed(context, "/home");
-    } else {
-      showToast(message: "Some error happened");
-    }
-  }
-}
-*/
-
-
-
-/* Zweiter Teil vom Konflikt
-  void _signUp() async {
-    setState(() {
-      isSigningUp = true;
-    });
-
-    String username = _usernameController.text;
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    if (!isPasswordValid(password)) {
-      showToast(message: "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.");
-      setState(() {
-        isSigningUp = false;
-      });
-      return;
-    }
-
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-
-    setState(() {
-      isSigningUp = false;
-    });
-
-    if (user != null) {
-      showToast(message: "User is successfully created");
-      Navigator.pushNamed(context, "/home");
-
-    
-    } else {
-      showToast(message: "Some error happened");
-    }
-  }
-}
-*/
-
-    
-    
-    
