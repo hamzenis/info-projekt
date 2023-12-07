@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import '../services/prices.dart';
+import '../services/stockData_service.dart';
 
 class ChartStock extends StatefulWidget {
   final String title;
