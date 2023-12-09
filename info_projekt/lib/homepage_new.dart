@@ -296,8 +296,14 @@ class ActionButton extends StatelessWidget {
   }
 }
 
-class PortfolioPage extends StatelessWidget {
+class PortfolioPage extends StatefulWidget {
+  @override
+  _PortfolioPageState createState() => _PortfolioPageState();
+}
+
+class _PortfolioPageState extends State<PortfolioPage> {
   final PortfolioService portfolioService = PortfolioService();
+  ValueNotifier<bool> showPercentage = ValueNotifier<bool>(false);
 
   @override
   Widget build(BuildContext context) {
@@ -313,37 +319,57 @@ class PortfolioPage extends StatelessWidget {
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text(
-                          'Portfolio Value: ${snapshot.data!['portfolioValue']}',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold),
+                bool isProfit = snapshot.data!['profitOrLoss']! >= 0;
+                return SafeArea(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        padding: EdgeInsets.all(10.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              '\$${snapshot.data!['portfolioValue']}',
+                              style: TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 16),
+                            GestureDetector(
+                              onTap: () {
+                                showPercentage.value = !showPercentage.value;
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isProfit
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    color: isProfit ? Colors.green : Colors.red,
+                                  ),
+                                  ValueListenableBuilder<bool>(
+                                    valueListenable: showPercentage,
+                                    builder: (context, value, child) {
+                                      return Text(
+                                        value
+                                            ? '${snapshot.data!['percentageGainOrLoss']!.toStringAsFixed(2)}%'
+                                            : '\$${snapshot.data!['profitOrLoss']!.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            color: isProfit
+                                                ? Colors.green
+                                                : Colors.red),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                          ],
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Profit or Loss: ${snapshot.data!['profitOrLoss']}',
-                          style: TextStyle(
-                              fontSize: 20,
-                              color: snapshot.data!['profitOrLoss']! >= 0
-                                  ? Colors.green
-                                  : Colors.red),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Percentage Gain or Loss: ${snapshot.data!['percentageGainOrLoss']!.toStringAsFixed(2)}%',
-                          style: TextStyle(
-                              fontSize: 20,
-                              color:
-                                  snapshot.data!['percentageGainOrLoss']! >= 0
-                                      ? Colors.green
-                                      : Colors.red),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 );
