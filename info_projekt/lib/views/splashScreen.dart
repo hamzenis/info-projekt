@@ -1,38 +1,70 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:info_projekt/firebase_options.dart';
+import 'package:info_projekt/pages/home_page.dart';
+import 'package:info_projekt/pages/login_page.dart';
+import 'package:info_projekt/services/uri_service.dart';
 
+// TODO Comment this class and the methods
+class SplashScreen extends StatelessWidget {
+  final Widget child;
+  final UriService uriService;
 
-class SplashScreen extends StatefulWidget {
-  final Widget? child;
-  const SplashScreen({super.key, this.child});
+  SplashScreen({Key? key, required this.child})
+      : uriService = getUriService(),
+        super(key: key);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  @override
+  Widget build(BuildContext context) {
+    final currentUri = uriService.currentUri;
+    final currentRoute = currentUri.path;
+
+    return FutureBuilder<FirebaseApp>(
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return SomethingWentWrong();
+        }
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (currentRoute == '/payment') {
+            return child;
+          }
+
+          return StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (BuildContext context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else {
+                if (snapshot.hasData) {
+                  return HomePage();
+                } else {
+                  return LoginPage();
+                }
+              }
+            },
+          );
+        }
+
+        return CircularProgressIndicator();
+      },
+    );
+  }
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-
-@override
-  void initState() {
-    Future.delayed(
-      const Duration(seconds: 3),(){
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => widget.child!), (route) => false);
-    }
-    );
-    super.initState();
-  }
-
+class SomethingWentWrong extends StatelessWidget {
+  const SomethingWentWrong({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text(
-          "Welcome To The best stock market app",
-          style: TextStyle(
-            color: Colors.blue,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: Text('Something went wrong!'),
       ),
     );
   }
