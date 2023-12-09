@@ -7,6 +7,7 @@ import 'package:info_projekt/pages/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:info_projekt/pages/verify_email_page.dart';
 import 'package:uni_links/uni_links.dart';
 
 import 'package:info_projekt/views/wallet_screen.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
             ),
         '/login': (context) => const LoginPage(),
         '/signUp': (context) => const SignUpPage(),
+        '/verifyEmail': (context) => VerifyEmailPage(),
         '/home': (context) => const HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(

@@ -3,7 +3,7 @@ import 'package:info_projekt/common/toast.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String? userEmail; // Variable to store the user's email
+  String? userEmail; // Variable to store the user's email address
 
   Future<User?> signUpWithEmailAndPassword(
       String email, String password) async {
@@ -12,6 +12,7 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+
       //access user object from outside
       User? user = credential.user;
       if (user != null && !user.emailVerified) {
@@ -28,7 +29,7 @@ class FirebaseAuthService {
     }
   }
 
-  Future<User?> signInWithEmailAndPassword(
+  Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
@@ -36,24 +37,22 @@ class FirebaseAuthService {
         password: password,
       );
       userEmail = email; // Store the email when user signs in
-      User? user = credential.user;
 
-      // Check if the user's email is verified
-      if (user != null && !user.emailVerified) {
-        showToast(message: 'Please verify your email address.');
-        return null; // Stop further execution
-      }
-
-      return user; // Email is verified, return the user
+      return credential;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' ||
-          e.code == 'wrong-password' ||
-          e.code == 'invalid-credential') {
-        showToast(message: 'Invalid email or password.');
+      if (e.code == 'email-already-in-use') {
+        showToast(message: 'The email address is already in use.');
       } else {
         showToast(message: 'An error occurred: ${e.code}');
       }
       return null; // Stop further execution after handling the exception
+    }
+  }
+
+  Future<void> resendVerificationEmail() async {
+    User? user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
     }
   }
 }
