@@ -1,17 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
+import 'services/portfolio_service.dart';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
+  final PortfolioService portfolioService = PortfolioService();
 
-  const HomePageNew({super.key});
+  HomePageNew({super.key});
 
-  /// Filler code for the action buttons
-  /// Remove this when implementing the actual functionality
   void _showAction(BuildContext context, int index) {
     showDialog(
         context: context,
@@ -34,14 +35,7 @@ class HomePageNew extends StatelessWidget {
       appBar: AppBar(
         title: const Text('TradeMate'),
       ),
-      // TODO: Replace with your own code
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: 25,
-        itemBuilder: (context, index) {
-          return FakeItem(isBig: index.isOdd);
-        },
-      ),
+      body: PortfolioPage(),
       floatingActionButton: ExpandableFab(
         distance: 100,
         children: [
@@ -302,26 +296,59 @@ class ActionButton extends StatelessWidget {
   }
 }
 
-/// Filler code for the home page
-/// Remove this when implementing the actual functionality
-@immutable
-class FakeItem extends StatelessWidget {
-  const FakeItem({
-    super.key,
-    required this.isBig,
-  });
-
-  final bool isBig;
+class PortfolioPage extends StatelessWidget {
+  final PortfolioService portfolioService = PortfolioService();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-      height: isBig ? 128 : 36,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-        color: Colors.grey.shade300,
-      ),
-    );
+    User? user = FirebaseAuth.instance.currentUser;
+    print("UID: ${user!.uid}");
+    return user == null
+        ? Center(child: Text('Please log in'))
+        : FutureBuilder<Map<String, double>>(
+            future: portfolioService.calculatePortfolioValue(user.uid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Portfolio Value: ${snapshot.data!['portfolioValue']}',
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Profit or Loss: ${snapshot.data!['profitOrLoss']}',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: snapshot.data!['profitOrLoss']! >= 0
+                                  ? Colors.green
+                                  : Colors.red),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Percentage Gain or Loss: ${snapshot.data!['percentageGainOrLoss']!.toStringAsFixed(2)}%',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color:
+                                  snapshot.data!['percentageGainOrLoss']! >= 0
+                                      ? Colors.green
+                                      : Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
+          );
   }
 }
