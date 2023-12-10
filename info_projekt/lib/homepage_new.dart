@@ -311,7 +311,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
     print("UID: ${user!.uid}");
     return user == null
         ? Center(child: Text('Please log in'))
-        : FutureBuilder<Map<String, double>>(
+        : FutureBuilder<Map<String, dynamic>>(
             future: portfolioService.calculatePortfolioValue(user.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -319,62 +319,191 @@ class _PortfolioPageState extends State<PortfolioPage> {
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else {
-                bool isProfit = snapshot.data!['profitOrLoss']! >= 0;
                 return SafeArea(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        padding: EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              '\$${snapshot.data!['portfolioValue']}',
-                              style: TextStyle(
-                                  fontSize: 24, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 16),
-                            GestureDetector(
-                              onTap: () {
-                                showPercentage.value = !showPercentage.value;
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    isProfit
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    color: isProfit ? Colors.green : Colors.red,
-                                  ),
-                                  ValueListenableBuilder<bool>(
-                                    valueListenable: showPercentage,
-                                    builder: (context, value, child) {
-                                      return Text(
-                                        value
-                                            ? '${snapshot.data!['percentageGainOrLoss']!.toStringAsFixed(2)}%'
-                                            : '\$${snapshot.data!['profitOrLoss']!.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            color: isProfit
-                                                ? Colors.green
-                                                : Colors.red),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
+                  child: PortfolioOverview(
+                    portfolioValue: snapshot.data!['portfolioValue'],
+                    profitOrLoss: snapshot.data!['profitOrLoss'],
+                    percentageGainOrLoss:
+                        snapshot.data!['percentageGainOrLoss'],
+                    showPercentage: showPercentage,
+                    onTogglePercentage: () {
+                      showPercentage.value = !showPercentage.value;
+                    },
+                    individualInvestments:
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                      future:
+                          portfolioService.getIndividualInvestments(user.uid),
+                      builder: (context, investmentSnapshot) {
+                        if (investmentSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (investmentSnapshot.hasError) {
+                          return Center(
+                              child:
+                                  Text('Error: ${investmentSnapshot.error}'));
+                        } else {
+                          return InvestmentList(investmentSnapshot.data!);
+                        }
+                      },
                     ),
                   ),
                 );
               }
             },
           );
+  }
+
+  String valueToString(bool isProfit, double value) {
+    return showPercentage.value
+        ? '${value.toStringAsFixed(2)}%'
+        : '\$${value.toStringAsFixed(2)}';
+  }
+}
+
+class PortfolioOverview extends StatelessWidget {
+  final double portfolioValue;
+  final double profitOrLoss;
+  final double percentageGainOrLoss;
+  final ValueNotifier<bool> showPercentage;
+  final VoidCallback onTogglePercentage;
+  final Widget individualInvestments;
+
+  PortfolioOverview({
+    required this.portfolioValue,
+    required this.profitOrLoss,
+    required this.percentageGainOrLoss,
+    required this.showPercentage,
+    required this.onTogglePercentage,
+    required this.individualInvestments,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    bool isProfit = profitOrLoss >= 0;
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              '\$${portfolioValue.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            GestureDetector(
+              onTap: onTogglePercentage,
+              child: Row(
+                children: [
+                  Icon(
+                    isProfit
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: isProfit ? Colors.green : Colors.red,
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: showPercentage,
+                    builder: (context, value, child) {
+                      return Text(
+                        value
+                            ? '${percentageGainOrLoss.toStringAsFixed(2)}%'
+                            : '\$${profitOrLoss.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: isProfit ? Colors.green : Colors.red,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Investments',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Expanded(child: individualInvestments),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class InvestmentList extends StatefulWidget {
+  final List<Map<String, dynamic>> investments;
+
+  InvestmentList(this.investments);
+
+  @override
+  _InvestmentListState createState() => _InvestmentListState();
+}
+
+class _InvestmentListState extends State<InvestmentList> {
+  bool showPercentage = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: widget.investments.length,
+      itemBuilder: (context, index) {
+        var investment = widget.investments[index];
+        bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
+
+        return ListTile(
+          title: Text(investment['name']),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '\$${investment['totalValue'].toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isInvestmentProfit ? Colors.green : Colors.red,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    showPercentage = !showPercentage;
+                  });
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      isInvestmentProfit
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: isInvestmentProfit ? Colors.green : Colors.red,
+                    ),
+                    Text(
+                      showPercentage
+                          ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
+                          : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                      style: TextStyle(
+                        color: isInvestmentProfit ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String valueToString(bool isProfit, double value) {
+    return '${value.toStringAsFixed(2)}';
+  }
+
+  String valueToPercentage(bool isProfit, double percentage) {
+    return '${percentage.toStringAsFixed(2)}%';
   }
 }

@@ -76,4 +76,52 @@ class PortfolioService {
       throw Exception('Failed to load stock price');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getIndividualInvestments(
+      String uid) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception('No user found with this uid');
+    }
+
+    var userDoc = userQuery.docs.first;
+    var portfolioSnapshot =
+        await userDoc.reference.collection('portfolio').get();
+
+    Map<String, Map<String, dynamic>> investments = {};
+
+    for (var portfolioDoc in portfolioSnapshot.docs) {
+      var portfolio = portfolioDoc.data();
+      var symbol = portfolio['symbol'];
+      var quantity = (portfolio['quantity'] as num).toDouble();
+      var price = (portfolio['price'] as num).toDouble();
+      var purchaseDate = (portfolio['purchaseDate'] as Timestamp).toDate();
+      var totalValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
+      var profitOrLoss = totalValue - quantity * price;
+      var percentageGainOrLoss = profitOrLoss / totalValue * 100;
+
+      if (investments.containsKey(symbol)) {
+        investments[symbol]?['quantity'] += quantity;
+        investments[symbol]?['totalValue'] += totalValue;
+        investments[symbol]?['profitOrLoss'] += profitOrLoss;
+      } else {
+        investments[symbol] = {
+          'name': portfolio['name'],
+          'symbol': symbol,
+          'quantity': quantity,
+          'price': price,
+          'purchaseDate': purchaseDate,
+          'totalValue': totalValue,
+          'profitOrLoss': profitOrLoss,
+          'percentageGainOrLoss': percentageGainOrLoss,
+        };
+      }
+    }
+
+    return investments.values.toList();
+  }
 }
