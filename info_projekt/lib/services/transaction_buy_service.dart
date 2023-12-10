@@ -6,7 +6,7 @@ import 'package:info_projekt/services/stockData_service.dart';
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
-/// TODO:
+/// TODO: Check total price calculation & wrong password handling
 /// Function that starts the buy flow.
 /// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
 /// If the password is correct, it checks if the user has enough money to buy the stock.
