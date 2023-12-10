@@ -74,6 +74,9 @@ Future<void> startSellStockFlow(
                   'amount': FieldValue.increment(-amount),
                   'date_sell': Timestamp.now(),
                   'price_sell': totalPrice,
+                  'owned': false,
+                  'price_buy': 0.0,
+                  'stock_symbol': stockSymbol,
                 });
               }
             } else {
