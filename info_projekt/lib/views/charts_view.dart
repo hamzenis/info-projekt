@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../services/stockData_service.dart';
 
+import '../widgets/buy_popup.dart';
+
 class ChartStock extends StatefulWidget {
   final String title;
   const ChartStock({
@@ -142,7 +144,14 @@ class _ChartStockState extends State<ChartStock> {
                 ),
                 floatingActionButton: FloatingActionButton.extended(
                   onPressed: () {
-                    // TODO:Write Buy Action
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return BuyPopup(
+                          stockSymbol: widget.title,
+                        ); // Show the BuyPopup content
+                      },
+                    );
                   },
                   backgroundColor: Colors.green,
                   icon: const Icon(Icons.attach_money),
