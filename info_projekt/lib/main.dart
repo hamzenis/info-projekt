@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
-        '/home': (context) => const HomePage(),
+        '/home': (context) => HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
               future: getInitialLink(),
