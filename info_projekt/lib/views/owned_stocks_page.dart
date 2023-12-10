@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:info_projekt/widgets/sell_popup.dart';
 
 class OwnedStocksPage extends StatelessWidget {
   final _auth = FirebaseAuth.instance;
@@ -51,9 +52,21 @@ class OwnedStocksPage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final transaction = transactions[index];
                       return ListTile(
-                        title: Text(transaction['stock_symbol']),
-                        subtitle: Text('Amount: ${transaction['amount']}'),
-                      );
+                      title: Text(transaction['stock_symbol']),
+                      subtitle: Text('Amount: ${transaction['amount']}'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.sell),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => SellPopup(
+                              stockSymbol: transaction['stock_symbol'],
+                              documentId: transaction.id, // Assuming transaction is a DocumentSnapshot
+                            ),
+                          );
+                        },
+                      ),
+                    );
                     },
                   ),
                 );
