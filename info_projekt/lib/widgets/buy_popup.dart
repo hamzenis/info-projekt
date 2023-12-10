@@ -36,16 +36,20 @@ class BuyPopup extends StatelessWidget {
         ElevatedButton(
           onPressed: () async {
             int enteredAmount = int.tryParse(amountController.text) ?? 0;
-            print('User entered: $enteredAmount'); // TODO: Functionality
+            print(
+                'User entered: $enteredAmount'); // TODO: Remove this DEBUG line
             if (enteredAmount == 0) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Please enter a valid number'),
+                  backgroundColor: Colors.red,
                 ),
               );
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pop();
+              await startBuyStockFlow(context, enteredAmount, stockSymbol);
             }
-            Navigator.of(context).pop();
-            await startBuyStockFlow(context, enteredAmount, stockSymbol);
           },
           child: const Text('Buy'),
         ),

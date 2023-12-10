@@ -51,22 +51,31 @@ class OwnedStocksPage extends StatelessWidget {
                     itemCount: transactions.length,
                     itemBuilder: (context, index) {
                       final transaction = transactions[index];
-                      return ListTile(
-                      title: Text(transaction['stock_symbol']),
-                      subtitle: Text('Amount: ${transaction['amount']}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.sell),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => SellPopup(
-                              stockSymbol: transaction['stock_symbol'],
-                              documentId: transaction.id, // Assuming transaction is a DocumentSnapshot
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                      return Container(
+                        margin: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 0.5),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: ListTile(
+                          title: Text(transaction['stock_symbol']),
+                          subtitle: Text(
+                              ' Amount: ${transaction['amount']}\n Price: \$${transaction['price_buy']}\n Date: ${transaction['date_buy'].toDate().toString().substring(0, 16)}'),
+                          trailing: IconButton(
+                            icon: Icon(Icons.sell),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => SellPopup(
+                                  stockSymbol: transaction['stock_symbol'],
+                                  documentId: transaction
+                                      .id, // Assuming transaction is a DocumentSnapshot
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
                     },
                   ),
                 );
