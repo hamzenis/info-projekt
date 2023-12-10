@@ -7,6 +7,11 @@ import 'package:info_projekt/services/transaction_buy_service.dart';
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
+/// TODO: Check total price calculation & wrong password handling
+/// Function that starts the sell flow.
+/// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
+/// If the password is correct, it checks if the user has the stock and enough amount to sell.
+/// If the user has the stock and enough amount, it adds the amount of money to the user's balance and updates his transaction history.
 Future<void> startSellStockFlow(
     BuildContext context, int amount, String stockSymbol) async {
   try {
@@ -25,55 +30,99 @@ Future<void> startSellStockFlow(
           return;
         }
 
-        // Fetch the user's transaction history
-        final transactionHistorySnapshot = await _firestore
-            .collection('Users')
-            .doc(user.uid)
-            .collection('transaction_history')
-            .where('stock_symbol', isEqualTo: stockSymbol)
-            .where('owned', isEqualTo: true)
-            .get();
+        // Get user document
+        final userDoc = await _firestore.collection('Users').doc(user.uid).get();
 
-        int totalOwnedShares = 0;
-        String documentId = ''; // Placeholder for the document ID
-        for (var doc in transactionHistorySnapshot.docs) {
-          totalOwnedShares += doc.data()['amount'] as int;
-          documentId = doc.id; // Assuming the latest transaction is the target
-        }
+        if (userDoc.exists) {
+          // Query user's transaction history for the specific stock
+          final transactionHistorySnapshot = await _firestore
+              .collection('Users')
+              .doc(user.uid)
+              .collection('transaction_history')
+              .where('stock_symbol', isEqualTo: stockSymbol)
+              .where('owned', isEqualTo: true)
+              .get();
 
-        if (amount > totalOwnedShares) {
-          errorDialogNotEnoughShares(context);
-          return;
-        }
+          if (transactionHistorySnapshot.docs.isNotEmpty) {
+            var transactionDoc = transactionHistorySnapshot.docs.first;
+            int ownedAmount = transactionDoc['amount'];
 
-        String? priceString = await getCurrentPrice(stockSymbol);
-        double price = double.tryParse(priceString ?? '0.0') ?? 0.0;
-        double totalPrice = price * amount;
+            if (ownedAmount >= amount) {
+              String? priceString = await getCurrentPrice(stockSymbol);
+              double price = double.tryParse(priceString ?? '0.0') ?? 0.0;
+              double totalPrice = price * amount;
 
-        // Update the user's balance
-        await _firestore.collection('Users').doc(user.uid).update({
-          'balance': FieldValue.increment(totalPrice),
-        });
+              await _firestore.collection('Users').doc(user.uid).update({
+                'balance': FieldValue.increment(totalPrice),
+              });
 
-        // Update the transaction history
-        if (amount >= totalOwnedShares) {
-          // Selling all shares
-          await _firestore.collection('Users').doc(user.uid).collection('transaction_history').doc(documentId).update({
-            'owned': false,
-            'date_sell': Timestamp.now(),
-            'price_sell': totalPrice,
-          });
-        } else {
-          // Partial selling, update the amount
-          await _firestore.collection('Users').doc(user.uid).collection('transaction_history').doc(documentId).update({
-            'amount': FieldValue.increment(-amount),
-          });
+              // Update transaction history
+              if (ownedAmount == amount) {
+                await _firestore
+                    .collection('Users')
+                    .doc(user.uid)
+                    .collection('transaction_history')
+                    .doc(transactionDoc.id)
+                    .delete();
+              } else {
+                await _firestore
+                    .collection('Users')
+                    .doc(user.uid)
+                    .collection('transaction_history')
+                    .doc(transactionDoc.id)
+                    .update({
+                  'amount': FieldValue.increment(-amount),
+                  'date_sell': Timestamp.now(),
+                  'price_sell': totalPrice,
+                });
+              }
+            } else {
+              errorDialogNotEnoughShares(context);
+            }
+          } else {
+            errorDialogNotEnoughShares(context);
+          }
         }
       }
     }
   } on Exception catch (e) {
     print('Sell failed: $e');
   }
+}
+
+
+/// Function that was created for the withdraw button.
+/// It creates a popup with the password of the user.
+/// It acts as security feature, so that only the user that knows the password can withdraw money.
+Future<String?> getUserPassword(BuildContext context) async {
+  final controller = TextEditingController();
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Enter your password'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(hintText: 'Password'),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop(controller.text);
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
 
 
