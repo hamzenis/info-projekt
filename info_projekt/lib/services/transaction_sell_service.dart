@@ -58,6 +58,7 @@ Future<void> startSellStockFlow(
 
   // Retrieve the original buying price
   double originalPriceBuy = transactionDoc.data()?['price_buy'] ?? 0.0;
+  Timestamp originalDateBuy = transactionDoc.data()?['date_buy'] ?? Timestamp.now();
 
   // Update transaction history
   if (ownedAmount == amount) {
@@ -68,6 +69,7 @@ Future<void> startSellStockFlow(
         .doc(transactionDoc.id)
         .delete();
   } else {
+    // Update transaction history for partial sell
     await _firestore
         .collection('Users')
         .doc(user.uid)
@@ -75,12 +77,14 @@ Future<void> startSellStockFlow(
         .doc(transactionDoc.id)
         .update({
       'amount': FieldValue.increment(-amount),
+      'date_buy': originalDateBuy,  // Use the original purchase date
       'date_sell': Timestamp.now(),
       'price_sell': totalPrice,
       'owned': false,
-      'price_buy': originalPriceBuy,  // Update with the original price
+      'price_buy': originalPriceBuy,
       'stock_symbol': stockSymbol,
     });
+
           }
         } else {
           errorDialogNotEnoughShares(context);
