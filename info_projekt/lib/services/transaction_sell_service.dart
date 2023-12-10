@@ -48,40 +48,43 @@ Future<void> startSellStockFlow(
             int ownedAmount = transactionDoc['amount'];
 
             if (ownedAmount >= amount) {
-              String? priceString = await getCurrentPrice(stockSymbol);
-              double price = double.tryParse(priceString ?? '0.0') ?? 0.0;
-              double totalPrice = price * amount;
+  String? priceString = await getCurrentPrice(stockSymbol);
+  double price = double.tryParse(priceString ?? '0.0') ?? 0.0;
+  double totalPrice = price * amount;
 
-              await _firestore.collection('Users').doc(user.uid).update({
-                'balance': FieldValue.increment(totalPrice),
-              });
+  await _firestore.collection('Users').doc(user.uid).update({
+    'balance': FieldValue.increment(totalPrice),
+  });
 
-              // Update transaction history
-              if (ownedAmount == amount) {
-                await _firestore
-                    .collection('Users')
-                    .doc(user.uid)
-                    .collection('transaction_history')
-                    .doc(transactionDoc.id)
-                    .delete();
-              } else {
-                await _firestore
-                    .collection('Users')
-                    .doc(user.uid)
-                    .collection('transaction_history')
-                    .doc(transactionDoc.id)
-                    .update({
-                  'amount': FieldValue.increment(-amount),
-                  'date_sell': Timestamp.now(),
-                  'price_sell': totalPrice,
-                  'owned': false,
-                  'price_buy': 0.0,
-                  'stock_symbol': stockSymbol,
-                });
-              }
-            } else {
-              errorDialogNotEnoughShares(context);
-            }
+  // Retrieve the original buying price
+  double originalPriceBuy = transactionDoc.data()?['price_buy'] ?? 0.0;
+
+  // Update transaction history
+  if (ownedAmount == amount) {
+    await _firestore
+        .collection('Users')
+        .doc(user.uid)
+        .collection('transaction_history')
+        .doc(transactionDoc.id)
+        .delete();
+  } else {
+    await _firestore
+        .collection('Users')
+        .doc(user.uid)
+        .collection('transaction_history')
+        .doc(transactionDoc.id)
+        .update({
+      'amount': FieldValue.increment(-amount),
+      'date_sell': Timestamp.now(),
+      'price_sell': totalPrice,
+      'owned': false,
+      'price_buy': originalPriceBuy,  // Update with the original price
+      'stock_symbol': stockSymbol,
+    });
+          }
+        } else {
+          errorDialogNotEnoughShares(context);
+        }
           } else {
             errorDialogNotEnoughShares(context);
           }
