@@ -27,7 +27,7 @@ class OwnedStocksPage extends StatelessWidget {
           stream: _firestore
               .collection('Users')
               .doc(userDoc.id)
-              .collection('transaction_history')
+              .collection('stock_transaction_history')
               .where('owned', isEqualTo: true)
               .snapshots(),
           builder:

@@ -46,7 +46,7 @@ Future<void> startBuyStockFlow(
           await _firestore
               .collection('Users')
               .doc(userDoc.id)
-              .collection('transaction_history')
+              .collection('stock_transaction_history')
               .add({
             'amount': amount,
             'date_buy': Timestamp.now(),
