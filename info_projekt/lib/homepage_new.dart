@@ -421,13 +421,6 @@ class PortfolioOverview extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16),
-            Text(
-              'Investments',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             Expanded(child: individualInvestments),
           ],
         ),
@@ -446,56 +439,175 @@ class InvestmentList extends StatefulWidget {
 }
 
 class _InvestmentListState extends State<InvestmentList> {
+  late PageController _pageController;
+  final user = FirebaseAuth.instance.currentUser;
   bool showPercentage = false;
+  int _currentPage = 0;
+  List<String> watchlist = ['Stock A', 'Stock B', 'Stock C', 'Stock D'];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentPage)
+      ..addListener(() {
+        setState(() {
+          _currentPage = _pageController.page!.round();
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: widget.investments.length,
-      itemBuilder: (context, index) {
-        var investment = widget.investments[index];
-        bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
-
-        return ListTile(
-          title: Text(investment['name']),
-          subtitle: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '\$${investment['totalValue'].toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: isInvestmentProfit ? Colors.green : Colors.red,
-                ),
-              ),
-              GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    showPercentage = !showPercentage;
-                  });
+                  _pageController.animateToPage(0,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut);
                 },
-                child: Row(
-                  children: [
-                    Icon(
-                      isInvestmentProfit
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: isInvestmentProfit ? Colors.green : Colors.red,
-                    ),
-                    Text(
-                      showPercentage
-                          ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
-                          : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                child: Container(
+                  color:
+                      _currentPage == 0 ? Colors.grey[300] : Colors.transparent,
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      'Investments',
                       style: TextStyle(
-                        color: isInvestmentProfit ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                        color: _currentPage == 0 ? Colors.black : Colors.grey,
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(1,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut);
+                },
+                child: Container(
+                  color:
+                      _currentPage == 1 ? Colors.grey[300] : Colors.transparent,
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      'Watchlist',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _currentPage == 1 ? Colors.black : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            children: [
+              // Investments
+              ListView.builder(
+                itemCount: widget.investments.length,
+                itemBuilder: (context, index) {
+                  var investment = widget.investments[index];
+                  bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
+
+                  return ListTile(
+                    title: Text(investment['name']),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '\$${investment['totalValue'].toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color:
+                                isInvestmentProfit ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              showPercentage = !showPercentage;
+                            });
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                isInvestmentProfit
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: isInvestmentProfit
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                              Text(
+                                showPercentage
+                                    ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
+                                    : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                                style: TextStyle(
+                                  color: isInvestmentProfit
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              // Watchlist
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: PortfolioService().getWatchlist(user!.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    var watchlist = snapshot.data;
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: watchlist!.isEmpty
+                          ? Text(
+                              'Watchlist items will appear here when available.',
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          : ListView.builder(
+                              itemCount: watchlist.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(watchlist[index]['name']),
+                                );
+                              },
+                            ),
+                    );
+                  }
+                },
               ),
             ],
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
