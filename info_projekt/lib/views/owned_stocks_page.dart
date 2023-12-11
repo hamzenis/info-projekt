@@ -20,7 +20,12 @@ class OwnedStocksPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
-          return const Text('No user data');
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Owned Stocks'),
+            ),
+            body: const Text('No user data'),
+          );
         }
         final userDoc = userSnapshot.data!.docs.first;
         return StreamBuilder<QuerySnapshot>(
@@ -28,7 +33,6 @@ class OwnedStocksPage extends StatelessWidget {
               .collection('Users')
               .doc(userDoc.id)
               .collection('stock_transaction_history')
-              .where('owned', isEqualTo: true)
               .snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -47,37 +51,7 @@ class OwnedStocksPage extends StatelessWidget {
                   appBar: AppBar(
                     title: Text('Owned Stocks'),
                   ),
-                  body: ListView.builder(
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = transactions[index];
-                      return Container(
-                        margin: const EdgeInsets.all(10.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 0.5),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: ListTile(
-                          title: Text(transaction['stock_symbol']),
-                          subtitle: Text(
-                              ' Amount: ${transaction['amount']}\n Price: \$${transaction['price_buy']}\n Date: ${transaction['date_buy'].toDate().toString().substring(0, 16)}'),
-                          trailing: IconButton(
-                            icon: Icon(Icons.sell),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => SellPopup(
-                                  stockSymbol: transaction['stock_symbol'],
-                                  documentId: transaction
-                                      .id, // Assuming transaction is a DocumentSnapshot
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  body: buildListView(transactions), //HERE
                 );
               } else {
                 return Scaffold(
@@ -92,7 +66,9 @@ class OwnedStocksPage extends StatelessWidget {
                 appBar: AppBar(
                   title: Text('Owned Stocks'),
                 ),
-                body: Center(child: Text("No data")),
+                body: Center(
+                  child: Text("No data"),
+                ),
               );
             } else {
               return Scaffold(
@@ -107,4 +83,39 @@ class OwnedStocksPage extends StatelessWidget {
       },
     );
   }
+}
+
+ListView buildListView(List<QueryDocumentSnapshot> transactions) {
+  return ListView.builder(
+    itemCount: transactions.length,
+    itemBuilder: (context, index) {
+      final transaction = transactions[index];
+      print(transactions.length);
+      return Container(
+        margin: const EdgeInsets.all(10.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black, width: 0.5),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: ListTile(
+          title: Text(transaction['stock_symbol']),
+          subtitle: Text(
+              ' Amount: ${transaction['amount']}\n Price: \$${transaction['price']}\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
+          trailing: IconButton(
+            icon: const Icon(Icons.sell),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => SellPopup(
+                  stockSymbol: transaction['stock_symbol'],
+                  documentId: transaction
+                      .id, // Assuming transaction is a DocumentSnapshot
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    },
+  );
 }

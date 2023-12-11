@@ -36,7 +36,7 @@ Future<void> startBuyStockFlow(
           final userDoc = querySnapshot.docs.first;
           // double price = (double.tryParse(await getCurrentPrice(stockSymbol)) * amount);
           String? priceString = await getCurrentPrice(stockSymbol);
-          double price = double.tryParse(priceString ?? '0.0') ?? 0.0;
+          double price = double.tryParse(priceString) ?? 0.0;
           double totalPrice = price * amount;
 
           await _firestore.collection('Users').doc(userDoc.id).update({
@@ -49,13 +49,13 @@ Future<void> startBuyStockFlow(
               .collection('stock_transaction_history')
               .add({
             'amount': amount,
-            'date_buy': Timestamp.now(),
-            'date_sell': Timestamp.fromDate(DateTime(2000, 1, 1)),
-            'price_buy': totalPrice,
-            'owned': true,
-            'price_sell': 0.0,
+            'date': Timestamp.now(),
+            'price': totalPrice,
             'stock_symbol': stockSymbol,
+            'type': true, // true = buy,  false = sell
           });
+        } else {
+          print('User not found'); // TODO: Implement proper Error Handling
         }
       }
     }

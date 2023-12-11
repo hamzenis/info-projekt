@@ -48,6 +48,7 @@ class BuyPopup extends StatelessWidget {
               Navigator.of(context).pop();
             } else {
               Navigator.of(context).pop();
+              print("Starting Buy Flow"); // TODO: Remove this DEBUG line
               await startBuyStockFlow(context, enteredAmount, stockSymbol);
             }
           },
