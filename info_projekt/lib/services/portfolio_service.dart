@@ -124,4 +124,34 @@ class PortfolioService {
 
     return investments.values.toList();
   }
+
+  Future<List<Map<String, dynamic>>> getWatchlist(String uid) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception('No user found with this uid');
+    }
+
+    var userDoc = userQuery.docs.first;
+    var watchlistSnapshot =
+        await userDoc.reference.collection('watchlist').get();
+
+    List<Map<String, dynamic>> watchlist = [];
+
+    for (var watchlistDoc in watchlistSnapshot.docs) {
+      var watchlistItem = watchlistDoc.data();
+      var name = watchlistItem['name'];
+      var symbol = watchlistItem['symbol'];
+
+      watchlist.add({
+        'name': name,
+        'symbol': symbol,
+      });
+    }
+
+    return watchlist;
+  }
 }
