@@ -443,7 +443,6 @@ class _InvestmentListState extends State<InvestmentList> {
   final user = FirebaseAuth.instance.currentUser;
   bool showPercentage = false;
   int _currentPage = 0;
-  List<String> watchlist = ['Stock A', 'Stock B', 'Stock C', 'Stock D'];
 
   @override
   void initState() {
