@@ -90,7 +90,11 @@ ListView buildListView(List<QueryDocumentSnapshot> transactions) {
     itemCount: transactions.length,
     itemBuilder: (context, index) {
       final transaction = transactions[index];
-      print(transactions.length);
+      print(
+          "Transaction Len: ${transactions.length}"); // TODO: Remove this DEBUG line
+
+      String roundedPrice = double.parse(transaction['price'].toString())
+          .toStringAsFixed(2); // Round the price to 2 decimal places
       return Container(
         margin: const EdgeInsets.all(10.0),
         decoration: BoxDecoration(
@@ -100,7 +104,7 @@ ListView buildListView(List<QueryDocumentSnapshot> transactions) {
         child: ListTile(
           title: Text(transaction['stock_symbol']),
           subtitle: Text(
-              ' Amount: ${transaction['amount']}\n Price: \$${transaction['price']}\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
+              ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
           trailing: IconButton(
             icon: const Icon(Icons.sell),
             onPressed: () {
