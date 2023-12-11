@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../services/prices.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/portfolio_service.dart';
+
+final user = FirebaseAuth.instance.currentUser;
 
 class ChartStock extends StatefulWidget {
   final String title;
@@ -23,10 +28,14 @@ class ChartStock extends StatefulWidget {
 * TODO: Refactor for better readability
 * TODO: Add comments
 */
+
 class _ChartStockState extends State<ChartStock> {
   late ZoomPanBehavior _zoomPanBehavior;
+
   List<ChartData>? currentData;
   String selectedTimeRange = 'month'; // Default to 'month'
+  bool isInWatchlist = false;
+  final portfolioService = PortfolioService();
 
   /** 
   *  
@@ -38,6 +47,7 @@ class _ChartStockState extends State<ChartStock> {
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
+    checkIfInWatchlist();
   }
 
   /**
@@ -55,6 +65,11 @@ class _ChartStockState extends State<ChartStock> {
         ),
       ),
     );
+  }
+
+  Future<void> checkIfInWatchlist() async {
+    isInWatchlist =
+        await portfolioService.checkIfInWatchlist(user!.uid, widget.title);
   }
 
   /**
@@ -93,6 +108,52 @@ class _ChartStockState extends State<ChartStock> {
             return Scaffold(
                 appBar: AppBar(
                   title: Text(widget.title),
+                  actions: <Widget>[
+                    IconButton(
+                      icon: Icon(
+                        isInWatchlist ? Icons.star : Icons.star_border,
+                      ),
+                      onPressed: () async {
+                        if (isInWatchlist) {
+                          try {
+                            await portfolioService.removeFromWatchlist(
+                                user!.uid, widget.title);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('Stock removed from watchlist')),
+                            );
+                            setState(() {
+                              isInWatchlist = false;
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString())),
+                            );
+                          }
+                        } else {
+                          try {
+                            await portfolioService.addToWatchlist(
+                              user!.uid,
+                              companyName,
+                              widget.title,
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Stock added to watchlist')),
+                            );
+                            setState(() {
+                              isInWatchlist = true;
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString())),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
                 ),
                 body: SingleChildScrollView(
                   child: Column(

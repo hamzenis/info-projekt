@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
@@ -308,7 +311,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
   @override
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
-    print("UID: ${user!.uid}");
     return user == null
         ? Center(child: Text('Please log in'))
         : FutureBuilder<Map<String, dynamic>>(
@@ -594,8 +596,39 @@ class _InvestmentListState extends State<InvestmentList> {
                           : ListView.builder(
                               itemCount: watchlist.length,
                               itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(watchlist[index]['name']),
+                                return FutureBuilder(
+                                  future: http.get(Uri.parse(
+                                      'https://financialmodelingprep.com/api/v3/profile/${watchlist[index]['symbol']}?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X')),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return CircularProgressIndicator();
+                                    } else if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    } else {
+                                      var stockData =
+                                          jsonDecode(snapshot.data!.body)[0];
+                                      return Container(
+                                        child: ListTile(
+                                          title: Text(watchlist[index]['name']),
+                                          subtitle:
+                                              Text('\$${stockData['price']}'),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ChartStock(
+                                                  title: watchlist[index]
+                                                      ['symbol'],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    }
+                                  },
                                 );
                               },
                             ),

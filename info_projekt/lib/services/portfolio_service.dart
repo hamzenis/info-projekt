@@ -154,4 +154,86 @@ class PortfolioService {
 
     return watchlist;
   }
+
+  Future<void> addToWatchlist(String uid, String name, String symbol) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception('No user found with this uid');
+    }
+
+    var userDoc = userQuery.docs.first;
+    var watchlistSnapshot =
+        await userDoc.reference.collection('watchlist').get();
+
+    for (var watchlistDoc in watchlistSnapshot.docs) {
+      var watchlistItem = watchlistDoc.data();
+      var watchlistSymbol = watchlistItem['symbol'];
+
+      if (watchlistSymbol == symbol) {
+        throw Exception('Stock already in watchlist');
+      }
+    }
+
+    await userDoc.reference.collection('watchlist').add({
+      'name': name,
+      'symbol': symbol,
+    });
+  }
+
+  Future<void> removeFromWatchlist(String uid, String symbol) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception('No user found with this uid');
+    }
+
+    var userDoc = userQuery.docs.first;
+    var watchlistSnapshot =
+        await userDoc.reference.collection('watchlist').get();
+
+    for (var watchlistDoc in watchlistSnapshot.docs) {
+      var watchlistItem = watchlistDoc.data();
+      var watchlistSymbol = watchlistItem['symbol'];
+
+      if (watchlistSymbol == symbol) {
+        await watchlistDoc.reference.delete();
+        return;
+      }
+    }
+
+    throw Exception('Stock not found in watchlist');
+  }
+
+  Future<bool> checkIfInWatchlist(String uid, String symbol) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception('No user found with this uid');
+    }
+
+    var userDoc = userQuery.docs.first;
+    var watchlistSnapshot =
+        await userDoc.reference.collection('watchlist').get();
+
+    for (var watchlistDoc in watchlistSnapshot.docs) {
+      var watchlistItem = watchlistDoc.data();
+      var watchlistSymbol = watchlistItem['symbol'];
+
+      if (watchlistSymbol == symbol) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
