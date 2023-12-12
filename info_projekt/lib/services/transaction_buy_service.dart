@@ -25,9 +25,10 @@ Future<void> startBuyStockFlow(
         try {
           await user.reauthenticateWithCredential(credential);
         } catch (e) {
-          errorDialogWrongPassword(context);
+          errorDialogWrongPassword(context); //TODO: FIX this
           return;
         }
+
         final querySnapshot = await _firestore
             .collection('Users')
             .where('UID', isEqualTo: user.uid)
@@ -35,9 +36,14 @@ Future<void> startBuyStockFlow(
         if (querySnapshot.docs.isNotEmpty) {
           final userDoc = querySnapshot.docs.first;
           // double price = (double.tryParse(await getCurrentPrice(stockSymbol)) * amount);
-          String? priceString = await getCurrentPrice(stockSymbol);
-          double price = double.tryParse(priceString) ?? 0.0;
-          double totalPrice = price * amount;
+          String? singlePriceString = await getCurrentPrice(stockSymbol);
+          double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
+          double totalPrice = singlePrice * amount;
+
+          if (totalPrice > userDoc['balance']) {
+            print('Not enough money'); // TODO: Implement proper Error Handling
+            return;
+          }
 
           await _firestore.collection('Users').doc(userDoc.id).update({
             'balance': FieldValue.increment(-totalPrice),
@@ -54,6 +60,22 @@ Future<void> startBuyStockFlow(
             'stock_symbol': stockSymbol,
             'type': true, // true = buy,  false = sell
           });
+          print("stock_transaction_ history written");
+
+          String? companyName = await getCompanyName(stockSymbol);
+
+          await _firestore
+              .collection('Users')
+              .doc(userDoc.id)
+              .collection('portfolio')
+              .add({
+            'name': companyName,
+            'price': totalPrice,
+            'purchase_date': Timestamp.now(),
+            'quantity': amount,
+            'stock_symbol': stockSymbol,
+          });
+          print("portfolio written");
         } else {
           print('User not found'); // TODO: Implement proper Error Handling
         }
