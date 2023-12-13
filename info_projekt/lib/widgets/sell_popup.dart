@@ -3,9 +3,8 @@ import 'package:info_projekt/services/transaction_sell_service.dart';
 
 class SellPopup extends StatelessWidget {
   final String stockSymbol;
-  final String documentId;
 
-  SellPopup({required this.stockSymbol, required this.documentId});
+  SellPopup({required this.stockSymbol});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +19,9 @@ class SellPopup extends StatelessWidget {
           TextField(
             controller: amountController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: 'Number of Shares'),
+            decoration: InputDecoration(
+              hintText: 'Number of Shares',
+            ),
           ),
         ],
       ),

@@ -58,7 +58,9 @@ class OwnedStocksPage extends StatelessWidget {
                   appBar: AppBar(
                     title: Text('Owned Stocks'),
                   ),
-                  body: Center(child: CircularProgressIndicator()),
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
                 );
               }
             } else if (snapshot.connectionState == ConnectionState.none) {
@@ -75,7 +77,9 @@ class OwnedStocksPage extends StatelessWidget {
                 appBar: AppBar(
                   title: Text('Owned Stocks'),
                 ),
-                body: Center(child: CircularProgressIndicator()),
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
               );
             }
           },
@@ -102,7 +106,7 @@ ListView buildListView(List<QueryDocumentSnapshot> transactions) {
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: ListTile(
-          title: Text(transaction['stock_symbol']),
+          title: Text(transaction['symbol']),
           subtitle: Text(
               ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
           trailing: IconButton(
@@ -111,9 +115,7 @@ ListView buildListView(List<QueryDocumentSnapshot> transactions) {
               showDialog(
                 context: context,
                 builder: (context) => SellPopup(
-                  stockSymbol: transaction['stock_symbol'],
-                  documentId: transaction
-                      .id, // Assuming transaction is a DocumentSnapshot
+                  stockSymbol: transaction['symbol'],
                 ),
               );
             },

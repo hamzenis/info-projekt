@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,7 +41,8 @@ Future<void> startBuyStockFlow(
           double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
           double totalPrice = singlePrice * amount;
 
-          if (totalPrice > userDoc['balance']) {
+          // User Balance Check, for DEBUG purposes kDebugMode is also set to not trigger in DEBUG Mode
+          if (totalPrice > userDoc['balance'] && !kDebugMode) {
             print('Not enough money'); // TODO: Implement proper Error Handling
             return;
           }
@@ -57,10 +59,11 @@ Future<void> startBuyStockFlow(
             'amount': amount,
             'date': Timestamp.now(),
             'price': totalPrice,
-            'stock_symbol': stockSymbol,
+            'symbol': stockSymbol,
             'type': true, // true = buy,  false = sell
           });
-          print("stock_transaction_ history written");
+          print(
+              "stock_transaction_ history written"); // TODO: DEBUG Remove this
 
           String? companyName = await getCompanyName(stockSymbol);
 
@@ -71,18 +74,18 @@ Future<void> startBuyStockFlow(
               .add({
             'name': companyName,
             'price': totalPrice,
-            'purchase_date': Timestamp.now(),
+            'purchaseDate': Timestamp.now(),
             'quantity': amount,
-            'stock_symbol': stockSymbol,
+            'symbol': stockSymbol,
           });
-          print("portfolio written");
+          print("portfolio written"); // TODO: DEBUG Remove this
         } else {
           print('User not found'); // TODO: Implement proper Error Handling
         }
       }
     }
   } on Exception catch (e) {
-    print('Buy failed: $e');
+    print('Buy failed: $e'); // TODO: Implement proper Error Handling
   }
 }
 
