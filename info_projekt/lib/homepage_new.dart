@@ -440,21 +440,35 @@ class InvestmentList extends StatefulWidget {
   _InvestmentListState createState() => _InvestmentListState();
 }
 
-class _InvestmentListState extends State<InvestmentList> {
+class _InvestmentListState extends State<InvestmentList>
+    with AutomaticKeepAliveClientMixin {
+  List<Map<String, dynamic>>? _watchlist;
   late PageController _pageController;
   final user = FirebaseAuth.instance.currentUser;
   bool showPercentage = false;
   int _currentPage = 0;
 
   @override
+  bool get wantKeepAlive => true;
+
+  Future<List<Map<String, dynamic>>>? _watchlistFuture;
+
+  @override
   void initState() {
     super.initState();
+    _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
+    fetchWatchlist();
     _pageController = PageController(initialPage: _currentPage)
       ..addListener(() {
         setState(() {
           _currentPage = _pageController.page!.round();
         });
       });
+  }
+
+  Future<void> fetchWatchlist() async {
+    _watchlist = await PortfolioService().getWatchlist(user!.uid);
+    setState(() {});
   }
 
   @override
@@ -465,6 +479,7 @@ class _InvestmentListState extends State<InvestmentList> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -578,7 +593,7 @@ class _InvestmentListState extends State<InvestmentList> {
 
               // Watchlist
               FutureBuilder<List<Map<String, dynamic>>>(
-                future: PortfolioService().getWatchlist(user!.uid),
+                future: _watchlistFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
@@ -588,17 +603,17 @@ class _InvestmentListState extends State<InvestmentList> {
                     var watchlist = snapshot.data;
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: watchlist!.isEmpty
+                      child: _watchlist!.isEmpty
                           ? Text(
                               'Watchlist items will appear here when available.',
                               style: TextStyle(color: Colors.grey),
                             )
                           : ListView.builder(
-                              itemCount: watchlist.length,
+                              itemCount: _watchlist?.length,
                               itemBuilder: (context, index) {
                                 return FutureBuilder(
                                   future: http.get(Uri.parse(
-                                      'https://financialmodelingprep.com/api/v3/profile/${watchlist[index]['symbol']}?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X')),
+                                      'https://financialmodelingprep.com/api/v3/profile/${watchlist?[index]['symbol']}?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X')),
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
@@ -610,7 +625,8 @@ class _InvestmentListState extends State<InvestmentList> {
                                           jsonDecode(snapshot.data!.body)[0];
                                       return Container(
                                         child: ListTile(
-                                          title: Text(watchlist[index]['name']),
+                                          title:
+                                              Text(watchlist?[index]['name']),
                                           subtitle:
                                               Text('\$${stockData['price']}'),
                                           onTap: () {
@@ -619,7 +635,7 @@ class _InvestmentListState extends State<InvestmentList> {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     ChartStock(
-                                                  title: watchlist[index]
+                                                  title: watchlist?[index]
                                                       ['symbol'],
                                                 ),
                                               ),
