@@ -7,7 +7,7 @@ import 'package:info_projekt/services/stockData_service.dart';
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
-/// TODO: Check total price calculation & wrong password handling
+/// TODO: Check total price calculation & wrong password handling, pop up not enough money
 /// Function that starts the buy flow.
 /// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
 /// If the password is correct, it checks if the user has enough money to buy the stock.
@@ -89,7 +89,6 @@ Future<void> startBuyStockFlow(
   }
 }
 
-/// Function that was created for the withdraw button.
 /// It creates a popup with the password of the user.
 /// It acts as security feature, so that only the user that knows the password can withdraw money.
 Future<String?> getUserPassword(BuildContext context) async {
