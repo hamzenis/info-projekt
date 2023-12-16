@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:universal_html/html.dart' as html;
 
 /// This is the Brain of the Wallet Screen.
 /// This class works with the [WalletScreen] class to deposit and withdraw money.
@@ -280,6 +281,42 @@ class WalletServices {
       if (kDebugMode) {
         print('Payment failed: $e');
       }
+    }
+  }
+
+  /// DepositFlow for web
+  /// This function starts the deposit process.
+  /// It creates a payment intent and shows the payment sheet to the user.
+  /// If the payment was successful, it starts a webhook from stripe to update the balance in the database.
+  /// The database update is done via the backend server.
+  /// It also adds the transaction to the balance history.
+  Future<String?> startDepositFlowWeb(
+      double depositAmount, String userId) async {
+    int amountInCents = (depositAmount * 100).round();
+
+    var response = await http.post(
+      /// the ip: 134.119.216.59:5000 is the ip of the server
+      /// cant be changed to localhost so easy, because the webhook from stripe cant reach the localhost
+      /// if you want to run it on your local machine, you have to follow the instructions from stripe
+      /// https://stripe.com/docs/connect/webhooks#test-webhooks-locally
+      Uri.parse('http://134.119.216.59:5000/create-payment-intent-web'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'amount': amountInCents.toString(),
+        'user_id': userId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return data['url'];
+    } else {
+      if (kDebugMode) {
+        print('Failed to create payment intent: ${response.body}');
+      }
+      return null;
     }
   }
 

@@ -1,0 +1,141 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:info_projekt/services/stockData_service.dart';
+
+final _auth = FirebaseAuth.instance;
+final _firestore = FirebaseFirestore.instance;
+
+/// TODO: Check total price calculation & wrong password handling, pop up not enough money
+/// Function that starts the buy flow.
+/// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
+/// If the password is correct, it checks if the user has enough money to buy the stock.
+/// If the user has enough money, it subtracts the amount of money from the user's balance and adds the stock to his transaction history.
+Future<void> startBuyStockFlow(
+    BuildContext context, int amount, String stockSymbol) async {
+  try {
+    final user = _auth.currentUser;
+    if (user != null) {
+      String? password = await getUserPassword(context);
+      if (password != null) {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        try {
+          await user.reauthenticateWithCredential(credential);
+        } catch (e) {
+          errorDialogWrongPassword(context); //TODO: FIX this
+          return;
+        }
+
+        final querySnapshot = await _firestore
+            .collection('Users')
+            .where('UID', isEqualTo: user.uid)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          final userDoc = querySnapshot.docs.first;
+          // double price = (double.tryParse(await getCurrentPrice(stockSymbol)) * amount);
+          String? singlePriceString = await getCurrentPrice(stockSymbol);
+          double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
+          double totalPrice = singlePrice * amount;
+
+          // User Balance Check, for DEBUG purposes kDebugMode is also set to not trigger in DEBUG Mode
+          if (totalPrice > userDoc['balance'] && !kDebugMode) {
+            print('Not enough money'); // TODO: Implement proper Error Handling
+            return;
+          }
+
+          await _firestore.collection('Users').doc(userDoc.id).update({
+            'balance': FieldValue.increment(-totalPrice),
+          });
+
+          await _firestore
+              .collection('Users')
+              .doc(userDoc.id)
+              .collection('stock_transaction_history')
+              .add({
+            'amount': amount,
+            'date': Timestamp.now(),
+            'price': totalPrice,
+            'symbol': stockSymbol,
+            'type': true, // true = buy,  false = sell
+          });
+          print(
+              "stock_transaction_ history written"); // TODO: DEBUG Remove this
+
+          String? companyName = await getCompanyName(stockSymbol);
+
+          await _firestore
+              .collection('Users')
+              .doc(userDoc.id)
+              .collection('portfolio')
+              .add({
+            'name': companyName,
+            'price': totalPrice,
+            'purchaseDate': Timestamp.now(),
+            'quantity': amount,
+            'symbol': stockSymbol,
+          });
+          print("portfolio written"); // TODO: DEBUG Remove this
+        } else {
+          print('User not found'); // TODO: Implement proper Error Handling
+        }
+      }
+    }
+  } on Exception catch (e) {
+    print('Buy failed: $e'); // TODO: Implement proper Error Handling
+  }
+}
+
+/// It creates a popup with the password of the user.
+/// It acts as security feature, so that only the user that knows the password can withdraw money.
+Future<String?> getUserPassword(BuildContext context) async {
+  final controller = TextEditingController();
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Enter your password'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(hintText: 'Password'),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop(controller.text);
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+/// Function that alerts the user via a popup that the password he entered is incorrect.
+void errorDialogWrongPassword(BuildContext context) {
+  showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Incorrect password'),
+          actions: [
+            TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                })
+          ],
+        );
+      });
+}

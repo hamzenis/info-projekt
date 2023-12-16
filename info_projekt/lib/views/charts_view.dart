@@ -7,6 +7,9 @@ import '../services/prices.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/portfolio_service.dart';
+import '../services/stockData_service.dart';
+
+import '../widgets/buy_popup.dart';
 
 final user = FirebaseAuth.instance.currentUser;
 
@@ -203,7 +206,14 @@ class _ChartStockState extends State<ChartStock> {
                 ),
                 floatingActionButton: FloatingActionButton.extended(
                   onPressed: () {
-                    // TODO:Write Buy Action
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return BuyPopup(
+                          stockSymbol: widget.title,
+                        ); // Show the BuyPopup content
+                      },
+                    );
                   },
                   backgroundColor: Colors.green,
                   icon: const Icon(Icons.attach_money),

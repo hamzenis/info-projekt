@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/views/owned_stocks_page.dart';
 //import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -376,6 +377,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Text('Delete Profile'),
                   //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => OwnedStocksPage()),
+                    );
+                  },
+                  child: Text('My Shares'),
+                  ),
               ],
             ),
           ],
