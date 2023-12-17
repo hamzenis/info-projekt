@@ -1,14 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
@@ -545,10 +544,12 @@ class _InvestmentListState extends State<InvestmentList>
                   bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
 
                   return ListTile(
-                    title: Text(investment['name']),
-                    subtitle: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    title: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        Expanded(
+                          child: Text(investment['name']),
+                        ),
                         Text(
                           '\$${investment['totalValue'].toStringAsFixed(2)}',
                           style: TextStyle(
@@ -556,37 +557,152 @@ class _InvestmentListState extends State<InvestmentList>
                                 isInvestmentProfit ? Colors.green : Colors.red,
                           ),
                         ),
+                      ],
+                    ),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '\$${investment['price'].toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: isInvestmentProfit
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ),
+                            Text(
+                              ' x ${investment['quantity'].toStringAsFixed(2)} ',
+                            ),
+                          ],
+                        ),
                         GestureDetector(
                           onTap: () {
                             setState(() {
                               showPercentage = !showPercentage;
                             });
                           },
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                isInvestmentProfit
-                                    ? Icons.keyboard_arrow_up
-                                    : Icons.keyboard_arrow_down,
-                                color: isInvestmentProfit
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                              Text(
-                                showPercentage
-                                    ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
-                                    : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
-                                style: TextStyle(
-                                  color: isInvestmentProfit
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    isInvestmentProfit
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    color: isInvestmentProfit
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                  Text(
+                                    showPercentage
+                                        ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
+                                        : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                                    style: TextStyle(
+                                      color: isInvestmentProfit
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text(investment['name']),
+                            content: SingleChildScrollView(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: TextButton(
+                                      child: Text('Cancel'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ),
+                                  // Go To Chart Button
+                                  Expanded(
+                                    child: TextButton(
+                                      child: Text('Go to Chart'),
+                                      onPressed: () {
+                                        // Navigate to chart
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ChartStock(
+                                              title: investment['symbol'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  Expanded(
+                                    // Sell Stock
+                                    child: TextButton(
+                                      child: Text('Sell Stock'),
+                                      onPressed: () async {
+                                        // Ask for the amount
+                                        int? amount = await showDialog<int>(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                  'How many shares do you want to sell?'),
+                                              content: TextField(
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                decoration: InputDecoration(
+                                                  hintText: 'Amount',
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text('Cancel'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: const Text('OK'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop(
+                                                        1); // replace 1 with the selected value
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+
+                                        // Sell stock
+                                        if (amount != null) {
+                                          await startSellStockFlow(context,
+                                              amount, investment['symbol']);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
