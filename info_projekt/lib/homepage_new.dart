@@ -610,41 +610,23 @@ class _InvestmentListState extends State<InvestmentList>
                             )
                           : ListView.builder(
                               itemCount: _watchlist?.length,
-                              itemBuilder: (context, index) {
-                                return FutureBuilder(
-                                  future: http.get(Uri.parse(
-                                      'https://financialmodelingprep.com/api/v3/profile/${watchlist?[index]['symbol']}?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X')),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return CircularProgressIndicator();
-                                    } else if (snapshot.hasError) {
-                                      return Text('Error: ${snapshot.error}');
-                                    } else {
-                                      var stockData =
-                                          jsonDecode(snapshot.data!.body)[0];
-                                      return Container(
-                                        child: ListTile(
-                                          title:
-                                              Text(watchlist?[index]['name']),
-                                          subtitle:
-                                              Text('\$${stockData['price']}'),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ChartStock(
-                                                  title: watchlist?[index]
-                                                      ['symbol'],
-                                                ),
-                                              ),
-                                            );
-                                          },
+                              itemBuilder: (BuildContext context, int index) {
+                                return Container(
+                                  child: ListTile(
+                                    title: Text(_watchlist?[index]['name']),
+                                    subtitle:
+                                        Text(_watchlist?[index]['symbol']),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ChartStock(
+                                            title: _watchlist?[index]['symbol'],
+                                          ),
                                         ),
                                       );
-                                    }
-                                  },
+                                    },
+                                  ),
                                 );
                               },
                             ),
