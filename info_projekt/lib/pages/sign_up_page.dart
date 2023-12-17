@@ -5,6 +5,7 @@ import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/services/firestore_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -14,6 +15,8 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  //FirestoreService notwendig für Datenbank
+  FirestoreService firestoreService = FirestoreService();
   final FirebaseAuthService _auth = FirebaseAuthService();
 
   TextEditingController _emailController = TextEditingController();
@@ -154,6 +157,10 @@ class _SignUpPageState extends State<SignUpPage> {
     String email = _emailController.text;
     String password = _passwordController.text;
     String confirmPassword = _confirmPasswordController.text;
+    //notwendig für Datenbank
+    DateTime now = DateTime.now();
+    String registrationDate = now.toString();
+    //
 
     if (password != confirmPassword) {
       showToast(message: "Passwords do not match.");
@@ -187,39 +194,10 @@ class _SignUpPageState extends State<SignUpPage> {
               "Registration successful! Please check your email to verify your account.",
         );
         Navigator.pushNamed(context, "/verifyEmail");
+
+        //speichert Daten in der Datenbank
+        await firestoreService.saveUserDataToFirestore(email, registrationDate);
       } else {
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
-        DocumentReference userDocRef = await firestore.collection('Users').add({
-          'email': email,
-          'UID': user.uid,
-          'balance': '',
-          'iban': '',
-          'verified': true, // Update 'verified' to true upon email verification
-        });
-
-        CollectionReference transactionHistoryRef =
-            userDocRef.collection('transaction_history');
-        await transactionHistoryRef.add({
-          'price': 00.00,
-          'order_date': Timestamp.now(),
-          'name': '',
-          'symbol': '',
-          'buy': 'false',
-          'selling_price': 00.00,
-          'quantity': 0,
-          'total_cost': 0,
-          'transaction_fee': 0,
-        });
-
-        CollectionReference balanceHistoryRef =
-            userDocRef.collection('balance_history');
-        await balanceHistoryRef.add({
-          'amount': 00.00,
-          'date': Timestamp.now(),
-          'description': '',
-          'withdraw': false,
-        });
-
         showToast(message: "Email already verified. Please log in.");
         Navigator.pushNamed(context, "/login");
       }

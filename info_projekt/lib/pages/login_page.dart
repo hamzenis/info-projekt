@@ -197,7 +197,7 @@ class _LoginPageState extends State<LoginPage> {
 
           await _auth.resendVerificationEmail();
         } else {
-          Navigator.pushReplacementNamed(context, "/home");
+          Navigator.pushReplacementNamed(context, "/homePageNew");
         }
       }
     } on FirebaseAuthException catch (e) {

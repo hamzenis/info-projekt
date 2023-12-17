@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:info_projekt/common/toast.dart';
 import '../homepage_new.dart';
 
+/*Brauchen wir eigentlich nicht mehr, ist durch HomePageNew ersetzt worden (steht in Widgets)*/
+
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,7 @@ class HomePage extends StatelessWidget {
               },
             ),
             SizedBox(height: 10),
-            ElevatedButton.icon(
+            /* ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 minimumSize: Size.fromHeight(50),
               ),
@@ -58,7 +60,7 @@ class HomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => HomePageNew()),
                 );
               },
-            ),
+            ),*/
           ],
         ),
       ),
