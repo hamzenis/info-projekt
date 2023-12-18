@@ -17,18 +17,19 @@ class HomePageNew extends StatelessWidget {
 
   void _showAction(BuildContext context, int index) {
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: Text(_actionTitles[index]),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('CLOSE'),
-              ),
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(_actionTitles[index]),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('CLOSE'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -604,11 +605,6 @@ class _InvestmentListState extends State<InvestmentList>
                           children: [
                             Text(
                               '\$${investment['price'].toStringAsFixed(2)}',
-                              style: TextStyle(
-                                color: isInvestmentProfit
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
                             ),
                             Text(
                               ' x ${investment['quantity'].toStringAsFixed(2)} ',
