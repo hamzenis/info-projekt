@@ -12,24 +12,23 @@ final _firestore = FirebaseFirestore.instance;
 /// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
 /// If the password is correct, it checks if the user has the stock and enough amount to sell.
 /// If the user has the stock and enough amount, it adds the amount of money to the user's balance and updates his transaction history.
-Future<void> startSellStockFlow(
+Future<bool> startSellStockFlow(
     BuildContext context, int amount, String stockSymbol) async {
   try {
     final user = _auth.currentUser;
     if (user != null) {
+      // final credential = EmailAuthProvider.credential(
+      //   email: user.email!,
+      //   password: password,
+      // );
+      // try {
+      //   await user.reauthenticateWithCredential(credential);
+      // } catch (e) {
+      //   errorDialogWrongPassword(context); // TODO: FIX this
+      //   return;
+      // }
       String? password = await getUserPassword(context);
       if (password != null) {
-        // final credential = EmailAuthProvider.credential(
-        //   email: user.email!,
-        //   password: password,
-        // );
-        // try {
-        //   await user.reauthenticateWithCredential(credential);
-        // } catch (e) {
-        //   errorDialogWrongPassword(context); // TODO: FIX this
-        //   return;
-        // }
-
         final querySnapshot = await _firestore
             .collection('Users')
             .where('UID', isEqualTo: user.uid)
@@ -50,16 +49,13 @@ Future<void> startSellStockFlow(
             int totalStocks = 0;
             List<int> updateStockQuantity = [];
             for (final stock in stockSnapshot.docs) {
-              print(
-                  "Stock: ${stock['symbol']} ${stock['quantity']}"); // TODO: DEBUG Remove this
-              totalStocks += int.tryParse(stock['quantity'].toString()) ?? 0;
-            }
-            for (final stock in stockSnapshot.docs) {
               // Sell Logic:
               // If the amount of stocks to sell is smaller/same than the total amount of stocks, sell the amount of stocks
               // If the amount of stocks to sell is bigger than the total amount of stocks, error message
+              totalStocks += int.tryParse(stock['quantity'].toString()) ?? 0;
+            }
+            for (final stock in stockSnapshot.docs) {
               if (sellQuantity <= totalStocks) {
-                // Get the individual stock quantity
                 int individualStockQuantity =
                     int.tryParse(stock['quantity'].toString()) ?? 0;
                 // Compare the individual stock quantity with the amount of stocks to sell
@@ -77,9 +73,8 @@ Future<void> startSellStockFlow(
                   sellQuantity -= individualStockQuantity;
                 }
               } else {
-                print(
-                    "Not enough stocks to sell"); // TODO: Implement proper Error Handling
-                return;
+                print("Not enough stocks to sell");
+                return false;
               }
             }
             // Update users portfolio with the new stock quantity
@@ -92,10 +87,7 @@ Future<void> startSellStockFlow(
                   .update({
                 'quantity': updateStockQuantity[i],
               });
-              print(
-                  "Updated Stock Quantity: ${updateStockQuantity[i]} in ${stockSnapshot.docs[i].id}"); // TODO: DEBUG Remove this
             }
-
             // Store transaction to stock_transaction_history collection
             double totalPrice =
                 double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
@@ -110,15 +102,17 @@ Future<void> startSellStockFlow(
               'symbol': stockSymbol,
               'type': false, // true = buy,  false = sell
             });
-            print(
-                "stock_transaction_ history written"); // TODO: DEBUG Remove this
+
+            return true;
           }
         }
       }
     }
-  } on Exception catch (e) {
-    print('Sell failed: $e'); // TODO: Implement proper Error Handling
+  } catch (e) {
+    print('Error: $e');
   }
+
+  return false;
 }
 
 /// It creates a popup with the password of the user.

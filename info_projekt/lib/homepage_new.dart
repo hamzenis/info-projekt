@@ -361,7 +361,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 }
 
-class PortfolioOverview extends StatelessWidget {
+class PortfolioOverview extends StatefulWidget {
   final double portfolioValue;
   final double profitOrLoss;
   final double percentageGainOrLoss;
@@ -379,8 +379,13 @@ class PortfolioOverview extends StatelessWidget {
   });
 
   @override
+  _PortfolioOverviewState createState() => _PortfolioOverviewState();
+}
+
+class _PortfolioOverviewState extends State<PortfolioOverview> {
+  @override
   Widget build(BuildContext context) {
-    bool isProfit = profitOrLoss >= 0;
+    bool isProfit = widget.profitOrLoss >= 0;
 
     return Align(
       alignment: Alignment.topLeft,
@@ -389,40 +394,72 @@ class PortfolioOverview extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              '\$${portfolioValue.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            GestureDetector(
-              onTap: onTogglePercentage,
-              child: Row(
-                children: [
-                  Icon(
-                    isProfit
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: isProfit ? Colors.green : Colors.red,
-                  ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: showPercentage,
-                    builder: (context, value, child) {
-                      return Text(
-                        value
-                            ? '${percentageGainOrLoss.toStringAsFixed(2)}%'
-                            : '\$${profitOrLoss.toStringAsFixed(2)}',
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\$${widget.portfolioValue.toStringAsFixed(2)}',
                         style: TextStyle(
-                          fontSize: 20,
-                          color: isProfit ? Colors.green : Colors.red,
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8), // Reduced height
+                      GestureDetector(
+                        onTap: widget.onTogglePercentage,
+                        child: Row(
+                          children: [
+                            Icon(
+                              isProfit
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color: isProfit ? Colors.green : Colors.red,
+                            ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: widget.showPercentage,
+                              builder: (context, value, child) {
+                                return Text(
+                                  value
+                                      ? '${widget.percentageGainOrLoss.toStringAsFixed(2)}%'
+                                      : '\$${widget.profitOrLoss.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: isProfit ? Colors.green : Colors.red,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        PageRouteBuilder(
+                          pageBuilder: (BuildContext context,
+                              Animation<double> animation,
+                              Animation<double> secondaryAnimation) {
+                            return HomePageNew();
+                          },
+                          transitionDuration: Duration.zero,
+                        ),
+                        (Route<dynamic> route) => false,
                       );
                     },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             SizedBox(height: 16),
-            Expanded(child: individualInvestments),
+            Expanded(child: widget.individualInvestments),
           ],
         ),
       ),
@@ -690,8 +727,28 @@ class _InvestmentListState extends State<InvestmentList>
 
                                         // Sell stock
                                         if (amount != null) {
-                                          await startSellStockFlow(context,
-                                              amount, investment['symbol']);
+                                          bool success =
+                                              await startSellStockFlow(context,
+                                                  amount, investment['symbol']);
+
+                                          // Refresh page if the stock was successfully sold
+                                          if (success) {
+                                            Navigator.of(context)
+                                                .pushAndRemoveUntil(
+                                              PageRouteBuilder(
+                                                pageBuilder: (BuildContext
+                                                        context,
+                                                    Animation<double> animation,
+                                                    Animation<double>
+                                                        secondaryAnimation) {
+                                                  return HomePageNew();
+                                                },
+                                                transitionDuration:
+                                                    Duration.zero,
+                                              ),
+                                              (Route<dynamic> route) => false,
+                                            );
+                                          }
                                         }
                                       },
                                     ),
