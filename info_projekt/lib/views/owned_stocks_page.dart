@@ -135,7 +135,7 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
                     decoration: BoxDecoration(
                       color: tileColor,
                       border: Border.all(
-                        color: Color.fromARGB(200, 0, 0, 255).withOpacity(_controller.value),
+                        color: Color.fromARGB(255, 0, 0, 255).withOpacity(_controller.value),
                         width: 3.0,
                       ),
                       borderRadius: BorderRadius.circular(8.0),
