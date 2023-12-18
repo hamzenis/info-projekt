@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/services/transaction_buy_service.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
-/// TODO: Wrong password handling, taxes & fees
+/// TODO: Wrong password handling, taxes & fees: fees = 1 euro per transaction, taxes = 1000 euro tax free, and when you lose money taxes = amount of money lost + 1000 euro tax free	and when you make money taxes = amount of money made - 1000 euro tax free
 /// Function that starts the sell flow.
 /// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
 /// If the password is correct, it checks if the user has the stock and enough amount to sell.
@@ -16,108 +17,129 @@ Future<void> startSellStockFlow(
     BuildContext context, int amount, String stockSymbol) async {
   try {
     final user = _auth.currentUser;
-    if (user != null) {
-      String? password = await getUserPassword(context);
-      if (password != null) {
-        // final credential = EmailAuthProvider.credential(
-        //   email: user.email!,
-        //   password: password,
-        // );
-        // try {
-        //   await user.reauthenticateWithCredential(credential);
-        // } catch (e) {
-        //   errorDialogWrongPassword(context); // TODO: FIX this
-        //   return;
-        // }
+    if (user == null) {
+      showToast(message: 'User is not logged in');
+      return;
+    }
 
-        final querySnapshot = await _firestore
+    String? password = await getUserPassword(context);
+    if (password == null) {
+      showToast(message: 'Password is not provided');
+      return;
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: password,
+    );
+
+    try {
+      await user.reauthenticateWithCredential(credential);
+    } catch (e) {
+      showToast(message: 'Password is wrong');
+      return;
+    }
+
+    final userDoc = (await _firestore
             .collection('Users')
             .where('UID', isEqualTo: user.uid)
-            .get();
-        if (querySnapshot.docs.isNotEmpty) {
-          final userDoc = querySnapshot.docs.first;
-          final stockSnapshot = await _firestore
-              .collection('Users')
-              .doc(userDoc.id)
-              .collection('portfolio')
-              .where('symbol', isEqualTo: stockSymbol)
-              // Indexes in Firestore needed: Cloud Firestore -> Database -> Indexes -> Add Index or just click on the error message in the console if you get one
-              .orderBy('purchaseDate', descending: false)
-              .get();
+            .get())
+        .docs
+        .first;
 
-          if (stockSnapshot.docs.isNotEmpty) {
-            int sellQuantity = amount;
-            int totalStocks = 0;
-            List<int> updateStockQuantity = [];
-            for (final stock in stockSnapshot.docs) {
-              print(
-                  "Stock: ${stock['symbol']} ${stock['quantity']}"); // TODO: DEBUG Remove this
-              totalStocks += int.tryParse(stock['quantity'].toString()) ?? 0;
-            }
-            for (final stock in stockSnapshot.docs) {
-              // Sell Logic:
-              // If the amount of stocks to sell is smaller/same than the total amount of stocks, sell the amount of stocks
-              // If the amount of stocks to sell is bigger than the total amount of stocks, error message
-              if (sellQuantity <= totalStocks) {
-                // Get the individual stock quantity
-                int individualStockQuantity =
-                    int.tryParse(stock['quantity'].toString()) ?? 0;
-                // Compare the individual stock quantity with the amount of stocks to sell
-                // FIFO: First in, first out. If the amount of stocks to sell is smaller/same than the individual stock quantity
-                // Than add to list and set the amount of stocks to sell to 0
-                if (sellQuantity <= individualStockQuantity) {
-                  updateStockQuantity
-                      .add(individualStockQuantity - sellQuantity);
-                  sellQuantity = 0;
-                  // If the amount of stocks to sell is bigger than the individual stock quantity
-                  // Than add 0 to list and subtract the individual stock quantity from the amount of stocks to sell
-                  // For the next iteration
-                } else if (sellQuantity > individualStockQuantity) {
-                  updateStockQuantity.add(0);
-                  sellQuantity -= individualStockQuantity;
-                }
-              } else {
-                print(
-                    "Not enough stocks to sell"); // TODO: Implement proper Error Handling
-                return;
-              }
-            }
-            // Update users portfolio with the new stock quantity
-            for (int i = 0; i < updateStockQuantity.length; i++) {
-              await _firestore
-                  .collection('Users')
-                  .doc(userDoc.id)
-                  .collection('portfolio')
-                  .doc(stockSnapshot.docs[i].id)
-                  .update({
-                'quantity': updateStockQuantity[i],
-              });
-              print(
-                  "Updated Stock Quantity: ${updateStockQuantity[i]} in ${stockSnapshot.docs[i].id}"); // TODO: DEBUG Remove this
-            }
+    final stockSnapshot = await _firestore
+        .collection('Users')
+        .doc(userDoc.id)
+        .collection('portfolio')
+        .where('symbol', isEqualTo: stockSymbol)
+        .orderBy('purchaseDate', descending: false)
+        .get();
 
-            // Store transaction to stock_transaction_history collection
-            double totalPrice =
-                double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
-            await _firestore
-                .collection('Users')
-                .doc(userDoc.id)
-                .collection('stock_transaction_history')
-                .add({
-              'amount': amount,
-              'date': Timestamp.now(),
-              'price': totalPrice,
-              'symbol': stockSymbol,
-              'type': false, // true = buy,  false = sell
-            });
-            print(
-                "stock_transaction_ history written"); // TODO: DEBUG Remove this
-          }
-        }
+    if (stockSnapshot.docs.isEmpty) {
+      showToast(message: 'No stocks found for the symbol');
+      return;
+    }
+
+    int sellQuantity = amount;
+    int totalStocks = 0;
+    List<int> updateStockQuantity = [];
+    for (final stock in stockSnapshot.docs) {
+      totalStocks += int.tryParse(stock['quantity'].toString()) ?? 0;
+    }
+
+    if (sellQuantity > totalStocks) {
+      showToast(message: 'Not enough stocks to sell');
+      return;
+    }
+
+    for (final stock in stockSnapshot.docs) {
+      // Sell Logic:
+      // If the amount of stocks to sell is smaller/same than the total amount of stocks, sell the amount of stocks
+      // If the amount of stocks to sell is bigger than the total amount of stocks, error message
+      int individualStockQuantity =
+          // Get the individual stock quantity
+          int.tryParse(stock['quantity'].toString()) ?? 0;
+      // Compare the individual stock quantity with the amount of stocks to sell
+      // FIFO: First in, first out. If the amount of stocks to sell is smaller/same than the individual stock quantity
+      // Than add to list and set the amount of stocks to sell to 0
+      if (sellQuantity <= individualStockQuantity) {
+        updateStockQuantity.add(individualStockQuantity - sellQuantity);
+        sellQuantity = 0;
+        // If the amount of stocks to sell is bigger than the individual stock quantity
+        // Than add 0 to list and subtract the individual stock quantity from the amount of stocks to sell
+        // For the next iteration
+      } else if (sellQuantity > individualStockQuantity) {
+        updateStockQuantity.add(0);
+        sellQuantity -= individualStockQuantity;
       }
     }
-  } on Exception catch (e) {
-    print('Sell failed: $e'); // TODO: Implement proper Error Handling
+
+    // Update users portfolio with the new stock quantity
+    for (int i = 0; i < updateStockQuantity.length; i++) {
+      await _firestore
+          .collection('Users')
+          .doc(userDoc.id)
+          .collection('portfolio')
+          .doc(stockSnapshot.docs[i].id)
+          .update({
+        'quantity': updateStockQuantity[i],
+      });
+    }
+
+    // Store transaction to stock_transaction_history collection
+    double singlePrice = double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
+    double totalPrice = singlePrice * amount;
+    double fee = 1.0; // Transaction fee
+    double totalPriceAfterFee = totalPrice - fee; // Subtract fee from total price
+
+    // Retrieve tax_pot from Firestore
+    double taxPot = (userDoc['tax_pot'] as num).toDouble();
+
+    // Calculate new tax_pot
+    double profit = totalPrice - (singlePrice * amount);
+    taxPot += profit < 0 ? -profit : -profit;
+    
+    // Update balance and tax_pot in Firestore
+    await _firestore.collection('Users').doc(userDoc.id).update({
+      'balance': FieldValue.increment(totalPriceAfterFee),
+      'tax_pot': taxPot,
+    });
+
+    await _firestore
+        .collection('Users')
+        .doc(userDoc.id)
+        .collection('stock_transaction_history')
+        .add({
+      'amount': amount,
+      'date': Timestamp.now(),
+      'price': totalPrice,
+      'symbol': stockSymbol,
+      'type': false,
+    });
+
+    showToast(message: 'Stocks sold successfully');
+  } catch (e) {
+    showToast(message: 'Sell failed: ${e.toString()}');
   }
 }
 
