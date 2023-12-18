@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 
 final _auth = FirebaseAuth.instance;
@@ -26,7 +27,7 @@ Future<void> startBuyStockFlow(
         try {
           await user.reauthenticateWithCredential(credential);
         } catch (e) {
-          errorDialogWrongPassword(context); //TODO: FIX this
+          showToast(message: "Incorrect password");
           return;
         }
 
@@ -36,14 +37,14 @@ Future<void> startBuyStockFlow(
             .get();
         if (querySnapshot.docs.isNotEmpty) {
           final userDoc = querySnapshot.docs.first;
-          // double price = (double.tryParse(await getCurrentPrice(stockSymbol)) * amount);
           String? singlePriceString = await getCurrentPrice(stockSymbol);
           double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
           double totalPrice = singlePrice * amount;
+          double fee = 1.0; // Transaction fee
+          totalPrice += fee; // Add fee to total price
 
-          // User Balance Check, for DEBUG purposes kDebugMode is also set to not trigger in DEBUG Mode
           if (totalPrice > userDoc['balance'] && !kDebugMode) {
-            print('Not enough money'); // TODO: Implement proper Error Handling
+            showToast(message: "Not enough money");
             return;
           }
 
@@ -58,12 +59,10 @@ Future<void> startBuyStockFlow(
               .add({
             'amount': amount,
             'date': Timestamp.now(),
-            'price': totalPrice,
+            'price': totalPrice, // Updated to reflect total price after fee
             'symbol': stockSymbol,
             'type': true, // true = buy,  false = sell
           });
-          print(
-              "stock_transaction_ history written"); // TODO: DEBUG Remove this
 
           String? companyName = await getCompanyName(stockSymbol);
 
@@ -73,24 +72,25 @@ Future<void> startBuyStockFlow(
               .collection('portfolio')
               .add({
             'name': companyName,
-            'price': totalPrice,
+            'price': totalPrice, // Updated to reflect total price after fee
             'purchaseDate': Timestamp.now(),
             'quantity': amount,
             'symbol': stockSymbol,
           });
-          print("portfolio written"); // TODO: DEBUG Remove this
+
+          showToast(message: "Transaction successful");
+
         } else {
-          print('User not found'); // TODO: Implement proper Error Handling
+          showToast(message: "User not found");
         }
       }
     }
   } on Exception catch (e) {
-    print('Buy failed: $e'); // TODO: Implement proper Error Handling
+    showToast(message: "Buy failed: $e");
   }
 }
 
-/// It creates a popup with the password of the user.
-/// It acts as security feature, so that only the user that knows the password can withdraw money.
+/// Function that alerts the user via a popup that the password he entered is incorrect.
 Future<String?> getUserPassword(BuildContext context) async {
   final controller = TextEditingController();
   return showDialog<String>(
@@ -120,22 +120,4 @@ Future<String?> getUserPassword(BuildContext context) async {
       );
     },
   );
-}
-
-/// Function that alerts the user via a popup that the password he entered is incorrect.
-void errorDialogWrongPassword(BuildContext context) {
-  showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Incorrect password'),
-          actions: [
-            TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                })
-          ],
-        );
-      });
 }
