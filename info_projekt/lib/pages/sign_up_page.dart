@@ -194,7 +194,8 @@ class _SignUpPageState extends State<SignUpPage> {
           'UID': user.uid,
           'balance': '',
           'iban': '',
-          'verified': true, // Update 'verified' to true upon email verification
+          'verified': true,
+          'tax_pot': 1000.00 // Update 'verified' to true upon email verification
         });
 
         CollectionReference transactionHistoryRef =
