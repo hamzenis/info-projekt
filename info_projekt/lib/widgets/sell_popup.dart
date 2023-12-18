@@ -18,10 +18,9 @@ class SellPopup extends StatelessWidget {
           Text('Enter number of shares to sell:'),
           TextField(
             controller: amountController,
+            obscureText: true,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: 'Number of Shares',
-            ),
+            decoration: const InputDecoration(hintText: 'Enter the amount of stocks'),
           ),
         ],
       ),
