@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
-import 'package:info_projekt/services/transaction_buy_service.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
@@ -96,14 +95,25 @@ Future<void> startSellStockFlow(
 
     // Update users portfolio with the new stock quantity
     for (int i = 0; i < updateStockQuantity.length; i++) {
-      await _firestore
-          .collection('Users')
-          .doc(userDoc.id)
-          .collection('portfolio')
-          .doc(stockSnapshot.docs[i].id)
-          .update({
-        'quantity': updateStockQuantity[i],
-      });
+      if (updateStockQuantity[i] == 0) {
+        // If quantity is 0, delete the stock from the portfolio
+        await _firestore
+            .collection('Users')
+            .doc(userDoc.id)
+            .collection('portfolio')
+            .doc(stockSnapshot.docs[i].id)
+            .delete();
+      } else {
+        // If quantity is not 0, update the stock quantity
+        await _firestore
+            .collection('Users')
+            .doc(userDoc.id)
+            .collection('portfolio')
+            .doc(stockSnapshot.docs[i].id)
+            .update({
+          'quantity': updateStockQuantity[i],
+        });
+      }
     }
 
     // Store transaction to stock_transaction_history collection
