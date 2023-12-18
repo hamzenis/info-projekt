@@ -19,13 +19,13 @@ Future<bool> startSellStockFlow(
     final user = _auth.currentUser;
     if (user == null) {
       showToast(message: 'User is not logged in');
-      return;
+      return false;
     }
 
     String? password = await getUserPassword(context);
     if (password == null) {
       showToast(message: 'Password is not provided');
-      return;
+      return false;
     }
 
     final credential = EmailAuthProvider.credential(
@@ -37,7 +37,7 @@ Future<bool> startSellStockFlow(
       await user.reauthenticateWithCredential(credential);
     } catch (e) {
       showToast(message: 'Password is wrong');
-      return;
+      return false;
     }
 
     final userDoc = (await _firestore
@@ -57,7 +57,7 @@ Future<bool> startSellStockFlow(
 
     if (stockSnapshot.docs.isEmpty) {
       showToast(message: 'No stocks found for the symbol');
-                return false;
+      return false;
     }
 
     int sellQuantity = amount;
@@ -107,10 +107,12 @@ Future<bool> startSellStockFlow(
     }
 
     // Store transaction to stock_transaction_history collection
-    double singlePrice = double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
+    double singlePrice =
+        double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
     double totalPrice = singlePrice * amount;
     double fee = 1.0; // Transaction fee
-    double totalPriceAfterFee = totalPrice - fee; // Subtract fee from total price
+    double totalPriceAfterFee =
+        totalPrice - fee; // Subtract fee from total price
 
     // Retrieve tax_pot from Firestore
     double taxPot = (userDoc['tax_pot'] as num).toDouble();
@@ -118,7 +120,7 @@ Future<bool> startSellStockFlow(
     // Calculate new tax_pot
     double profit = totalPrice - (singlePrice * amount);
     taxPot += profit < 0 ? -profit : -profit;
-    
+
     // Update balance and tax_pot in Firestore
     await _firestore.collection('Users').doc(userDoc.id).update({
       'balance': FieldValue.increment(totalPriceAfterFee),
@@ -138,7 +140,7 @@ Future<bool> startSellStockFlow(
     });
 
     showToast(message: 'Stocks sold successfully');
-    return true
+    return true;
   } catch (e) {
     showToast(message: 'Sell failed: ${e.toString()}');
   }
