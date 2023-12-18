@@ -3,9 +3,31 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/widgets/sell_popup.dart';
 
-class OwnedStocksPage extends StatelessWidget {
+class OwnedStocksPage extends StatefulWidget {
+  @override
+  _OwnedStocksPageState createState() => _OwnedStocksPageState();
+}
+
+class _OwnedStocksPageState extends State<OwnedStocksPage>
+    with SingleTickerProviderStateMixin {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,41 +109,81 @@ class OwnedStocksPage extends StatelessWidget {
       },
     );
   }
-}
 
-ListView buildListView(List<QueryDocumentSnapshot> transactions) {
-  return ListView.builder(
-    itemCount: transactions.length,
-    itemBuilder: (context, index) {
-      final transaction = transactions[index];
-      print(
-          "Transaction Len: ${transactions.length}"); // TODO: Remove this DEBUG line
+  ListView buildListView(List<QueryDocumentSnapshot> transactions) {
+    // Sort transactions by date in descending order
+    transactions.sort((a, b) => b['date'].compareTo(a['date']));
 
-      String roundedPrice = double.parse(transaction['price'].toString())
-          .toStringAsFixed(2); // Round the price to 2 decimal places
-      return Container(
-        margin: const EdgeInsets.all(10.0),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 0.5),
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: ListTile(
-          title: Text(transaction['symbol']),
-          subtitle: Text(
-              ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
-          trailing: IconButton(
-            icon: const Icon(Icons.sell),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => SellPopup(
-                  stockSymbol: transaction['symbol'],
+    return ListView.builder(
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        final transaction = transactions[index];
+
+        String roundedPrice = double.parse(transaction['price'].toString())
+            .toStringAsFixed(2); // Round the price to 2 decimal places
+
+        Color tileColor = transaction['type'] ? Colors.green : Colors.red;
+
+        bool isLastTransaction = index == 0;
+
+        return isLastTransaction
+            ? AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Container(
+                    margin: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      color: tileColor,
+                      border: Border.all(
+                        color: Color.fromARGB(200, 0, 0, 255).withOpacity(_controller.value),
+                        width: 3.0,
+                      ),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: ListTile(
+                      title: Text(transaction['symbol']),
+                      subtitle: Text(
+                          ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.sell),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => SellPopup(
+                              stockSymbol: transaction['symbol'],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              )
+            : Container(
+                margin: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: tileColor,
+                  border: Border.all(color: Colors.black, width: 0.5),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: ListTile(
+                  title: Text(transaction['symbol']),
+                  subtitle: Text(
+                      ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.sell),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => SellPopup(
+                          stockSymbol: transaction['symbol'],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               );
-            },
-          ),
-        ),
-      );
-    },
-  );
+      },
+    );
+  }
 }
