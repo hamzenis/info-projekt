@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/portfolio_service.dart';
 import '../services/stockData_service.dart';
+import '../widgets/watchlist_button.dart';
 
 import '../widgets/buy_popup.dart';
 
@@ -111,47 +112,20 @@ class _ChartStockState extends State<ChartStock> {
                 appBar: AppBar(
                   title: Text(widget.title),
                   actions: <Widget>[
-                    IconButton(
-                      icon: Icon(
-                        isInWatchlist ? Icons.star : Icons.star_border,
-                      ),
-                      onPressed: () async {
-                        if (isInWatchlist) {
-                          try {
-                            await portfolioService.removeFromWatchlist(
-                                user!.uid, widget.title);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text('Stock removed from watchlist')),
-                            );
-                            setState(() {
-                              isInWatchlist = false;
-                            });
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
+                    FutureBuilder<bool>(
+                      future: portfolioService.checkIfInWatchlist(
+                          user!.uid, widget.title),
+                      builder:
+                          (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                        if (snapshot.hasData) {
+                          return WatchlistButton(
+                            isInWatchlist: snapshot.data!,
+                            title: widget.title,
+                            companyName: companyName,
+                            uid: user!.uid,
+                          );
                         } else {
-                          try {
-                            await portfolioService.addToWatchlist(
-                              user!.uid,
-                              companyName,
-                              widget.title,
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Stock added to watchlist')),
-                            );
-                            setState(() {
-                              isInWatchlist = true;
-                            });
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
+                          return CircularProgressIndicator();
                         }
                       },
                     ),

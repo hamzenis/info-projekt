@@ -692,10 +692,14 @@ class _InvestmentListState extends State<InvestmentList>
                                         int? amount = await showDialog<int>(
                                           context: context,
                                           builder: (context) {
+                                            final TextEditingController
+                                                controller =
+                                                TextEditingController();
                                             return AlertDialog(
                                               title: const Text(
                                                   'How many shares do you want to sell?'),
                                               content: TextField(
+                                                controller: controller,
                                                 keyboardType:
                                                     TextInputType.number,
                                                 decoration: InputDecoration(
@@ -712,8 +716,11 @@ class _InvestmentListState extends State<InvestmentList>
                                                 TextButton(
                                                   child: const Text('OK'),
                                                   onPressed: () {
-                                                    Navigator.of(context).pop(
-                                                        1); //TODO: replace 1 with the selected value
+                                                    int amount = int.tryParse(
+                                                            controller.text) ??
+                                                        0;
+                                                    Navigator.of(context)
+                                                        .pop(amount);
                                                   },
                                                 ),
                                               ],
