@@ -4,6 +4,8 @@ import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
+import 'package:info_projekt/widgets/watchlist_button.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
@@ -493,6 +495,8 @@ class _InvestmentListState extends State<InvestmentList>
   @override
   void initState() {
     super.initState();
+    Provider.of<WatchlistNotifier>(context, listen: false)
+        .loadWatchlist(user!.uid);
     _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
     fetchWatchlist();
     _pageController = PageController(initialPage: _currentPage)
@@ -767,47 +771,38 @@ class _InvestmentListState extends State<InvestmentList>
                 },
               ),
 
-              // Watchlist
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _watchlistFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    var watchlist = snapshot.data;
-                    return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: _watchlist!.isEmpty
-                          ? Text(
-                              'Watchlist items will appear here when available.',
-                              style: TextStyle(color: Colors.grey),
-                            )
-                          : ListView.builder(
-                              itemCount: _watchlist?.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return Container(
-                                  child: ListTile(
-                                    title: Text(_watchlist?[index]['name']),
-                                    subtitle:
-                                        Text(_watchlist?[index]['symbol']),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ChartStock(
-                                            title: _watchlist?[index]['symbol'],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                    );
-                  }
+              Consumer<WatchlistNotifier>(
+                builder: (context, watchlistNotifier, child) {
+                  var watchlist = watchlistNotifier.watchlist;
+                  return Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: watchlist.isEmpty
+                        ? Text(
+                            'Watchlist items will appear here when available.',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        : ListView.builder(
+                            itemCount: watchlist.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChartStock(
+                                        title: watchlist[index]['symbol'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  title: Text(watchlist[index]['name']),
+                                  subtitle: Text(watchlist[index]['symbol']),
+                                ),
+                              );
+                            },
+                          ),
+                  );
                 },
               ),
             ],
