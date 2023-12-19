@@ -1,15 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/providers/StateNotifierProvider.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
@@ -495,7 +497,7 @@ class _InvestmentListState extends State<InvestmentList>
   @override
   void initState() {
     super.initState();
-    Provider.of<WatchlistNotifier>(context, listen: false)
+    provider.Provider.of<WatchlistNotifier>(context, listen: false)
         .loadWatchlist(user!.uid);
     _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
     fetchWatchlist();
@@ -687,11 +689,16 @@ class _InvestmentListState extends State<InvestmentList>
                                       },
                                     ),
                                   ),
+                                  // Sell Stock
                                   Expanded(
-                                    // Sell Stock
                                     child: TextButton(
                                       child: Text('Sell Stock'),
                                       onPressed: () async {
+                                        final container = ProviderContainer();
+                                        final notifier = container.read(
+                                            investmentListNotifierProvider
+                                                .notifier);
+
                                         // Ask for the amount
                                         int? amount = await showDialog<int>(
                                           context: context,
@@ -740,23 +747,11 @@ class _InvestmentListState extends State<InvestmentList>
 
                                           // Refresh page if the stock was successfully sold
                                           if (success) {
-                                            Navigator.of(context)
-                                                .pushAndRemoveUntil(
-                                              PageRouteBuilder(
-                                                pageBuilder: (BuildContext
-                                                        context,
-                                                    Animation<double> animation,
-                                                    Animation<double>
-                                                        secondaryAnimation) {
-                                                  return HomePageNew();
-                                                },
-                                                transitionDuration:
-                                                    Duration.zero,
-                                              ),
-                                              (Route<dynamic> route) => false,
-                                            );
+                                            notifier.refresh();
                                           }
                                         }
+                                        // Close the popup
+                                        Navigator.of(context).pop();
                                       },
                                     ),
                                   ),
@@ -771,7 +766,7 @@ class _InvestmentListState extends State<InvestmentList>
                 },
               ),
 
-              Consumer<WatchlistNotifier>(
+              provider.Consumer<WatchlistNotifier>(
                 builder: (context, watchlistNotifier, child) {
                   var watchlist = watchlistNotifier.watchlist;
                   return Container(
