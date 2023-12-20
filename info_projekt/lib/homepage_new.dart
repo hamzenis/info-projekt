@@ -748,6 +748,24 @@ class _InvestmentListState extends State<InvestmentList>
                                           // Refresh page if the stock was successfully sold
                                           if (success) {
                                             notifier.refresh();
+                                            setState(() {
+                                              // Find the investment that matches the sold stock
+                                              var soldInvestment =
+                                                  widget.investments.firstWhere(
+                                                (inv) =>
+                                                    inv['symbol'] ==
+                                                    investment['symbol'],
+                                                orElse: () =>
+                                                    <String, dynamic>{},
+                                              );
+
+                                              // If the investment was found, decrease its quantity
+                                              if (soldInvestment != null &&
+                                                  soldInvestment.isNotEmpty) {
+                                                soldInvestment['quantity'] -=
+                                                    amount;
+                                              }
+                                            });
                                           }
                                         }
                                         // Close the popup

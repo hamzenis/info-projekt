@@ -35,7 +35,6 @@ class InvestmentListNotifier extends StateNotifier<List<Investment>> {
       : super(<Investment>[]);
 
   Future<void> refresh() async {
-    print('Refresh method called');
     final uid = firebaseAuth.currentUser?.uid;
 
     if (uid == null) {
@@ -43,12 +42,10 @@ class InvestmentListNotifier extends StateNotifier<List<Investment>> {
     }
 
     final investments = await portfolioService.getIndividualInvestments(uid);
-    print('Getting investments for user: $uid');
+
     state = investments
         .map((investment) => Investment.fromMap(investment))
         .toList();
-    print('State updated: $state');
-    print('UI rebuilt with investments: $investments');
   }
 }
 
