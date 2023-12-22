@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
+import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -27,23 +28,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _getUserInfo() async {
     _user = _auth.currentUser;
+
     if (_user != null) {
-      DocumentSnapshot userInfo =
-          await _firestore.collection('Users').doc(_user!.uid).get();
-      String registrationDate =
-          await firestoreService.fetchRegistrationDate(_user!.uid);
+      String? registrationDate = await firestoreService.fetchRegistrationDate();
       //if (userInfo.exists) {
       setState(() {
         _email = _user!.email;
         _registrationDate = registrationDate;
       });
-    } // else {
-    setState(() {
-      _email = _user!.email;
-      _registrationDate = 'No registration date found';
-      //});
-      //}
-    });
+    }
   }
 
   //PASSWORTVERWALTUNG FUNKTIONIERT! =)
@@ -104,9 +97,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       await _auth.signOut();
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Password changed succesfully!'),
-                          duration: const Duration(seconds: 3),
+                        const SnackBar(
+                          content: Text('Password changed succesfully!'),
+                          duration: Duration(seconds: 3),
                         ),
                       );
 
@@ -119,14 +112,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Passwords do not match or are empty'),
                       duration: Duration(seconds: 3),
                     ),
                   );
                 }
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -151,11 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Old Email'),
-                  onChanged: (value) => oldEmail = value,
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'New Email'),
+                  decoration: const InputDecoration(labelText: 'New Email:'),
                   onChanged: (value) => newEmail1 = value,
                 ),
               ],
@@ -178,7 +167,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: const Text('Confirm With Password'),
+                      title: const Text(
+                          'Confirm With Password! Be aware the change is permanent and you cannot log in with your old email anymore.'),
                       content: SingleChildScrollView(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -213,16 +203,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                   password: password!,
                                 );
 
+                                String? documentID =
+                                    await firestoreService.getDocumentId();
+
                                 // Re-authenticate the user using the credential
                                 await _user!
                                     .reauthenticateWithCredential(credential);
+
+                                await firestoreService.updateEmailFirestore(
+                                    newEmail1!, documentID);
 
                                 // If re-authentication succeeds, update the email
                                 await _user!.updateEmail(newEmail1!);
                                 await _user!.sendEmailVerification();
 
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text(
                                         'Email changed successfully, please verify!'),
                                     duration: Duration(seconds: 3),
@@ -241,19 +237,19 @@ class _ProfilePageState extends State<ProfilePage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Error: $e'),
-                                  duration: Duration(seconds: 3),
+                                  duration: const Duration(seconds: 3),
                                 ),
                               );
                             }
                           },
-                          child: Text('Save'),
+                          child: const Text('Save'),
                         ),
                       ],
                     );
                   },
                 );
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -265,6 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
     bool deleteConfirmed = false;
     String? password;
     bool _passwordVisible = true;
+    String? documentID = await firestoreService.getDocumentId();
 
     await showDialog(
       context: context,
@@ -296,24 +293,24 @@ class _ProfilePageState extends State<ProfilePage> {
             TextButton(
               onPressed: () async {
                 try {
-                  // Delete profile logic here
-                  await _firestore.collection('Users').doc(_user!.uid).delete();
+                  await firestoreService.deleteUser(documentID);
                   await _user!.delete();
                   setState(() {
                     _email = null;
                     _registrationDate = null;
                   });
-                  Navigator.of(context).pop(); // Close the dialog
+                  Navigator.of(context).pop();
                   Navigator.pushReplacementNamed(context, '/login');
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Profile deleted'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
                 } catch (e) {
                   print('Error: $e');
                 }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Profile deleted succesfully'),
-                    duration: Duration(seconds: 3),
-                  ),
-                );
               },
               child: const Text('Save'),
             ),
@@ -323,83 +320,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-/*
-  Future<void> _deleteProfileDialog(BuildContext context) async {
-    bool deleteConfirmed = false;
-    String? password;
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm With Password'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                    'Are you sure you want to delete your profile? If so, enter your password:'),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  onChanged: (value) => password = value,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .pop(); // Close password confirmation dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  if (_user != null && password != null) {
-                    // Create a credential using the user's email and password
-                    AuthCredential credential = EmailAuthProvider.credential(
-                      email: _user!.email!,
-                      password: password!,
-                    );
-
-                    // Re-authenticate the user using the credential
-                    await _user!.reauthenticateWithCredential(credential);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                            'Your profile has been deleted succesfully.'),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-
-                    await _auth.signOut();
-
-                    Navigator.of(context)
-                        .pop(); // Close password confirmation dialog
-                    Navigator.pushReplacementNamed(context, '/login');
-                  }
-                } catch (e) {
-                  print('Error: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-*/
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -423,29 +343,25 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${_email ?? "Loading..."}',
-                      style: TextStyle(fontSize: 15),
+                      '$_email',
+                      style: const TextStyle(fontSize: 15),
                     ),
-                    SizedBox(height: 10), // Adjust the height as needed
+                    const SizedBox(height: 10), // Adjust the height as needed
 
-                    Text(
+                    const Text(
                       'Registration Date:',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '${_registrationDate ?? "Loading..."}',
-                      style: TextStyle(fontSize: 15),
+                      style: const TextStyle(fontSize: 15),
                     )
                   ],
                 ),
-                /*ElevatedButton(
-                  onPressed: () => _changeEmailDialog(context),
-                  child: Text('Change Email'),
-                ),*/
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -461,12 +377,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () => _deleteProfileDialog(context),
                   child: const Text('Delete Profile'),
                 ),
-                SizedBox(height: 40), // Spacing between buttons
+                const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size.fromHeight(50),
+                    minimumSize: const Size.fromHeight(50),
                   ),
-                  icon: Icon(Icons.arrow_back, size: 32),
+                  icon: const Icon(Icons.arrow_back, size: 32),
                   label: const Text(
                     'Sign Out',
                     style: TextStyle(fontSize: 24),
@@ -485,172 +401,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
-/*
-class LoginPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-      ),
-      body: Center(
-        child: Text('Login Page'),
-      ),
-    );
-  }
-}
-*/
-
-/*
-
-void main() {
-  runApp(MaterialApp(
-    initialRoute: '/',
-    routes: {
-      '/': (context) => ProfilePage(),
-      '/login': (context) => LoginPage(),
-    },
-  ));
-}
-*/
-
-/*
-  Future<void> _deleteProfileDialog(BuildContext context) async {
-    bool deleteConfirmed = false;
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        
-        return AlertDialog(
-          title: Text('Delete Profile'),
-          content: Text('Are you sure you want to delete your profile?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('No'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  // Delete profile logic here
-                  await _firestore.collection('Users').doc(_user!.uid).delete();
-                  await _user!.delete();
-                  setState(() {
-                    _email = null;
-                    _registrationDate = null;
-                  });
-                  Navigator.of(context).pop(); // Close the dialog
-                  Navigator.pushReplacementNamed(context, '/login');
-                } catch (e) {
-                  print('Error: $e');
-                  // Handle error - show error message or log
-                }
-              },
-              child: Text('Yes'),
-            ),
-          ],
-        );
-        
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('User Profile'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Email:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${_email ?? "Loading..."}',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    SizedBox(height: 10), // Adjust the height as needed
-
-                    Text(
-                      'Registration Date:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${_registrationDate ?? "Loading..."}',
-                      style: TextStyle(fontSize: 15),
-                    )
-                  ],
-                ),
-                /*ElevatedButton(
-                  onPressed: () => _changeEmailDialog(context),
-                  child: Text('Change Email'),
-                ),*/
-              ],
-            ),
-            SizedBox(height: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _changeEmailDialog(context),
-                  child: Text('Change Email'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _changePasswordDialog(context),
-                  child: Text('Change Password'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _deleteProfileDialog(context),
-                  child: Text('Delete Profile'),
-                  //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-      ),
-      body: Center(
-        child: Text('Login Page'),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    initialRoute: '/',
-    routes: {
-      '/': (context) => ProfilePage(),
-      '/login': (context) => LoginPage(),
-    },
-  ));
-}
-*/
