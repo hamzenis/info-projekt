@@ -1,31 +1,37 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/services/transaction_sell_service.dart';
+import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
+import 'package:info_projekt/widgets/watchlist_button.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
+import 'services/portfolio_service.dart';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
+  final PortfolioService portfolioService = PortfolioService();
 
-  const HomePageNew({super.key});
+  HomePageNew({super.key});
 
-  /// Filler code for the action buttons
-  /// Remove this when implementing the actual functionality
   void _showAction(BuildContext context, int index) {
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: Text(_actionTitles[index]),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('CLOSE'),
-              ),
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(_actionTitles[index]),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('CLOSE'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -34,14 +40,7 @@ class HomePageNew extends StatelessWidget {
       appBar: AppBar(
         title: const Text('TradeMate'),
       ),
-      // TODO: Replace with your own code
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: 25,
-        itemBuilder: (context, index) {
-          return FakeItem(isBig: index.isOdd);
-        },
-      ),
+      body: PortfolioPage(),
       floatingActionButton: ExpandableFab(
         distance: 100,
         children: [
@@ -302,26 +301,527 @@ class ActionButton extends StatelessWidget {
   }
 }
 
-/// Filler code for the home page
-/// Remove this when implementing the actual functionality
-@immutable
-class FakeItem extends StatelessWidget {
-  const FakeItem({
-    super.key,
-    required this.isBig,
-  });
+class PortfolioPage extends StatefulWidget {
+  @override
+  _PortfolioPageState createState() => _PortfolioPageState();
+}
 
-  final bool isBig;
+class _PortfolioPageState extends State<PortfolioPage> {
+  final PortfolioService portfolioService = PortfolioService();
+  ValueNotifier<bool> showPercentage = ValueNotifier<bool>(false);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-      height: isBig ? 128 : 36,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-        color: Colors.grey.shade300,
+    User? user = FirebaseAuth.instance.currentUser;
+    return user == null
+        ? Center(child: Text('Please log in'))
+        : FutureBuilder<Map<String, dynamic>>(
+            future: portfolioService.calculatePortfolioValue(user.uid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else {
+                return SafeArea(
+                  child: PortfolioOverview(
+                    portfolioValue: snapshot.data!['portfolioValue'],
+                    profitOrLoss: snapshot.data!['profitOrLoss'],
+                    percentageGainOrLoss:
+                        snapshot.data!['percentageGainOrLoss'],
+                    showPercentage: showPercentage,
+                    onTogglePercentage: () {
+                      showPercentage.value = !showPercentage.value;
+                    },
+                    individualInvestments:
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                      future:
+                          portfolioService.getIndividualInvestments(user.uid),
+                      builder: (context, investmentSnapshot) {
+                        if (investmentSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (investmentSnapshot.hasError) {
+                          return Center(
+                              child:
+                                  Text('Error: ${investmentSnapshot.error}'));
+                        } else {
+                          return InvestmentList(investmentSnapshot.data!);
+                        }
+                      },
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+  }
+
+  String valueToString(bool isProfit, double value) {
+    return showPercentage.value
+        ? '${value.toStringAsFixed(2)}%'
+        : '\$${value.toStringAsFixed(2)}';
+  }
+}
+
+class PortfolioOverview extends StatefulWidget {
+  final double portfolioValue;
+  final double profitOrLoss;
+  final double percentageGainOrLoss;
+  final ValueNotifier<bool> showPercentage;
+  final VoidCallback onTogglePercentage;
+  final Widget individualInvestments;
+
+  PortfolioOverview({
+    required this.portfolioValue,
+    required this.profitOrLoss,
+    required this.percentageGainOrLoss,
+    required this.showPercentage,
+    required this.onTogglePercentage,
+    required this.individualInvestments,
+  });
+
+  @override
+  _PortfolioOverviewState createState() => _PortfolioOverviewState();
+}
+
+class _PortfolioOverviewState extends State<PortfolioOverview> {
+  @override
+  Widget build(BuildContext context) {
+    bool isProfit = widget.profitOrLoss >= 0;
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\$${widget.portfolioValue.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8), // Reduced height
+                      GestureDetector(
+                        onTap: widget.onTogglePercentage,
+                        child: Row(
+                          children: [
+                            Icon(
+                              isProfit
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color: isProfit ? Colors.green : Colors.red,
+                            ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: widget.showPercentage,
+                              builder: (context, value, child) {
+                                return Text(
+                                  value
+                                      ? '${widget.percentageGainOrLoss.toStringAsFixed(2)}%'
+                                      : '\$${widget.profitOrLoss.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: isProfit ? Colors.green : Colors.red,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        PageRouteBuilder(
+                          pageBuilder: (BuildContext context,
+                              Animation<double> animation,
+                              Animation<double> secondaryAnimation) {
+                            return HomePageNew();
+                          },
+                          transitionDuration: Duration.zero,
+                        ),
+                        (Route<dynamic> route) => false,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Expanded(child: widget.individualInvestments),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class InvestmentList extends StatefulWidget {
+  final List<Map<String, dynamic>> investments;
+
+  InvestmentList(this.investments);
+
+  @override
+  _InvestmentListState createState() => _InvestmentListState();
+}
+
+class _InvestmentListState extends State<InvestmentList>
+    with AutomaticKeepAliveClientMixin {
+  List<Map<String, dynamic>>? _watchlist;
+  late PageController _pageController;
+  final user = FirebaseAuth.instance.currentUser;
+  bool showPercentage = false;
+  int _currentPage = 0;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  Future<List<Map<String, dynamic>>>? _watchlistFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<WatchlistNotifier>(context, listen: false)
+        .loadWatchlist(user!.uid);
+    _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
+    fetchWatchlist();
+    _pageController = PageController(initialPage: _currentPage)
+      ..addListener(() {
+        setState(() {
+          _currentPage = _pageController.page!.round();
+        });
+      });
+  }
+
+  Future<void> fetchWatchlist() async {
+    _watchlist = await PortfolioService().getWatchlist(user!.uid);
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(0,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut);
+                },
+                child: Container(
+                  color:
+                      _currentPage == 0 ? Colors.grey[300] : Colors.transparent,
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      'Investments',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _currentPage == 0 ? Colors.black : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(1,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut);
+                },
+                child: Container(
+                  color:
+                      _currentPage == 1 ? Colors.grey[300] : Colors.transparent,
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      'Watchlist',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _currentPage == 1 ? Colors.black : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            children: [
+              // Investments
+              ListView.builder(
+                itemCount: widget.investments.length,
+                itemBuilder: (context, index) {
+                  var investment = widget.investments[index];
+                  bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
+
+                  return ListTile(
+                    title: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(investment['name']),
+                        ),
+                        Text(
+                          '\$${investment['totalValue'].toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color:
+                                isInvestmentProfit ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '\$${investment['price'].toStringAsFixed(2)}',
+                            ),
+                            Text(
+                              ' x ${investment['quantity'].toStringAsFixed(2)} ',
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              showPercentage = !showPercentage;
+                            });
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    isInvestmentProfit
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    color: isInvestmentProfit
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                  Text(
+                                    showPercentage
+                                        ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
+                                        : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                                    style: TextStyle(
+                                      color: isInvestmentProfit
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text(investment['name']),
+                            content: SingleChildScrollView(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: TextButton(
+                                      child: Text('Cancel'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ),
+                                  // Go To Chart Button
+                                  Expanded(
+                                    child: TextButton(
+                                      child: Text('Go to Chart'),
+                                      onPressed: () {
+                                        // Navigate to chart
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ChartStock(
+                                              title: investment['symbol'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  // Sell Stock
+                                  Expanded(
+                                    child: TextButton(
+                                      child: Text('Sell Stock'),
+                                      onPressed: () async {
+                                        // Ask for the amount
+                                        int? amount = await showDialog<int>(
+                                          context: context,
+                                          builder: (context) {
+                                            final TextEditingController
+                                                controller =
+                                                TextEditingController();
+                                            return AlertDialog(
+                                              title: const Text(
+                                                  'How many shares do you want to sell?'),
+                                              content: TextField(
+                                                controller: controller,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                decoration: InputDecoration(
+                                                  hintText: 'Amount',
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text('Cancel'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: const Text('OK'),
+                                                  onPressed: () {
+                                                    int amount = int.tryParse(
+                                                            controller.text) ??
+                                                        0;
+                                                    Navigator.of(context)
+                                                        .pop(amount);
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+
+                                        // Sell stock
+                                        if (amount != null) {
+                                          bool success =
+                                              await startSellStockFlow(context,
+                                                  amount, investment['symbol']);
+
+                                          // Refresh page if the stock was successfully sold
+                                          if (success) {
+                                            setState(() {
+                                              // Find the investment that matches the sold stock
+                                              var soldInvestment =
+                                                  widget.investments.firstWhere(
+                                                (inv) =>
+                                                    inv['symbol'] ==
+                                                    investment['symbol'],
+                                                orElse: () =>
+                                                    <String, dynamic>{},
+                                              );
+
+                                              // If the investment was found, decrease its quantity
+                                              if (soldInvestment != null &&
+                                                  soldInvestment.isNotEmpty) {
+                                                soldInvestment['quantity'] -=
+                                                    amount;
+                                              }
+                                            });
+                                          }
+                                        }
+                                        // Close the popup
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+
+              Consumer<WatchlistNotifier>(
+                builder: (context, watchlistNotifier, child) {
+                  var watchlist = watchlistNotifier.watchlist;
+                  return Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: watchlist.isEmpty
+                        ? Text(
+                            'Watchlist items will appear here when available.',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        : ListView.builder(
+                            itemCount: watchlist.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChartStock(
+                                        title: watchlist[index]['symbol'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  title: Text(watchlist[index]['name']),
+                                  subtitle: Text(watchlist[index]['symbol']),
+                                ),
+                              );
+                            },
+                          ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String valueToString(bool isProfit, double value) {
+    return '${value.toStringAsFixed(2)}';
+  }
+
+  String valueToPercentage(bool isProfit, double percentage) {
+    return '${percentage.toStringAsFixed(2)}%';
   }
 }

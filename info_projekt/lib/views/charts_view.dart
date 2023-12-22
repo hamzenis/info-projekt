@@ -3,7 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import '../services/prices.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/portfolio_service.dart';
+import '../services/stockData_service.dart';
+import '../widgets/watchlist_button.dart';
+
+import '../widgets/buy_popup.dart';
+
+final user = FirebaseAuth.instance.currentUser;
 
 class ChartStock extends StatefulWidget {
   final String title;
@@ -23,10 +31,14 @@ class ChartStock extends StatefulWidget {
 * TODO: Refactor for better readability
 * TODO: Add comments
 */
+
 class _ChartStockState extends State<ChartStock> {
   late ZoomPanBehavior _zoomPanBehavior;
+
   List<ChartData>? currentData;
   String selectedTimeRange = 'month'; // Default to 'month'
+  bool isInWatchlist = false;
+  final portfolioService = PortfolioService();
 
   /** 
   *  
@@ -38,6 +50,7 @@ class _ChartStockState extends State<ChartStock> {
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
+    checkIfInWatchlist();
   }
 
   /**
@@ -55,6 +68,11 @@ class _ChartStockState extends State<ChartStock> {
         ),
       ),
     );
+  }
+
+  Future<void> checkIfInWatchlist() async {
+    isInWatchlist =
+        await portfolioService.checkIfInWatchlist(user!.uid, widget.title);
   }
 
   /**
@@ -93,6 +111,25 @@ class _ChartStockState extends State<ChartStock> {
             return Scaffold(
                 appBar: AppBar(
                   title: Text(widget.title),
+                  actions: <Widget>[
+                    FutureBuilder<bool>(
+                      future: portfolioService.checkIfInWatchlist(
+                          user!.uid, widget.title),
+                      builder:
+                          (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                        if (snapshot.hasData) {
+                          return WatchlistButton(
+                            isInWatchlist: snapshot.data!,
+                            title: widget.title,
+                            companyName: companyName,
+                            uid: user!.uid,
+                          );
+                        } else {
+                          return CircularProgressIndicator();
+                        }
+                      },
+                    ),
+                  ],
                 ),
                 body: SingleChildScrollView(
                   child: Column(
@@ -142,7 +179,14 @@ class _ChartStockState extends State<ChartStock> {
                 ),
                 floatingActionButton: FloatingActionButton.extended(
                   onPressed: () {
-                    // TODO:Write Buy Action
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return BuyPopup(
+                          stockSymbol: widget.title,
+                        ); // Show the BuyPopup content
+                      },
+                    );
                   },
                   backgroundColor: Colors.green,
                   icon: const Icon(Icons.attach_money),
