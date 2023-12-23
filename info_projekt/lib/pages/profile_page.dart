@@ -6,6 +6,15 @@ import 'package:info_projekt/common/toast.dart';
 import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
+import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/pages/sign_up_page.dart';
+import 'package:info_projekt/widgets/form_container_widget.dart';
+
 class ProfilePage extends StatefulWidget {
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -40,88 +49,141 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   //PASSWORTVERWALTUNG FUNKTIONIERT! =)
-
   Future<void> _changePasswordDialog(BuildContext context) async {
     String? oldPassword;
     String? newPassword1;
     String? newPassword2;
+    bool passwordVisible = false;
+    bool oldPasswordVisible = false;
+    bool newPassword1Visible = false;
+    bool newPassword2Visible = false;
 
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Change Password'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Old Password'),
-                  onChanged: (value) => oldPassword = value,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Change Password'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Old Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            oldPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              oldPasswordVisible = !oldPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !oldPasswordVisible,
+                      onChanged: (value) => oldPassword = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            newPassword1Visible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              newPassword1Visible = !newPassword1Visible;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !newPassword1Visible,
+                      onChanged: (value) => newPassword1 = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            newPassword2Visible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              newPassword2Visible = !newPassword2Visible;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !newPassword2Visible,
+                      onChanged: (value) => newPassword2 = value,
+                    ),
+                  ],
                 ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'New Password'),
-                  onChanged: (value) => newPassword1 = value,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
                 ),
-                TextFormField(
-                  decoration:
-                      const InputDecoration(labelText: 'Confirm New Password'),
-                  onChanged: (value) => newPassword2 = value,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (oldPassword != null &&
-                    newPassword1 != null &&
-                    newPassword2 != null &&
-                    newPassword1 == newPassword2) {
-                  try {
-                    UserCredential userCredential =
-                        await _auth.signInWithEmailAndPassword(
-                      email: _user!.email!,
-                      password: oldPassword!, // Replace with user's password
-                    );
+                TextButton(
+                  onPressed: () async {
+                    if (oldPassword != null &&
+                        newPassword1 != null &&
+                        newPassword2 != null &&
+                        newPassword1 == newPassword2) {
+                      try {
+                        UserCredential userCredential =
+                            await _auth.signInWithEmailAndPassword(
+                          email: _user!.email!,
+                          password:
+                              oldPassword!, // Replace with user's password
+                        );
 
-                    User? user = userCredential.user;
-                    if (user != null) {
-                      await user.updatePassword(newPassword1!);
-                      await _auth.signOut();
+                        User? user = userCredential.user;
+                        if (user != null) {
+                          await user.updatePassword(newPassword1!);
+                          await _auth.signOut();
 
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Password changed succesfully!'),
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+
+                          Navigator.of(context).pop(); // Close the dialog
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      } catch (e) {
+                        print('Error: $e');
+                        // Handle error - show error message or log
+                      }
+                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Password changed succesfully!'),
+                          content: Text('Passwords do not match or are empty'),
                           duration: Duration(seconds: 3),
                         ),
                       );
-
-                      Navigator.of(context).pop(); // Close the dialog
-                      Navigator.pushReplacementNamed(context, '/login');
                     }
-                  } catch (e) {
-                    print('Error: $e');
-                    // Handle error - show error message or log
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Passwords do not match or are empty'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
+                    // ... The logic for password change ...
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -133,6 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
     String? oldEmail;
     String? newEmail1;
     String? password;
+    bool passwordVisible = false;
 
     await showDialog(
       context: context,
@@ -166,85 +229,102 @@ class _ProfilePageState extends State<ProfilePage> {
                 await showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text(
-                          'Confirm With Password! Be aware the change is permanent and you cannot log in with your old email anymore.'),
-                      content: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                                'Please enter your current password to proceed:'),
-                            TextFormField(
-                              decoration:
-                                  const InputDecoration(labelText: 'Password'),
-                              obscureText: true,
-                              onChanged: (value) => password = value,
-                            ),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context)
-                                .pop(); // Close password confirmation dialog
-                          },
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            try {
-                              if (_user != null && password != null) {
-                                // Create a credential using the user's email and password
-                                AuthCredential credential =
-                                    EmailAuthProvider.credential(
-                                  email: _user!.email!,
-                                  password: password!,
-                                );
-
-                                String? documentID =
-                                    await firestoreService.getDocumentId();
-
-                                // Re-authenticate the user using the credential
-                                await _user!
-                                    .reauthenticateWithCredential(credential);
-
-                                await firestoreService.updateEmailFirestore(
-                                    newEmail1!, documentID);
-
-                                // If re-authentication succeeds, update the email
-                                await _user!.updateEmail(newEmail1!);
-                                await _user!.sendEmailVerification();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Email changed successfully, please verify!'),
-                                    duration: Duration(seconds: 3),
+                    return StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return AlertDialog(
+                          title: const Text(
+                              'Confirm With Password! Be aware the change is permanent and you cannot log in with your old email anymore.'),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                    'Please enter your current password to proceed:'),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        passwordVisible
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          passwordVisible = !passwordVisible;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                );
-
-                                await _auth.signOut();
-
+                                  obscureText: !passwordVisible,
+                                  onChanged: (value) => password = value,
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
                                 Navigator.of(context)
                                     .pop(); // Close password confirmation dialog
-                                Navigator.pushReplacementNamed(
-                                    context, '/login');
-                              }
-                            } catch (e) {
-                              print('Error: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error: $e'),
-                                  duration: const Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          },
-                          child: const Text('Save'),
-                        ),
-                      ],
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                try {
+                                  if (_user != null && password != null) {
+                                    // Create a credential using the user's email and password
+                                    AuthCredential credential =
+                                        EmailAuthProvider.credential(
+                                      email: _user!.email!,
+                                      password: password!,
+                                    );
+
+                                    String? documentID =
+                                        await firestoreService.getDocumentId();
+
+                                    // Re-authenticate the user using the credential
+                                    await _user!.reauthenticateWithCredential(
+                                        credential);
+
+                                    await firestoreService.updateEmailFirestore(
+                                        newEmail1!, documentID);
+
+                                    // If re-authentication succeeds, update the email
+                                    await _user!.updateEmail(newEmail1!);
+                                    await _user!.sendEmailVerification();
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Email changed successfully, please verify!'),
+                                        duration: Duration(seconds: 3),
+                                      ),
+                                    );
+
+                                    await _auth.signOut();
+
+                                    Navigator.of(context)
+                                        .pop(); // Close password confirmation dialog
+                                    Navigator.pushReplacementNamed(
+                                        context, '/login');
+                                  }
+                                } catch (e) {
+                                  print('Error: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: $e'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text('Save'),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
@@ -260,61 +340,80 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _deleteProfileDialog(BuildContext context) async {
     bool deleteConfirmed = false;
     String? password;
-    bool _passwordVisible = true;
+    bool passwordVisible = false;
     String? documentID = await firestoreService.getDocumentId();
 
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm With Password'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                    'Are you sure you want to delete your profile? If so, enter your password:'),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  onChanged: (value) => password = value,
+        return StatefulBuilder(
+          // Use StatefulBuilder to manage state inside the dialog
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Confirm With Password'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                        'Are you sure you want to delete your profile? If so, enter your password:'),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            passwordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              passwordVisible = !passwordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !passwordVisible,
+                      onChanged: (value) => password = value,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(); // Close password confirmation dialog
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await firestoreService.deleteUser(documentID);
+                      await _user!.delete();
+                      setState(() {
+                        _email = null;
+                        _registrationDate = null;
+                      });
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacementNamed(context, '/login');
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Profile deleted'),
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error: $e');
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .pop(); // Close password confirmation dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  await firestoreService.deleteUser(documentID);
-                  await _user!.delete();
-                  setState(() {
-                    _email = null;
-                    _registrationDate = null;
-                  });
-                  Navigator.of(context).pop();
-                  Navigator.pushReplacementNamed(context, '/login');
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile deleted'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                } catch (e) {
-                  print('Error: $e');
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
