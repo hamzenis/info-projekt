@@ -79,7 +79,7 @@ Future<void> startBuyStockFlow(
               .collection('portfolio')
               .add({
             'name': companyName,
-            'price': singlePrice, // Updated to reflect total price after fee
+            'price': singlePrice,
             'purchaseDate': Timestamp.now(),
             'quantity': amount,
             'symbol': stockSymbol,
