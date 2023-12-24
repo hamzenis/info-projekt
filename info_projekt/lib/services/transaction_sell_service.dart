@@ -116,24 +116,30 @@ Future<void> startSellStockFlow(
       }
     }
 
-    // Store transaction to stock_transaction_history collection
-    double singlePrice = double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
-    double totalPrice = singlePrice * amount;
-    double fee = 1.0; // Transaction fee
-    double totalPriceAfterFee = totalPrice - fee; // Subtract fee from total price
+  // Store transaction to stock_transaction_history collection
+double singlePrice = double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
+double totalPrice = singlePrice * amount;
+double fee = 1.0; // Transaction fee
+double totalPriceAfterFee = totalPrice - fee; // Subtract fee from total price
 
-    // Retrieve tax_pot from Firestore
-    double taxPot = (userDoc['tax_pot'] as num).toDouble();
+// Retrieve tax_pot from Firestore
+double taxPot = (userDoc['tax_pot'] as num).toDouble();
 
-    // Calculate new tax_pot
-    double profit = totalPrice - (singlePrice * amount);
-    taxPot += profit < 0 ? -profit : -profit;
-    
-    // Update balance and tax_pot in Firestore
-    await _firestore.collection('Users').doc(userDoc.id).update({
-      'balance': FieldValue.increment(totalPriceAfterFee),
-      'tax_pot': taxPot,
-    });
+// Calculate new tax_pot
+double profit = 0;
+for (final stock in stockSnapshot.docs) {
+  double purchasePrice = double.tryParse(stock['price'].toString()) ?? 0.0;
+  int individualStockQuantity = int.tryParse(stock['quantity'].toString()) ?? 0;
+  profit += (singlePrice - purchasePrice) * individualStockQuantity;
+}
+taxPot += profit;
+taxPot -= fee; // subtract fee from tax pot
+
+// Update balance and tax_pot in Firestore
+await _firestore.collection('Users').doc(userDoc.id).update({
+  'balance': FieldValue.increment(totalPriceAfterFee),
+  'tax_pot': taxPot,
+});
 
     await _firestore
         .collection('Users')
