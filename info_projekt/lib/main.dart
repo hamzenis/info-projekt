@@ -50,7 +50,8 @@ class MyApp extends StatelessWidget {
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
         '/profile': (context) => ProfilePage(), // Added ProfilePage route
-        '/home': (context) => HomePage(),
+        '/home': (context) =>
+            HomePage(), // Old Homepage, not deleted yet because of hotreload route
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
               future: getInitialLink(),
