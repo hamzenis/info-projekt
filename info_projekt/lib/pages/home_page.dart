@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:info_projekt/common/toast.dart';
 import '../homepage_new.dart';
 
+// DO NOT DELTED THIS FILE, IT IS USED FOR TESTING WHEN HOTRELOADING
 /*Brauchen wir eigentlich nicht mehr, ist durch HomePageNew ersetzt worden (steht in Widgets)*/
 
 class HomePage extends StatelessWidget {
@@ -45,7 +46,9 @@ class HomePage extends StatelessWidget {
               },
             ),
             SizedBox(height: 10),
-            /* ElevatedButton.icon(
+            // DO NOT DELETE THIS BUTTON, IT IS USED FOR TESTING WHEN HOTRELOADING
+            // TODO: Remove this button when the app is finished
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 minimumSize: Size.fromHeight(50),
               ),
@@ -60,7 +63,7 @@ class HomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => HomePageNew()),
                 );
               },
-            ),*/
+            ),
           ],
         ),
       ),

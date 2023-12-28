@@ -13,9 +13,7 @@ import 'package:info_projekt/pages/verify_email_page.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:provider/provider.dart';
-
 import 'package:info_projekt/views/wallet_screen.dart';
-import '../homepage_new.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
