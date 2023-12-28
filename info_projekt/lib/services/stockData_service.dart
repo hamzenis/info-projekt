@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// TODO: Replace static date with dynamic date
 // TODO: Remove API key from code
 // TODO: Add error handling
 // TODO: Replace Day data request for a better resolution (1min or 5min)
+// TODO: Check if it's weekend/after hours/holidays and return other chart data (day data)
+// TODO: Write documentation
+String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
+
 class ChartData {
   final DateTime time;
   final double price;
@@ -20,12 +23,15 @@ class ChartData {
 */
 Future<List<ChartData>> loadMonthData(String stockSymbol) async {
   List<ChartData> spotList = [];
+  DateTime today = DateTime.now();
+  DateTime lastMonth = today.subtract(Duration(days: 30));
+  String todayString = today.toString().substring(0, 10);
+  String lastMonthString = lastMonth.toString().substring(0, 10);
 
   try {
     // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'; // Replace with API key
     String url =
-        'https://financialmodelingprep.com/api/v3/historical-chart/1hour/$stockSymbol?from=2023-10-24&to=2023-11-24&apikey=$apiKey';
+        'https://financialmodelingprep.com/api/v3/historical-chart/1hour/$stockSymbol?from=$lastMonthString&to=$todayString&apikey=$apiKey';
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
 
@@ -44,8 +50,7 @@ Future<List<ChartData>> loadMonthData(String stockSymbol) async {
       spotList.add(ChartData(DateTime.parse(timeString), price));
     }
   } catch (e) {
-    print(
-        "Error parsing JSON: $e"); // TODO: Remove and replace with error handling
+    throw ("Error parsing JSON: $e"); // TODO: Remove and replace with error handling
   }
 
   return spotList;
@@ -53,15 +58,13 @@ Future<List<ChartData>> loadMonthData(String stockSymbol) async {
 
 /*
 *
-*
+*   TODO: Return a double instead of a String
 *   Fetches data from the API and returns a double with the real-time quote price
 */
 Future<String> getCurrentPrice(String stockSymbol) async {
   double realTimeQuote = 0.0;
 
   try {
-    // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
     String url =
         'https://financialmodelingprep.com/api/v3/quote-short/$stockSymbol?apikey=$apiKey';
     http.Response response = await http
@@ -92,8 +95,6 @@ Future<String> getCompanyName(String stockSymbol) async {
   String companyName = '';
 
   try {
-    // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
     String url =
         'https://financialmodelingprep.com/api/v3/profile/$stockSymbol?apikey=$apiKey';
     http.Response response = await http
@@ -119,12 +120,13 @@ Future<String> getCompanyName(String stockSymbol) async {
 */
 Future<List<ChartData>> loadDayData(String stockSymbol) async {
   List<ChartData> spotList = [];
+  DateTime todaya = DateTime.now();
+  DateTime today = todaya.subtract(Duration(days: 2));
+  String todayString = today.toString().substring(0, 10);
 
   try {
-    // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'; // Replace with API key
     String url =
-        'https://financialmodelingprep.com/api/v3/historical-chart/15min/$stockSymbol?from=2023-11-24&to=2023-11-24&apikey=$apiKey';
+        'https://financialmodelingprep.com/api/v3/historical-chart/15min/$stockSymbol?from=$todayString&to=$todayString&apikey=$apiKey';
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
 
@@ -158,12 +160,14 @@ Future<List<ChartData>> loadDayData(String stockSymbol) async {
 */
 Future<List<ChartData>> loadYearData(String stockSymbol) async {
   List<ChartData> spotList = [];
+  DateTime today = DateTime.now();
+  DateTime lastYear = today.subtract(Duration(days: 365));
+  String todayString = today.toString().substring(0, 10);
+  String lastYearString = lastYear.toString().substring(0, 10);
 
   try {
-    // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'; // Replace with API key
     String url =
-        'https://financialmodelingprep.com/api/v3/historical-chart/1day/$stockSymbol?from=2022-11-24&to=2023-11-24&apikey=$apiKey';
+        'https://financialmodelingprep.com/api/v3/historical-chart/1day/$stockSymbol?from=$lastYearString&to=$todayString&apikey=$apiKey';
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
 
@@ -199,8 +203,6 @@ Future<String> getCompanyAbout(String stockSymbol) async {
   String companyAbout = '';
 
   try {
-    // Send a GET request to the API
-    String apiKey = 'KKCRslaWI36ENKmv2yKfduM44Z5EDm0X';
     String url =
         'https://financialmodelingprep.com/api/v3/profile/$stockSymbol?apikey=$apiKey';
     http.Response response = await http

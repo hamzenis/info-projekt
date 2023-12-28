@@ -61,8 +61,43 @@ class _LoginPageState extends State<LoginPage> {
                 hintText: "Password",
                 isPasswordField: true,
               ),
+              InkWell(
+                onTap: () async {
+              if (_emailController.text.isEmpty) {
+                showToast(message: "Please enter your email address.");
+                return;
+              }
+              try {
+                // Check if the email is registered
+                bool isRegistered = await _auth.isEmailRegistered(_emailController.text);
+                print("Is email registered: $isRegistered"); // Debugging log
+
+                if (isRegistered) {
+                  await _firebaseAuth.sendPasswordResetEmail(email: _emailController.text);
+                  showToast(message: "Password reset email sent.");
+                } else {
+                  showToast(message: "This email address is not registered.");
+                }
+              } catch (e) {
+                showToast(message: "An error occurred: $e");
+                print("Error: $e"); // Debugging log
+              }
+            },
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 20),
+                  alignment: Alignment.topRight,
+                  child: const Text(
+                    'Forgot Password ?',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blueGrey,
+                        decoration: TextDecoration.none,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
               const SizedBox(
-                height: 30,
+                height: 10,
               ),
               GestureDetector(
                 onTap: () {
@@ -104,18 +139,18 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           FontAwesomeIcons.google,
                           color: Colors.white,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 5,
                         ),
-                        Text(
+                        const Text(
                           "Sign in with Google",
                           style: TextStyle(
                             color: Colors.white,

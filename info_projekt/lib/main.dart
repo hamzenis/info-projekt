@@ -2,6 +2,7 @@ import 'package:info_projekt/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:info_projekt/firebase_options.dart';
+import 'package:info_projekt/homepage_new.dart';
 import 'package:info_projekt/pages/payment_page.dart';
 import 'package:info_projekt/views/splashScreen.dart';
 import 'package:info_projekt/pages/home_page.dart';
@@ -9,7 +10,10 @@ import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:info_projekt/pages/verify_email_page.dart';
+import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:uni_links/uni_links.dart';
+import 'package:provider/provider.dart';
+
 import 'package:info_projekt/views/wallet_screen.dart';
 import '../homepage_new.dart';
 
@@ -23,7 +27,12 @@ void main() async {
       "pk_test_51OCfrgEFCGzXnEeOd1oT0r7x9bEhxiXxXv6VJyf6LWO1E8ZMtwx7cWjVdlidFPnRo4aG3xF5bTpsk5iOPe3toFmZ00MXrBqrOa";
   Stripe.merchantIdentifier = 'MerchantIdentifier';
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => WatchlistNotifier(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

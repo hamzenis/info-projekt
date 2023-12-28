@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/views/owned_stocks_page.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:intl/intl.dart';
@@ -474,7 +475,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 ElevatedButton(
                   onPressed: () => _deleteProfileDialog(context),
-                  child: const Text('Delete Profile'),
+                  child: Text('Delete Profile'),
+                  //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => OwnedStocksPage()),
+                    );
+                  },
+                  child: Text('My Shares'),
                 ),
                 const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(
