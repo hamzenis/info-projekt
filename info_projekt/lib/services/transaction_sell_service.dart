@@ -12,19 +12,19 @@ final _firestore = FirebaseFirestore.instance;
 /// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
 /// If the password is correct, it checks if the user has the stock and enough amount to sell.
 /// If the user has the stock and enough amount, it adds the amount of money to the user's balance and updates his transaction history.
-Future<void> startSellStockFlow(
+Future<bool> startSellStockFlow(
     BuildContext context, int amount, String stockSymbol) async {
   try {
     final user = _auth.currentUser;
     if (user == null) {
       showToast(message: 'User is not logged in');
-      return;
+      return false;
     }
 
     String? password = await getUserPassword(context);
     if (password == null) {
       showToast(message: 'Password is not provided');
-      return;
+      return false;
     }
 
     final credential = EmailAuthProvider.credential(
@@ -36,7 +36,7 @@ Future<void> startSellStockFlow(
       await user.reauthenticateWithCredential(credential);
     } catch (e) {
       showToast(message: 'Password is wrong');
-      return;
+      return false;
     }
 
     final userDoc = (await _firestore
@@ -56,7 +56,7 @@ Future<void> startSellStockFlow(
 
     if (stockSnapshot.docs.isEmpty) {
       showToast(message: 'No stocks found for the symbol');
-      return;
+      return false;
     }
 
     int sellQuantity = amount;
@@ -68,7 +68,7 @@ Future<void> startSellStockFlow(
 
     if (sellQuantity > totalStocks) {
       showToast(message: 'Not enough stocks to sell');
-      return;
+      return false;
     }
 
     for (final stock in stockSnapshot.docs) {
@@ -116,30 +116,33 @@ Future<void> startSellStockFlow(
       }
     }
 
-  // Store transaction to stock_transaction_history collection
-double singlePrice = double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
-double totalPrice = singlePrice * amount;
-double fee = 1.0; // Transaction fee
-double totalPriceAfterFee = totalPrice - fee; // Subtract fee from total price
+    // Store transaction to stock_transaction_history collection
+    double singlePrice =
+        double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
+    double totalPrice = singlePrice * amount;
+    double fee = 1.0; // Transaction fee
+    double totalPriceAfterFee =
+        totalPrice - fee; // Subtract fee from total price
 
 // Retrieve tax_pot from Firestore
-double taxPot = (userDoc['tax_pot'] as num).toDouble();
+    double taxPot = (userDoc['tax_pot'] as num).toDouble();
 
 // Calculate new tax_pot
-double profit = 0;
-for (final stock in stockSnapshot.docs) {
-  double purchasePrice = double.tryParse(stock['price'].toString()) ?? 0.0;
-  int individualStockQuantity = int.tryParse(stock['quantity'].toString()) ?? 0;
-  profit += (singlePrice - purchasePrice) * individualStockQuantity;
-}
-taxPot += profit;
-taxPot -= fee; // subtract fee from tax pot
+    double profit = 0;
+    for (final stock in stockSnapshot.docs) {
+      double purchasePrice = double.tryParse(stock['price'].toString()) ?? 0.0;
+      int individualStockQuantity =
+          int.tryParse(stock['quantity'].toString()) ?? 0;
+      profit += (singlePrice - purchasePrice) * individualStockQuantity;
+    }
+    taxPot += profit;
+    taxPot -= fee; // subtract fee from tax pot
 
 // Update balance and tax_pot in Firestore
-await _firestore.collection('Users').doc(userDoc.id).update({
-  'balance': FieldValue.increment(totalPriceAfterFee),
-  'tax_pot': taxPot,
-});
+    await _firestore.collection('Users').doc(userDoc.id).update({
+      'balance': FieldValue.increment(totalPriceAfterFee),
+      'tax_pot': taxPot,
+    });
 
     await _firestore
         .collection('Users')
@@ -154,9 +157,12 @@ await _firestore.collection('Users').doc(userDoc.id).update({
     });
 
     showToast(message: 'Stocks sold successfully');
+    return true;
   } catch (e) {
     showToast(message: 'Sell failed: ${e.toString()}');
   }
+
+  return false;
 }
 
 /// It creates a popup with the password of the user.
