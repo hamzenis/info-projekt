@@ -39,17 +39,24 @@ Future<void> startBuyStockFlow(
           final userDoc = querySnapshot.docs.first;
           String? singlePriceString = await getCurrentPrice(stockSymbol);
           double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
-          double totalPrice = singlePrice * amount;
           double fee = 1.0; // Transaction fee
-          totalPrice += fee; // Add fee to total price
+          singlePrice = (fee / amount) + singlePrice; // Add fee to total price
 
-          if (totalPrice > userDoc['balance'] && !kDebugMode) {
+          if (singlePrice > userDoc['balance'] && !kDebugMode) {
             showToast(message: "Not enough money");
             return;
           }
 
+          // Retrieve tax_pot from Firestore
+          double taxPot = (userDoc['tax_pot'] as num).toDouble();
+
+          // Subtract fee from taxPot
+          taxPot -= fee;
+
           await _firestore.collection('Users').doc(userDoc.id).update({
-            'balance': FieldValue.increment(-totalPrice),
+            'balance': FieldValue.increment(-singlePrice * amount),
+            // update tax_pot: subtract the fee from the tax pot
+            'tax_pot': taxPot,
           });
 
           await _firestore
@@ -59,7 +66,7 @@ Future<void> startBuyStockFlow(
               .add({
             'amount': amount,
             'date': Timestamp.now(),
-            'price': totalPrice, // Updated to reflect total price after fee
+            'price': singlePrice, // Updated to reflect total price after fee
             'symbol': stockSymbol,
             'type': true, // true = buy,  false = sell
           });
@@ -72,7 +79,7 @@ Future<void> startBuyStockFlow(
               .collection('portfolio')
               .add({
             'name': companyName,
-            'price': totalPrice, // Updated to reflect total price after fee
+            'price': singlePrice,
             'purchaseDate': Timestamp.now(),
             'quantity': amount,
             'symbol': stockSymbol,

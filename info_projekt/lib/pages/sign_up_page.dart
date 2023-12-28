@@ -195,7 +195,7 @@ class _SignUpPageState extends State<SignUpPage> {
           'balance': '',
           'iban': '',
           'verified': true,
-          'tax_pot': 1000.00 // Update 'verified' to true upon email verification
+          'tax_pot': 00.00 // Update 'verified' to true upon email verification
         });
 
         CollectionReference transactionHistoryRef =
