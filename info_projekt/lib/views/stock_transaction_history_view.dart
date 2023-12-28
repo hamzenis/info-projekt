@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/widgets/sell_popup.dart';
 
+// TODO: Rewrite this page and make it stable
 class OwnedStocksPage extends StatefulWidget {
   @override
   _OwnedStocksPageState createState() => _OwnedStocksPageState();
@@ -44,7 +45,7 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
         if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('Owned Stocks'),
+              title: Text('Stock Transaction History'),
             ),
             body: const Text('No user data'),
           );
@@ -62,7 +63,7 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
               if (snapshot.hasError) {
                 return Scaffold(
                   appBar: AppBar(
-                    title: Text('Owned Stocks'),
+                    title: Text('Stock Transaction History'),
                   ),
                   body: Center(child: Text("Error: ${snapshot.error}")),
                 );
@@ -71,14 +72,14 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
                 final transactions = snapshot.data?.docs ?? [];
                 return Scaffold(
                   appBar: AppBar(
-                    title: Text('Owned Stocks'),
+                    title: Text('Stock Transaction History'),
                   ),
                   body: buildListView(transactions), //HERE
                 );
               } else {
                 return Scaffold(
                   appBar: AppBar(
-                    title: Text('Owned Stocks'),
+                    title: Text('Stock Transaction History'),
                   ),
                   body: Center(
                     child: CircularProgressIndicator(),
@@ -88,7 +89,7 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
             } else if (snapshot.connectionState == ConnectionState.none) {
               return Scaffold(
                 appBar: AppBar(
-                  title: Text('Owned Stocks'),
+                  title: Text('Stock Transaction History'),
                 ),
                 body: Center(
                   child: Text("No data"),
@@ -97,7 +98,7 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
             } else {
               return Scaffold(
                 appBar: AppBar(
-                  title: Text('Owned Stocks'),
+                  title: Text('Stock Transaction History'),
                 ),
                 body: Center(
                   child: CircularProgressIndicator(),
@@ -135,7 +136,8 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
                     decoration: BoxDecoration(
                       color: tileColor,
                       border: Border.all(
-                        color: Color.fromARGB(255, 0, 0, 255).withOpacity(_controller.value),
+                        color: Color.fromARGB(255, 0, 0, 255)
+                            .withOpacity(_controller.value),
                         width: 3.0,
                       ),
                       borderRadius: BorderRadius.circular(8.0),
@@ -144,17 +146,6 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
                       title: Text(transaction['symbol']),
                       subtitle: Text(
                           ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.sell),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => SellPopup(
-                              stockSymbol: transaction['symbol'],
-                            ),
-                          );
-                        },
-                      ),
                     ),
                   );
                 },
@@ -170,17 +161,6 @@ class _OwnedStocksPageState extends State<OwnedStocksPage>
                   title: Text(transaction['symbol']),
                   subtitle: Text(
                       ' Amount: ${transaction['amount']}\n Price: \$$roundedPrice\n Date: ${transaction['date'].toDate().toString().substring(0, 16)}\n Type: ${transaction['type'] ? 'Buy' : 'Sell'}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.sell),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => SellPopup(
-                          stockSymbol: transaction['symbol'],
-                        ),
-                      );
-                    },
-                  ),
                 ),
               );
       },

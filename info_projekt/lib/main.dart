@@ -13,9 +13,7 @@ import 'package:info_projekt/pages/verify_email_page.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:provider/provider.dart';
-
 import 'package:info_projekt/views/wallet_screen.dart';
-import '../homepage_new.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +50,8 @@ class MyApp extends StatelessWidget {
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
         '/profile': (context) => ProfilePage(), // Added ProfilePage route
-        '/home': (context) => HomePage(),
+        '/home': (context) =>
+            HomePage(), // Old Homepage, not deleted yet because of hotreload route
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
               future: getInitialLink(),
