@@ -49,6 +49,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
     authDomain: 'informatik-projekt-6e4f5.firebaseapp.com',
+    databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
   );
 
@@ -57,6 +58,7 @@ class DefaultFirebaseOptions {
     appId: '1:1078843075023:android:ecd8d2afc9ce0cdd200aba',
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
+    databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
   );
 
@@ -65,6 +67,7 @@ class DefaultFirebaseOptions {
     appId: '1:1078843075023:ios:71dfaa96bde868c0200aba',
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
+    databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
     androidClientId: '1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com',
     iosClientId: '1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com',
@@ -76,6 +79,7 @@ class DefaultFirebaseOptions {
     appId: '1:1078843075023:ios:f62a4125d0df649b200aba',
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
+    databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
     androidClientId: '1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com',
     iosClientId: '1078843075023-f6kul7n54e0s04thdn732045pfdcn31a.apps.googleusercontent.com',

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1078843075023",
+    "firebase_url": "https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "informatik-projekt-6e4f5",
     "storage_bucket": "informatik-projekt-6e4f5.appspot.com"
   },
@@ -31,10 +32,46 @@
               "client_type": 3
             },
             {
-              "client_id": "1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com",
+              "client_id": "1078843075023-23m5gfe8hi13rm3ghni2lk1n7t629nmf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.infoProjekt"
+                "bundle_id": "com.example.gtkFlutter"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078843075023:android:ea383c2fa2e68a0f200aba",
+        "android_client_info": {
+          "package_name": "com.example.gtk_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1078843075023-23m5gfe8hi13rm3ghni2lk1n7t629nmf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.gtkFlutter"
               }
             }
           ]
@@ -75,10 +112,10 @@
               "client_type": 3
             },
             {
-              "client_id": "1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com",
+              "client_id": "1078843075023-23m5gfe8hi13rm3ghni2lk1n7t629nmf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.infoProjekt"
+                "bundle_id": "com.example.gtkFlutter"
               }
             }
           ]

@@ -1,3 +1,4 @@
+import 'package:info_projekt/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:info_projekt/firebase_options.dart';
@@ -14,6 +15,7 @@ import 'package:uni_links/uni_links.dart';
 import 'package:provider/provider.dart';
 
 import 'package:info_projekt/views/wallet_screen.dart';
+import '../homepage_new.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,9 +47,11 @@ class MyApp extends StatelessWidget {
         '/': (context) => SplashScreen(
               child: LoginPage(),
             ),
-        '/login': (context) => const LoginPage(),
+        '/login': (context) => LoginPage(),
+        '/homePageNew': (context) => HomePageNew(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
+        '/profile': (context) => ProfilePage(), // Added ProfilePage route
         '/home': (context) => HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
