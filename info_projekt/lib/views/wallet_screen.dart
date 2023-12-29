@@ -23,6 +23,9 @@ class _WalletScreenState extends State<WalletScreen> {
   WalletServices walletServices = WalletServices();
   // Balance is choose to be a ValueNotifier to be able to update ONLY the balance
   ValueNotifier<double?> balance = ValueNotifier(null);
+  DocumentSnapshot? lastDocument;
+  List<DocumentSnapshot> documentList = [];
+  bool isLoading = false;
 
   /// Function to refresh the balance of the user.
   @override
@@ -124,10 +127,6 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
           const SizedBox(height: 16.0),
 
-          /// Transaction History of the User.
-          /// The data is fetched from the Firestore Database.
-          /// The data is sorted by date and type of transaction.
-          /// The data is displayed in a ListView.
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: _firestore
@@ -143,63 +142,104 @@ class _WalletScreenState extends State<WalletScreen> {
                   return const Text('No user data');
                 }
                 final userDoc = userSnapshot.data!.docs.first;
-                return StreamBuilder<QuerySnapshot>(
-                  stream: _firestore
-                      .collection('Users')
-                      .doc(userDoc.id)
-                      .collection('balance_history')
-                      .snapshots(),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<QuerySnapshot> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData) {
-                      return const Text('No transactions');
-                    }
-                    final transactions = snapshot.data!.docs
-                        .map((doc) => TransactionHistory.fromFirestore(doc))
-                        .toList();
-                    transactions.sort((a, b) {
-                      var compareDate = b.date.compareTo(a.date);
-                      if (compareDate != 0) return compareDate;
-                      if (a.type == TransactionType.withdrawal) return -1;
-                      if (b.type == TransactionType.withdrawal) return 1;
-                      return 0;
-                    });
-                    return ListView.builder(
-                      itemCount: transactions.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final transaction = transactions[index];
-
-                        final color = transaction.type ==
-                                TransactionType
-                                    .withdrawal // Color is changed depending on the type of transaction.
-                            ? Colors.red
-                            : Colors.green;
-                        final amountString = transaction.type ==
-                                TransactionType
-                                    .withdrawal // A '-' is added to the amount if the transaction is a withdrawal.
-                            ? '-\$${transaction.amount.toStringAsFixed(2)}'
-                            : '\$${transaction.amount.toStringAsFixed(2)}';
-
-                        return ListTile(
-                          title: Text(transaction.description),
-                          subtitle: Text(transaction.date.toString()),
-                          trailing: Text(
-                            amountString,
-                            style: TextStyle(color: color),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
+                return TransactionList(userId: userDoc.id);
               },
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Transaction History of the User.
+/// The data is fetched from the Firestore Database.
+/// The data is sorted by date and type of transaction.
+/// The data is displayed in a ListView.
+class TransactionList extends StatefulWidget {
+  final String userId;
+
+  TransactionList({required this.userId});
+
+  @override
+  _TransactionListState createState() => _TransactionListState();
+}
+
+class _TransactionListState extends State<TransactionList> {
+  final _firestore = FirebaseFirestore.instance;
+  List<DocumentSnapshot> documentList = [];
+  bool isLoading = false;
+  DocumentSnapshot? lastDocument;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMore();
+  }
+
+  void _loadMore() {
+    if (!isLoading) {
+      setState(() {
+        isLoading = true;
+      });
+
+      Query query = _firestore
+          .collection('Users')
+          .doc(widget.userId)
+          .collection('balance_history')
+          .orderBy('date', descending: true)
+          .limit(10);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument!);
+      }
+
+      query.get().then((querySnapshot) {
+        documentList.addAll(querySnapshot.docs);
+        isLoading = false;
+        if (querySnapshot.docs.isNotEmpty) {
+          lastDocument = querySnapshot.docs.last;
+        }
+        setState(() {});
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: documentList.length + 1,
+      itemBuilder: (BuildContext context, int index) {
+        if (index < documentList.length) {
+          final transaction =
+              TransactionHistory.fromFirestore(documentList[index]);
+
+          final color = transaction.type == TransactionType.withdrawal
+              ? Colors.red
+              : Colors.green;
+          final amountString = transaction.type == TransactionType.withdrawal
+              ? '-\$${transaction.amount.toStringAsFixed(2)}'
+              : '\$${transaction.amount.toStringAsFixed(2)}';
+
+          return ListTile(
+            title: Text(transaction.description),
+            subtitle: Text(transaction.date.toString()),
+            trailing: Text(
+              amountString,
+              style: TextStyle(color: color),
+            ),
+          );
+        } else if (isLoading) {
+          return CircularProgressIndicator();
+        } else if (documentList.length % 10 == 0) {
+          return TextButton(
+            child: Text("Load More"),
+            onPressed: _loadMore,
+          );
+        } else {
+          return null;
+        }
+      },
     );
   }
 }
