@@ -177,6 +177,7 @@ class WalletServices {
         });
   }
 
+  /// Function that alerts the user that the input cant be zero.
   void errorDialogCantBeZero(BuildContext context) {
     showDialog(
         context: context,
@@ -194,6 +195,7 @@ class WalletServices {
         });
   }
 
+  /// Function that alerts the user that he has to add an IBAN to his account before he can withdraw money.
   void errorDialogNoIbanFound(BuildContext context) {
     showDialog(
         context: context,
