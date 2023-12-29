@@ -169,10 +169,23 @@ class _TransactionListState extends State<TransactionList> {
   List<DocumentSnapshot> documentList = [];
   bool isLoading = false;
   DocumentSnapshot? lastDocument;
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _loadMore();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        _loadMore();
+      }
+    });
+  }
+
+  Future<void> _refresh() async {
+    documentList.clear();
+    lastDocument = null;
     _loadMore();
   }
 
@@ -206,39 +219,41 @@ class _TransactionListState extends State<TransactionList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: documentList.length + 1,
-      itemBuilder: (BuildContext context, int index) {
-        if (index < documentList.length) {
-          final transaction =
-              TransactionHistory.fromFirestore(documentList[index]);
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: documentList.length + 1,
+        itemBuilder: (BuildContext context, int index) {
+          if (index < documentList.length) {
+            final transaction =
+                TransactionHistory.fromFirestore(documentList[index]);
 
-          final color = transaction.type == TransactionType.withdrawal
-              ? Colors.red
-              : Colors.green;
-          final amountString = transaction.type == TransactionType.withdrawal
-              ? '-\$${transaction.amount.toStringAsFixed(2)}'
-              : '\$${transaction.amount.toStringAsFixed(2)}';
+            final color = transaction.type == TransactionType.withdrawal
+                ? Colors.red
+                : Colors.green;
+            final amountString = transaction.type == TransactionType.withdrawal
+                ? '-\$${transaction.amount.toStringAsFixed(2)}'
+                : '\$${transaction.amount.toStringAsFixed(2)}';
 
-          return ListTile(
-            title: Text(transaction.description),
-            subtitle: Text(transaction.date.toString()),
-            trailing: Text(
-              amountString,
-              style: TextStyle(color: color),
-            ),
-          );
-        } else if (isLoading) {
-          return CircularProgressIndicator();
-        } else if (documentList.length % 10 == 0) {
-          return TextButton(
-            child: Text("Load More"),
-            onPressed: _loadMore,
-          );
-        } else {
-          return null;
-        }
-      },
+            return ListTile(
+              title: Text(transaction.description),
+              subtitle: Text(transaction.date.toString()),
+              trailing: Text(
+                amountString,
+                style: TextStyle(color: color),
+              ),
+            );
+          } else if (isLoading) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else {
+            return null;
+          }
+        },
+      ),
     );
   }
 }
