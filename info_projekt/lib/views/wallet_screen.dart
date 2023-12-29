@@ -23,9 +23,6 @@ class _WalletScreenState extends State<WalletScreen> {
   WalletServices walletServices = WalletServices();
   // Balance is choose to be a ValueNotifier to be able to update ONLY the balance
   ValueNotifier<double?> balance = ValueNotifier(null);
-  DocumentSnapshot? lastDocument;
-  List<DocumentSnapshot> documentList = [];
-  bool isLoading = false;
 
   /// Function to refresh the balance of the user.
   @override
@@ -127,6 +124,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
           const SizedBox(height: 16.0),
 
+          // Transaction History of the User
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: _firestore
