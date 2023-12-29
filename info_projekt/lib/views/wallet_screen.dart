@@ -154,6 +154,7 @@ class _WalletScreenState extends State<WalletScreen> {
 /// The data is fetched from the Firestore Database.
 /// The data is sorted by date and type of transaction.
 /// The data is displayed in a ListView.
+/// The data is loaded in batches of 10 (Pagination)
 class TransactionList extends StatefulWidget {
   final String userId;
 
