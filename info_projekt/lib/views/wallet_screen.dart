@@ -85,6 +85,8 @@ class _WalletScreenState extends State<WalletScreen> {
                           context, withdrawAmount);
                       double? newBalance = await walletServices.fetchBalance();
                       balance.value = newBalance;
+
+                      setState(() {});
                     }
                   }
                 },
@@ -115,6 +117,8 @@ class _WalletScreenState extends State<WalletScreen> {
                       await walletServices.startDepositFlow(depositAmount);
                       double? newBalance = await walletServices.fetchBalance();
                       balance.value = newBalance;
+
+                      setState(() {});
                     }
                   }
                 },
@@ -200,7 +204,7 @@ class _TransactionListState extends State<TransactionList> {
           .doc(widget.userId)
           .collection('balance_history')
           .orderBy('date', descending: true)
-          .limit(10);
+          .limit(30);
 
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument!);
