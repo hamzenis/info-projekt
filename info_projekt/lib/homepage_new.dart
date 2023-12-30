@@ -590,7 +590,8 @@ class _InvestmentListState extends State<InvestmentList>
                       itemCount: widget.investments.length,
                       itemBuilder: (context, index) {
                         var investment = widget.investments[index];
-                        bool isInvestmentProfit = investment['profitOrLoss'];
+                        bool isInvestmentProfit =
+                            investment['profitOrLoss'] > 0;
 
                         return ListTile(
                           title: Row(
