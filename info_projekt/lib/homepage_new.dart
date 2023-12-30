@@ -579,202 +579,223 @@ class _InvestmentListState extends State<InvestmentList>
             controller: _pageController,
             children: [
               // Investments
-              ListView.builder(
-                itemCount: widget.investments.length,
-                itemBuilder: (context, index) {
-                  var investment = widget.investments[index];
-                  bool isInvestmentProfit = investment['profitOrLoss'] >= 0;
+              widget.investments.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Here appears your investments',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: widget.investments.length,
+                      itemBuilder: (context, index) {
+                        var investment = widget.investments[index];
+                        bool isInvestmentProfit = investment['profitOrLoss'];
 
-                  return ListTile(
-                    title: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(investment['name']),
-                        ),
-                        Text(
-                          '\$${investment['totalValue'].toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color:
-                                isInvestmentProfit ? Colors.green : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                    subtitle: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '\$${investment['price'].toStringAsFixed(2)}',
-                            ),
-                            Text(
-                              ' x ${investment['quantity'].toStringAsFixed(2)} ',
-                            ),
-                          ],
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              showPercentage = !showPercentage;
-                            });
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        return ListTile(
+                          title: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    isInvestmentProfit
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    color: isInvestmentProfit
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                  Text(
-                                    showPercentage
-                                        ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
-                                        : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
-                                    style: TextStyle(
-                                      color: isInvestmentProfit
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                  ),
-                                ],
+                              Expanded(
+                                child: Text(investment['name']),
+                              ),
+                              Text(
+                                '\$${investment['totalValue'].toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  color: isInvestmentProfit
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(investment['name']),
-                            content: SingleChildScrollView(
-                              child: Row(
+                          subtitle: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: <Widget>[
-                                  Expanded(
-                                    child: TextButton(
-                                      child: Text('Cancel'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '\$${investment['price'].toStringAsFixed(2)}',
                                   ),
-                                  // Go To Chart Button
-                                  Expanded(
-                                    child: TextButton(
-                                      child: Text('Go to Chart'),
-                                      onPressed: () {
-                                        // Navigate to chart
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ChartStock(
-                                              title: investment['symbol'],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  // Sell Stock
-                                  Expanded(
-                                    child: TextButton(
-                                      child: Text('Sell Stock'),
-                                      onPressed: () async {
-                                        // Ask for the amount
-                                        int? amount = await showDialog<int>(
-                                          context: context,
-                                          builder: (context) {
-                                            final TextEditingController
-                                                controller =
-                                                TextEditingController();
-                                            return AlertDialog(
-                                              title: const Text(
-                                                  'How many shares do you want to sell?'),
-                                              content: TextField(
-                                                controller: controller,
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                decoration: InputDecoration(
-                                                  hintText: 'Amount',
-                                                ),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  child: const Text('Cancel'),
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  child: const Text('OK'),
-                                                  onPressed: () {
-                                                    int amount = int.tryParse(
-                                                            controller.text) ??
-                                                        0;
-                                                    Navigator.of(context)
-                                                        .pop(amount);
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-
-                                        // Sell stock
-                                        if (amount != null) {
-                                          bool success =
-                                              await startSellStockFlow(context,
-                                                  amount, investment['symbol']);
-
-                                          // Refresh page if the stock was successfully sold
-                                          if (success) {
-                                            setState(() {
-                                              // Find the investment that matches the sold stock
-                                              var soldInvestment =
-                                                  widget.investments.firstWhere(
-                                                (inv) =>
-                                                    inv['symbol'] ==
-                                                    investment['symbol'],
-                                                orElse: () =>
-                                                    <String, dynamic>{},
-                                              );
-
-                                              // If the investment was found, decrease its quantity
-                                              if (soldInvestment != null &&
-                                                  soldInvestment.isNotEmpty) {
-                                                soldInvestment['quantity'] -=
-                                                    amount;
-                                              }
-                                            });
-                                          }
-                                        }
-                                        // Close the popup
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
+                                  Text(
+                                    ' x ${investment['quantity'].toStringAsFixed(2)} ',
                                   ),
                                 ],
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    showPercentage = !showPercentage;
+                                  });
+                                },
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          isInvestmentProfit
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: isInvestmentProfit
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                        Text(
+                                          showPercentage
+                                              ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
+                                              : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                                          style: TextStyle(
+                                            color: isInvestmentProfit
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(investment['name']),
+                                  content: SingleChildScrollView(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: TextButton(
+                                            child: Text('Cancel'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ),
+                                        // Go To Chart Button
+                                        Expanded(
+                                          child: TextButton(
+                                            child: Text('Go to Chart'),
+                                            onPressed: () {
+                                              // Navigate to chart
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ChartStock(
+                                                    title: investment['symbol'],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        // Sell Stock
+                                        Expanded(
+                                          child: TextButton(
+                                            child: Text('Sell Stock'),
+                                            onPressed: () async {
+                                              // Ask for the amount
+                                              int? amount =
+                                                  await showDialog<int>(
+                                                context: context,
+                                                builder: (context) {
+                                                  final TextEditingController
+                                                      controller =
+                                                      TextEditingController();
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                        'How many shares do you want to sell?'),
+                                                    content: TextField(
+                                                      controller: controller,
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText: 'Amount',
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        child: const Text(
+                                                            'Cancel'),
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                      TextButton(
+                                                        child: const Text('OK'),
+                                                        onPressed: () {
+                                                          int amount =
+                                                              int.tryParse(
+                                                                      controller
+                                                                          .text) ??
+                                                                  0;
+                                                          Navigator.of(context)
+                                                              .pop(amount);
+                                                        },
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+
+                                              // Sell stock
+                                              if (amount != null) {
+                                                bool success =
+                                                    await startSellStockFlow(
+                                                        context,
+                                                        amount,
+                                                        investment['symbol']);
+
+                                                // Refresh page if the stock was successfully sold
+                                                if (success) {
+                                                  setState(() {
+                                                    // Find the investment that matches the sold stock
+                                                    var soldInvestment = widget
+                                                        .investments
+                                                        .firstWhere(
+                                                      (inv) =>
+                                                          inv['symbol'] ==
+                                                          investment['symbol'],
+                                                      orElse: () =>
+                                                          <String, dynamic>{},
+                                                    );
+
+                                                    // If the investment was found, decrease its quantity
+                                                    if (soldInvestment !=
+                                                            null &&
+                                                        soldInvestment
+                                                            .isNotEmpty) {
+                                                      soldInvestment[
+                                                          'quantity'] -= amount;
+                                                    }
+                                                  });
+                                                }
+                                              }
+                                              // Close the popup
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
 
               Consumer<WatchlistNotifier>(
                 builder: (context, watchlistNotifier, child) {
@@ -782,9 +803,11 @@ class _InvestmentListState extends State<InvestmentList>
                   return Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: watchlist.isEmpty
-                        ? Text(
-                            'Watchlist items will appear here when available.',
-                            style: TextStyle(color: Colors.grey),
+                        ? const Center(
+                            child: Text(
+                              'Watchlist items will appear here when available.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           )
                         : ListView.builder(
                             itemCount: watchlist.length,
