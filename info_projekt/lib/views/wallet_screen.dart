@@ -113,6 +113,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         await launch(paymentLink,
                             forceSafariVC: false, forceWebView: false);
                       }
+                      setState(() {});
                     }
                   } else {
                     // If the app is running on mobile, start the deposit flow
