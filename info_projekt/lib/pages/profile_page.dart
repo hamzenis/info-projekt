@@ -7,6 +7,7 @@ import 'package:info_projekt/common/toast.dart';
 import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
+import 'package:info_projekt/services/updateEmail_service.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -18,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirestoreService firestoreService = FirestoreService();
   DeleteProfile delete = DeleteProfile();
+  UpdateEmail update = UpdateEmail();
 
   late User? _user;
   String? _email;
@@ -268,26 +270,21 @@ class _ProfilePageState extends State<ProfilePage> {
                               onPressed: () async {
                                 try {
                                   if (_user != null && password != null) {
-                                    // Create a credential using the user's email and password
-                                    AuthCredential credential =
-                                        EmailAuthProvider.credential(
-                                      email: _user!.email!,
-                                      password: password!,
-                                    );
-
                                     String? documentID =
                                         await firestoreService.getDocumentId();
 
                                     // Re-authenticate the user using the credential
+                                    AuthCredential credentials =
+                                        firestoreService
+                                            .getCredentials(password!);
                                     await _user!.reauthenticateWithCredential(
-                                        credential);
+                                        credentials);
 
-                                    await firestoreService.updateEmailFirestore(
+                                    await update.updateEmailFirestore(
                                         newEmail1!, documentID);
 
-                                    // If re-authentication succeeds, update the email
-                                    await _user!.updateEmail(newEmail1!);
                                     await _user!.sendEmailVerification();
+                                    await _user!.updateEmail(newEmail1!);
 
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -299,8 +296,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                                     await _auth.signOut();
 
-                                    Navigator.of(context)
-                                        .pop(); // Close password confirmation dialog
+                                    Navigator.of(context).pop();
                                     Navigator.pushReplacementNamed(
                                         context, '/login');
                                   }
@@ -486,7 +482,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 ElevatedButton(
                   onPressed: () => _deleteProfileDialog(context),
-                  child: Text('Delete Profile'),
+                  child: const Text('Delete Profile'),
                   //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
                 ),
                 ElevatedButton(
@@ -497,7 +493,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           builder: (context) => OwnedStocksPage()),
                     );
                   },
-                  child: Text('Stock Transaction History'),
+                  child: const Text('Stock Transaction History'),
                 ),
                 const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(

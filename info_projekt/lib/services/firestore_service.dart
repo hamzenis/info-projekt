@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? user = FirebaseAuth.instance.currentUser;
 
   //DateTime registrationDate = DateTime.now();
   String iban = 'null';
@@ -29,22 +30,6 @@ class FirestoreService {
     } catch (e) {
       print('Error saving user data: $e');
       // Handle the error as per your requirement
-    }
-  }
-
-  Future<num> getUserEmail() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final querySnapshot = await _firestore
-          .collection('Users')
-          .where('UID', isEqualTo: user?.uid)
-          .get();
-      final userDoc = querySnapshot.docs.first;
-      final userData = userDoc.data();
-      final balance = userData['balance'] as num;
-      return balance;
-    } else {
-      throw Exception("User is null, cannot retrieve balance.");
     }
   }
 
@@ -90,14 +75,10 @@ class FirestoreService {
     return null;
   }
 
-  Future<void> updateEmailFirestore(String newMail, String? documentID) async {
-    //User? user = FirebaseAuth.instance.currentUser;
-    //String? UID = user?.uid;
-
-    FirebaseFirestore.instance
-        .collection('Users')
-        .doc(documentID)
-        .update({"email": newMail});
+  AuthCredential getCredentials(String password) {
+    AuthCredential credentials =
+        EmailAuthProvider.credential(email: user!.email!, password: password);
+    return credentials;
   }
 
   Future<String?> fetchRegistrationDate() async {
