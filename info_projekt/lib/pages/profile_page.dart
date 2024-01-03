@@ -391,23 +391,41 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () async {
                     try {
-                      await firestoreService.deleteUser(documentID);
-                      await _user!.delete();
-                      setState(() {
-                        _email = null;
-                        _registrationDate = null;
-                      });
-                      Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(context, '/login');
+                      bool userDeleted = await firestoreService.deleteUser(
+                          documentID, password!);
+                      if (userDeleted) {
+                        await _user!.delete();
+                        setState(() {
+                          _email = null;
+                          _registrationDate = null;
+                        });
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacementNamed(context, '/login');
 
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile deleted'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      } else {
+                        // Handle the case when the user is not deleted
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Profile could not be deleted, check Balance and Open Transactions'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile deleted'),
+                        SnackBar(
+                          content: Text('Error: $e'),
                           duration: Duration(seconds: 3),
                         ),
                       );
-                    } catch (e) {
-                      print('Error: $e');
                     }
                   },
                   child: const Text('Save'),
