@@ -280,10 +280,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     await _user!.reauthenticateWithCredential(
                                         credentials);
 
+                                    await _user!.sendEmailVerification();
+
                                     await update.updateEmailFirestore(
                                         newEmail1!, documentID);
 
-                                    await _user!.sendEmailVerification();
                                     await _user!.updateEmail(newEmail1!);
 
                                     ScaffoldMessenger.of(context).showSnackBar(

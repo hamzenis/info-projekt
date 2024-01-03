@@ -94,11 +94,11 @@ class FirestoreService {
         if (querySnapshot.docs.isNotEmpty) {
           DocumentSnapshot userDocument = querySnapshot.docs.first;
 
-          DateTime? registrationDate = userDocument.get('registrationDate');
+          Timestamp registrationDate = userDocument.get('registrationDate');
 
-          return registrationDate != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format(registrationDate)
-              : null;
+          var format = DateFormat('yyyy-MM-dd HH:mm');
+          var date = registrationDate.toDate();
+          return format.format(date);
         } else {
           print('No matching document found for the current user.');
           return null;
