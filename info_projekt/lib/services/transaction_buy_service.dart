@@ -86,7 +86,6 @@ Future<void> startBuyStockFlow(
           });
 
           showToast(message: "Transaction successful");
-
         } else {
           showToast(message: "User not found");
         }

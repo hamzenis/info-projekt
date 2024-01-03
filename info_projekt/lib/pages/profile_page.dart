@@ -142,8 +142,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         UserCredential userCredential =
                             await _auth.signInWithEmailAndPassword(
                           email: _user!.email!,
-                          password:
-                              oldPassword!, // Replace with user's password
+                          password: oldPassword!,
                         );
 
                         User? user = userCredential.user;
@@ -151,12 +150,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           await user.updatePassword(newPassword1!);
                           await _auth.signOut();
 
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          showToast(message: "Password changed succesfully!");
+
+                          /*ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Password changed succesfully!'),
                               duration: Duration(seconds: 3),
                             ),
                           );
+                          */
 
                           Navigator.of(context).pop(); // Close the dialog
                           Navigator.pushReplacementNamed(context, '/login');
@@ -166,14 +168,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Handle error - show error message or log
                       }
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      showToast(
+                          message: "Passwords do not match or are empty.");
+                      /*ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Passwords do not match or are empty'),
                           duration: Duration(seconds: 3),
                         ),
-                      );
+                      ); */
                     }
-                    // ... The logic for password change ...
                   },
                   child: const Text('Save'),
                 ),
@@ -261,8 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.of(context)
-                                    .pop(); // Close password confirmation dialog
+                                Navigator.of(context).pop();
                               },
                               child: const Text('Cancel'),
                             ),
@@ -287,13 +289,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
                                     await _user!.updateEmail(newEmail1!);
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    showToast(
+                                        message:
+                                            "Change succesfull, please verify your Email!");
+                                    /*ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
                                             'Email changed successfully, please verify!'),
                                         duration: Duration(seconds: 3),
                                       ),
                                     );
+                                    */
 
                                     await _auth.signOut();
 
@@ -391,22 +397,25 @@ class _ProfilePageState extends State<ProfilePage> {
                         });
                         Navigator.of(context).pop();
                         Navigator.pushReplacementNamed(context, '/login');
-
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        showToast(message: "Profile deletetion succesfully!");
+                        /*ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Profile deleted'),
                             duration: Duration(seconds: 3),
                           ),
-                        );
+                        ); */
                       } else {
                         // Handle the case when the user is not deleted
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        showToast(
+                            message:
+                                "Profile not deleted. Check balance and open transactions.");
+                        /*ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
                                 'Profile could not be deleted, check Balance and Open Transactions'),
                             duration: Duration(seconds: 3),
                           ),
-                        );
+                        ); */
                       }
                     } catch (e) {
                       print('Error: $e');
