@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+//import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class FirestoreService {
@@ -9,6 +9,7 @@ class FirestoreService {
 
   //DateTime registrationDate = DateTime.now();
   String iban = 'null';
+  num taxpot = 0;
 
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
@@ -18,18 +19,15 @@ class FirestoreService {
     Map<String, dynamic> datatoSave = {
       'email': userName,
       'registrationDate': DateTime.now(),
-      'UID': UID
+      'UID': UID,
+      'taxpot': taxpot
     };
 
     try {
-      //await FirebaseFirestore.instance.collection('Users').add(datatoSave);
-      DocumentReference userDocRef =
-          await FirebaseFirestore.instance.collection('Users').add(datatoSave);
-
-      // You can add additional logic or error handling here if needed
+      //DocumentReference userDocRef =
+      await FirebaseFirestore.instance.collection('Users').add(datatoSave);
     } catch (e) {
       print('Error saving user data: $e');
-      // Handle the error as per your requirement
     }
   }
 
