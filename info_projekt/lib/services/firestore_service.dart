@@ -64,43 +64,6 @@ class FirestoreService {
     }
   }
 
-  //Es gibt keinen Befehl alle Subcollections auf einmal zu löschen, deswegen muss man es kompliziert machen
-  Future<bool> deleteUser(String? documentID, String password) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    bool result;
-    String? documentID = await getDocumentId();
-    num balance = await getUserBalance();
-
-    AuthCredential credentials =
-        EmailAuthProvider.credential(email: user!.email!, password: password);
-    await user.reauthenticateWithCredential(credentials);
-
-    List<String> subcollections = [
-      'stock_transaction_history',
-      'portfolio',
-      'balance_history'
-    ];
-
-    if (balance == 0) {
-      for (String subcollection in subcollections) {
-        var collectionRef = _firestore
-            .collection('Users')
-            .doc(documentID)
-            .collection(subcollection);
-        var snapshots = await collectionRef.get();
-        for (var doc in snapshots.docs) {
-          await doc.reference.delete();
-
-          await _firestore.collection('Users').doc(documentID).delete();
-        }
-      }
-      result = true;
-    } else {
-      result = false;
-    }
-    return result;
-  }
-
   //Document ID /= User ID,deswegen brauchen wir ein Snapshot, um die DocumentID zu erhalten
   //und darauf folgend Daten zu ändern oder auch zu löschen.
 

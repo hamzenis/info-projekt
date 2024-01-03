@@ -6,15 +6,7 @@ import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/common/toast.dart';
-import 'package:info_projekt/pages/sign_up_page.dart';
-import 'package:info_projekt/widgets/form_container_widget.dart';
+import 'package:info_projekt/services/deleteProfile_service.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -25,6 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirestoreService firestoreService = FirestoreService();
+  DeleteProfile delete = DeleteProfile();
 
   late User? _user;
   String? _email;
@@ -391,8 +384,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () async {
                     try {
-                      bool userDeleted = await firestoreService.deleteUser(
-                          documentID, password!);
+                      bool userDeleted =
+                          await delete.deleteUser(documentID, password!);
                       if (userDeleted) {
                         await _user!.delete();
                         setState(() {
