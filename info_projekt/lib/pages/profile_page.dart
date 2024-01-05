@@ -6,15 +6,8 @@ import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:info_projekt/services/firebase_auth_services.dart';
-import 'package:info_projekt/common/toast.dart';
-import 'package:info_projekt/pages/sign_up_page.dart';
-import 'package:info_projekt/widgets/form_container_widget.dart';
+import 'package:info_projekt/services/deleteProfile_service.dart';
+import 'package:info_projekt/services/updateEmail_service.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -25,6 +18,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirestoreService firestoreService = FirestoreService();
+  DeleteProfile delete = DeleteProfile();
+  UpdateEmail update = UpdateEmail();
 
   late User? _user;
   String? _email;
@@ -147,8 +142,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         UserCredential userCredential =
                             await _auth.signInWithEmailAndPassword(
                           email: _user!.email!,
-                          password:
-                              oldPassword!, // Replace with user's password
+                          password: oldPassword!,
                         );
 
                         User? user = userCredential.user;
@@ -156,12 +150,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           await user.updatePassword(newPassword1!);
                           await _auth.signOut();
 
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          showToast(message: "Password changed succesfully!");
+
+                          /*ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Password changed succesfully!'),
                               duration: Duration(seconds: 3),
                             ),
                           );
+                          */
 
                           Navigator.of(context).pop(); // Close the dialog
                           Navigator.pushReplacementNamed(context, '/login');
@@ -171,14 +168,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Handle error - show error message or log
                       }
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      showToast(
+                          message: "Passwords do not match or are empty.");
+                      /*ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Passwords do not match or are empty'),
                           duration: Duration(seconds: 3),
                         ),
-                      );
+                      ); */
                     }
-                    // ... The logic for password change ...
                   },
                   child: const Text('Save'),
                 ),
@@ -266,8 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.of(context)
-                                    .pop(); // Close password confirmation dialog
+                                Navigator.of(context).pop();
                               },
                               child: const Text('Cancel'),
                             ),
@@ -275,39 +272,38 @@ class _ProfilePageState extends State<ProfilePage> {
                               onPressed: () async {
                                 try {
                                   if (_user != null && password != null) {
-                                    // Create a credential using the user's email and password
-                                    AuthCredential credential =
-                                        EmailAuthProvider.credential(
-                                      email: _user!.email!,
-                                      password: password!,
-                                    );
-
                                     String? documentID =
                                         await firestoreService.getDocumentId();
 
                                     // Re-authenticate the user using the credential
+                                    AuthCredential credentials =
+                                        firestoreService
+                                            .getCredentials(password!);
                                     await _user!.reauthenticateWithCredential(
-                                        credential);
+                                        credentials);
 
-                                    await firestoreService.updateEmailFirestore(
-                                        newEmail1!, documentID);
-
-                                    // If re-authentication succeeds, update the email
-                                    await _user!.updateEmail(newEmail1!);
                                     await _user!.sendEmailVerification();
 
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    await update.updateEmailFirestore(
+                                        newEmail1!, documentID);
+
+                                    await _user!.updateEmail(newEmail1!);
+
+                                    showToast(
+                                        message:
+                                            "Change succesfull, please verify your Email!");
+                                    /*ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
                                             'Email changed successfully, please verify!'),
                                         duration: Duration(seconds: 3),
                                       ),
                                     );
+                                    */
 
                                     await _auth.signOut();
 
-                                    Navigator.of(context)
-                                        .pop(); // Close password confirmation dialog
+                                    Navigator.of(context).pop();
                                     Navigator.pushReplacementNamed(
                                         context, '/login');
                                   }
@@ -391,23 +387,44 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextButton(
                   onPressed: () async {
                     try {
-                      await firestoreService.deleteUser(documentID);
-                      await _user!.delete();
-                      setState(() {
-                        _email = null;
-                        _registrationDate = null;
-                      });
-                      Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(context, '/login');
-
+                      bool userDeleted =
+                          await delete.deleteUser(documentID, password!);
+                      if (userDeleted) {
+                        await _user!.delete();
+                        setState(() {
+                          _email = null;
+                          _registrationDate = null;
+                        });
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacementNamed(context, '/login');
+                        showToast(message: "Profile deletetion succesfully!");
+                        /*ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile deleted'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        ); */
+                      } else {
+                        // Handle the case when the user is not deleted
+                        showToast(
+                            message:
+                                "Profile not deleted. Check balance and open transactions.");
+                        /*ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Profile could not be deleted, check Balance and Open Transactions'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        ); */
+                      }
+                    } catch (e) {
+                      print('Error: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile deleted'),
+                        SnackBar(
+                          content: Text('Error: $e'),
                           duration: Duration(seconds: 3),
                         ),
                       );
-                    } catch (e) {
-                      print('Error: $e');
                     }
                   },
                   child: const Text('Save'),
@@ -475,7 +492,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 ElevatedButton(
                   onPressed: () => _deleteProfileDialog(context),
-                  child: Text('Delete Profile'),
+                  child: const Text('Delete Profile'),
                   //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
                 ),
                 ElevatedButton(
@@ -486,7 +503,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           builder: (context) => OwnedStocksPage()),
                     );
                   },
-                  child: Text('Stock Transaction History'),
+                  child: const Text('Stock Transaction History'),
                 ),
                 const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(

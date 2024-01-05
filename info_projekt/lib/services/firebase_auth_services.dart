@@ -56,17 +56,15 @@ class FirebaseAuthService {
     }
   }
 
-Future<bool> isEmailRegistered(String email) async {
-  try {
-    final List<String> userSignInMethods = 
-        await _auth.fetchSignInMethodsForEmail(email);
-    print("User sign-in methods: $userSignInMethods");
-    return userSignInMethods.isNotEmpty;
-  } catch (e) {
-    print("Firebase error: $e");
-    return false;
+  Future<bool> isEmailRegistered(String email) async {
+    try {
+      final List<String> userSignInMethods =
+          await _auth.fetchSignInMethodsForEmail(email);
+      print("User sign-in methods: $userSignInMethods");
+      return userSignInMethods.isNotEmpty;
+    } catch (e) {
+      print("Firebase error: $e");
+      return false;
+    }
   }
-}
-
-
 }

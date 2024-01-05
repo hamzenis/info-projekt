@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+//import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? user = FirebaseAuth.instance.currentUser;
 
   //DateTime registrationDate = DateTime.now();
-  num balance = 0;
   String iban = 'null';
-  num tax_pot = 0;
+  num taxpot = 0;
 
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
@@ -19,60 +19,31 @@ class FirestoreService {
     Map<String, dynamic> datatoSave = {
       'email': userName,
       'registrationDate': DateTime.now(),
-      'iban': iban,
-      'balance': balance,
-      'taxpot': tax_pot,
-      'UID': UID
+      'UID': UID,
+      'taxpot': taxpot
     };
 
-    Map<String, dynamic> stockTransactionHistoryData = {};
-    Map<String, dynamic> balanceData = {};
-    Map<String, dynamic> portfolioData = {};
-
     try {
-      //await FirebaseFirestore.instance.collection('Users').add(datatoSave);
-      DocumentReference userDocRef =
-          await FirebaseFirestore.instance.collection('Users').add(datatoSave);
-
-      CollectionReference stockTransactionHistoryRef =
-          userDocRef.collection('stock_transaction_history');
-      await stockTransactionHistoryRef.add(stockTransactionHistoryData);
-
-      CollectionReference balanceHistoryRef =
-          userDocRef.collection('balance_history');
-      await balanceHistoryRef.add(balanceData);
-
-      CollectionReference portfolioRef = userDocRef.collection('portfolio');
-      await portfolioRef.add(portfolioData);
-
-      // You can add additional logic or error handling here if needed
+      //DocumentReference userDocRef =
+      await FirebaseFirestore.instance.collection('Users').add(datatoSave);
     } catch (e) {
       print('Error saving user data: $e');
-      // Handle the error as per your requirement
     }
   }
 
-  //Es gibt keinen Befehl alle Subcollections auf einmal zu löschen, deswegen muss man es kompliziert machen
-  Future<void> deleteUser(String? documentID) async {
-    String? documentID = await getDocumentId();
-
-    List<String> subcollections = [
-      'stock_transaction_history',
-      'portfolio',
-      'balance_history'
-    ];
-
-    for (String subcollection in subcollections) {
-      var collectionRef = _firestore
+  Future<num> getUserBalance() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final querySnapshot = await _firestore
           .collection('Users')
-          .doc(documentID)
-          .collection(subcollection);
-      var snapshots = await collectionRef.get();
-      for (var doc in snapshots.docs) {
-        await doc.reference.delete();
-
-        await _firestore.collection('Users').doc(documentID).delete();
-      }
+          .where('UID', isEqualTo: user?.uid)
+          .get();
+      final userDoc = querySnapshot.docs.first;
+      final userData = userDoc.data();
+      final balance = userData['balance'] as num;
+      return balance;
+    } else {
+      throw Exception("User is null, cannot retrieve balance.");
     }
   }
 
@@ -102,14 +73,10 @@ class FirestoreService {
     return null;
   }
 
-  Future<void> updateEmailFirestore(String newMail, String? documentID) async {
-    //User? user = FirebaseAuth.instance.currentUser;
-    //String? UID = user?.uid;
-
-    FirebaseFirestore.instance
-        .collection('Users')
-        .doc(documentID)
-        .update({"email": newMail});
+  AuthCredential getCredentials(String password) {
+    AuthCredential credentials =
+        EmailAuthProvider.credential(email: user!.email!, password: password);
+    return credentials;
   }
 
   Future<String?> fetchRegistrationDate() async {
@@ -125,11 +92,11 @@ class FirestoreService {
         if (querySnapshot.docs.isNotEmpty) {
           DocumentSnapshot userDocument = querySnapshot.docs.first;
 
-          DateTime? registrationDate = userDocument.get('registrationDate');
+          Timestamp registrationDate = userDocument.get('registrationDate');
 
-          return registrationDate != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format(registrationDate)
-              : null;
+          var format = DateFormat('yyyy-MM-dd HH:mm');
+          var date = registrationDate.toDate();
+          return format.format(date);
         } else {
           print('No matching document found for the current user.');
           return null;
