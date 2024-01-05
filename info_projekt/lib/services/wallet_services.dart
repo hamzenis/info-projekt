@@ -3,11 +3,12 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:universal_html/html.dart' as html;
+import 'package:info_projekt/pages/profile_page.dart'; // Replace 'your_project' with your actual project name
 
 /// This is the Brain of the Wallet Screen.
 /// This class works with the [WalletScreen] class to deposit and withdraw money.
@@ -35,6 +36,9 @@ class WalletServices {
                 controller: controller,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(hintText: 'Amount'),
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ],
               ),
             ],
           ),
@@ -49,7 +53,11 @@ class WalletServices {
               child: const Text('OK'),
               onPressed: () {
                 double? amount = double.tryParse(controller.text);
-                Navigator.of(context).pop(amount);
+                if (amount == 0) {
+                  errorDialogCantBeZero(context);
+                } else {
+                  Navigator.of(context).pop(amount);
+                }
               },
             ),
           ],
@@ -71,6 +79,9 @@ class WalletServices {
             controller: controller,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(hintText: 'Amount'),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly
+            ],
           ),
           actions: [
             TextButton(
@@ -83,7 +94,11 @@ class WalletServices {
               child: const Text('OK'),
               onPressed: () {
                 double? amount = double.tryParse(controller.text);
-                Navigator.of(context).pop(amount);
+                if (amount == 0) {
+                  errorDialogCantBeZero(context);
+                } else {
+                  Navigator.of(context).pop(amount);
+                }
               },
             ),
           ],
@@ -152,6 +167,56 @@ class WalletServices {
           return AlertDialog(
             title: const Text('Incorrect password'),
             actions: [
+              TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  })
+            ],
+          );
+        });
+  }
+
+  /// Function that alerts the user that the input cant be zero.
+  void errorDialogCantBeZero(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Amount cant be 0'),
+            actions: [
+              TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  })
+            ],
+          );
+        });
+  }
+
+  /// Function that alerts the user that he has to add an IBAN to his account before he can withdraw money.
+  void errorDialogNoIbanFound(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('No IBAN found'),
+            content: const Text(
+                'You have to add an IBAN to your account before you can withdraw money.'),
+            actions: [
+              TextButton(
+                child: const Text('Account Settings'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePage(),
+                    ),
+                  );
+                },
+              ),
               TextButton(
                   child: const Text('OK'),
                   onPressed: () {

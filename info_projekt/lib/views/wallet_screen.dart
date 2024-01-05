@@ -77,16 +77,22 @@ class _WalletScreenState extends State<WalletScreen> {
                     final userData = userDoc.data();
                     final iban = userData['iban'] as String;
 
-                    double? withdrawAmount = await walletServices
-                        .getUserWithdrawInput(context, iban);
-                    if (withdrawAmount != null) {
-                      await Future.delayed(const Duration(milliseconds: 500));
-                      await walletServices.startWithdrawFlow(
-                          context, withdrawAmount);
-                      double? newBalance = await walletServices.fetchBalance();
-                      balance.value = newBalance;
-
-                      setState(() {});
+                    if (iban.isEmpty ||
+                        iban == '' ||
+                        iban == 'null' ||
+                        iban == 'undefined') {
+                      walletServices.errorDialogNoIbanFound(context);
+                    } else {
+                      double? withdrawAmount = await walletServices
+                          .getUserWithdrawInput(context, iban);
+                      if (withdrawAmount != null) {
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await walletServices.startWithdrawFlow(
+                            context, withdrawAmount);
+                        double? newBalance =
+                            await walletServices.fetchBalance();
+                        balance.value = newBalance;
+                      }
                     }
                   }
                 },
@@ -107,6 +113,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         await launch(paymentLink,
                             forceSafariVC: false, forceWebView: false);
                       }
+                      setState(() {});
                     }
                   } else {
                     // If the app is running on mobile, start the deposit flow
