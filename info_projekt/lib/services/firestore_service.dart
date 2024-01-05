@@ -9,7 +9,7 @@ class FirestoreService {
 
   //DateTime registrationDate = DateTime.now();
   String iban = 'null';
-  num taxpot = 0;
+  num tax_pot = 0;
 
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
@@ -20,7 +20,7 @@ class FirestoreService {
       'email': userName,
       'registrationDate': DateTime.now(),
       'UID': UID,
-      'taxpot': taxpot
+      'tax_pot': taxpot
     };
 
     try {
