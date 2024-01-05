@@ -20,7 +20,7 @@ class FirestoreService {
       'email': userName,
       'registrationDate': DateTime.now(),
       'UID': UID,
-      'tax_pot': taxpot
+      'tax_pot': tax_pot
     };
 
     try {
