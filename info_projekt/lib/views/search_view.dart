@@ -22,6 +22,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPage extends State<SearchPage> {
   List<dynamic> _searchResults = [];
   late final SearchService _searchService;
+  bool _searchPerformed = false;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _SearchPage extends State<SearchPage> {
     if (mounted) {
       setState(() {
         _searchResults = results;
+        _searchPerformed = true;
       });
     }
   }
@@ -47,9 +49,10 @@ class _SearchPage extends State<SearchPage> {
       onChanged: (String s) {
         if (_debounce?.isActive ?? false) _debounce?.cancel();
         // 1 second delay before searching -> less API calls
-        _debounce = Timer(const Duration(seconds: 1), () {
+        _debounce = Timer(const Duration(milliseconds: 250), () {
           if (s.trim().isEmpty) {
             setState(() {
+              _searchPerformed = false;
               _searchResults = [];
             });
           } else {
@@ -79,6 +82,7 @@ class _SearchPage extends State<SearchPage> {
             ? IconButton(
                 onPressed: () {
                   _searchController.clear();
+                  _searchPerformed = false;
                   setState(() {
                     _searchResults = [];
                   });
@@ -93,7 +97,6 @@ class _SearchPage extends State<SearchPage> {
     );
   }
 
-  /// Function to create the search results list view.
   Widget _searchListView() {
     return ListView.builder(
       itemCount: _searchResults.length,
@@ -105,7 +108,6 @@ class _SearchPage extends State<SearchPage> {
             onTap: () {
               Navigator.push(
                 context,
-                // go to charts_view.dart when clicking on a stock
                 MaterialPageRoute(
                   builder: (context) => ChartStock(
                     title: _searchResults[index]['symbol'],
@@ -177,30 +179,43 @@ class _SearchPage extends State<SearchPage> {
     );
   }
 
+  Widget _buildBody() {
+    if (_searchPerformed && _searchResults.isEmpty) {
+      return _buildNoStockFoundMessage();
+    } else if (_searchResults.isEmpty) {
+      return _buildFeaturedStocksView();
+    } else {
+      return _searchListView();
+    }
+  }
+
+  Widget _buildNoStockFoundMessage() {
+    return Center(child: Text('No stock found'));
+  }
+
+  Widget _buildFeaturedStocksView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text(
+            'Top 10 Stocks of all time',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(child: _featuredStocks()),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchService = SearchService(onSearchResults: updateSearchResults);
 
     return Scaffold(
       appBar: AppBar(title: _searchTextField()),
-
-      /// If the search results are empty, display the featured stocks list view.
-      /// If the search results are not empty, display the search results list view.
-      body: _searchResults.isEmpty
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Top 10 Stocks of all time',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Expanded(child: _featuredStocks()),
-              ],
-            )
-          : _searchListView(),
+      body: _buildBody(),
     );
   }
 }
