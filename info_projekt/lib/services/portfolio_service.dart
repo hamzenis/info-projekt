@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../models/portfolio_model.dart';
+
 class PortfolioService {
   final CollectionReference portfolioCollection =
       FirebaseFirestore.instance.collection('portfolio');
 
-  Future<Map<String, double>> calculatePortfolioValue(String uid) async {
+  Future<Portfolio> calculatePortfolioValue(String uid) async {
     var userQuery = await FirebaseFirestore.instance
         .collection('Users')
         .where('UID', isEqualTo: uid)
@@ -58,11 +60,11 @@ class PortfolioService {
 
     double percentageGainOrLoss = totalProfitOrLoss / totalCurrentValue * 100;
 
-    return {
-      'portfolioValue': totalCurrentValue,
-      'profitOrLoss': totalProfitOrLoss,
-      'percentageGainOrLoss': percentageGainOrLoss
-    };
+    return Portfolio(
+      portfolioValue: totalCurrentValue,
+      profitOrLoss: totalProfitOrLoss,
+      percentageGainOrLoss: percentageGainOrLoss,
+    );
   }
 
   Future<double?> getCurrentPrice(String symbol) async {
