@@ -49,9 +49,10 @@ class _SearchPage extends State<SearchPage> {
       onChanged: (String s) {
         if (_debounce?.isActive ?? false) _debounce?.cancel();
         // 1 second delay before searching -> less API calls
-        _debounce = Timer(const Duration(seconds: 1), () {
+        _debounce = Timer(const Duration(milliseconds: 250), () {
           if (s.trim().isEmpty) {
             setState(() {
+              _searchPerformed = false;
               _searchResults = [];
             });
           } else {
@@ -81,6 +82,7 @@ class _SearchPage extends State<SearchPage> {
             ? IconButton(
                 onPressed: () {
                   _searchController.clear();
+                  _searchPerformed = false;
                   setState(() {
                     _searchResults = [];
                   });
@@ -177,34 +179,43 @@ class _SearchPage extends State<SearchPage> {
     );
   }
 
+  Widget _buildBody() {
+    if (_searchPerformed && _searchResults.isEmpty) {
+      return _buildNoStockFoundMessage();
+    } else if (_searchResults.isEmpty) {
+      return _buildFeaturedStocksView();
+    } else {
+      return _searchListView();
+    }
+  }
+
+  Widget _buildNoStockFoundMessage() {
+    return Center(child: Text('No stock found'));
+  }
+
+  Widget _buildFeaturedStocksView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text(
+            'Top 10 Stocks of all time',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(child: _featuredStocks()),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchService = SearchService(onSearchResults: updateSearchResults);
 
     return Scaffold(
       appBar: AppBar(title: _searchTextField()),
-
-      /// If the search results are empty and a search has been performed, display the "No stock found" message.
-      /// If the search results are empty and no search has been performed, display the featured stocks list view.
-      /// If the search results are not empty, display the search results list view.
-      body: _searchPerformed && _searchResults.isEmpty
-          ? Center(child: Text('No stock found'))
-          : _searchResults.isEmpty
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'Top 10 Stocks of all time',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(child: _featuredStocks()),
-                  ],
-                )
-              : _searchListView(),
+      body: _buildBody(),
     );
   }
 }
