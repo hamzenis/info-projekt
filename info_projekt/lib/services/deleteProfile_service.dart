@@ -3,7 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 
 class DeleteProfile {
+/*
+  const collectionRef = db.collection('cities');
+const snapshot = await collectionRef.count().get();
+console.log(snapshot.data().count);
+*/
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   //Es gibt keinen Befehl alle Subcollections auf einmal zu löschen, deswegen muss man es kompliziert machen
   Future<bool> deleteUser(String? documentID, String password) async {
     User? user = FirebaseAuth.instance.currentUser;

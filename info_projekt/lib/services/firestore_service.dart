@@ -22,7 +22,7 @@ class FirestoreService {
       'registrationDate': DateTime.now(),
       'iban': iban,
       'UID': UID,
-      'taxpot': tax_pot,
+      'tax_pot': tax_pot,
       'balance': balance
     };
 
