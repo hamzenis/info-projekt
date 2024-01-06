@@ -43,9 +43,9 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Firebase',
       routes: {
         '/': (context) => SplashScreen(
-              child: LoginPage(),
+              child: const LoginPage(),
             ),
-        '/login': (context) => LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/homePageNew': (context) => HomePageNew(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
                       currentUri.queryParameters['client_secret'] ?? '';
                   return PaymentPage(clientSecret: clientSecret);
                 } else {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
               },
             ),
