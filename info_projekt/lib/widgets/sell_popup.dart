@@ -20,7 +20,8 @@ class SellPopup extends StatelessWidget {
             controller: amountController,
             obscureText: true,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(hintText: 'Enter the amount of stocks'),
+            decoration:
+                const InputDecoration(hintText: 'Enter the amount of stocks'),
           ),
         ],
       ),
@@ -33,11 +34,10 @@ class SellPopup extends StatelessWidget {
           onPressed: () async {
             int enteredAmount = int.tryParse(amountController.text) ?? 0;
             if (enteredAmount <= 0) {
-              // Show error message
               return;
             }
             Navigator.of(context).pop();
-            await startSellStockFlow(context, enteredAmount, stockSymbol);
+            await startSellStockFlow(enteredAmount, stockSymbol);
           },
           child: Text('Sell'),
         ),

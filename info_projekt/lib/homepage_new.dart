@@ -10,6 +10,8 @@ import 'dart:math' as math;
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
+import 'package:info_projekt/common/toast.dart';
 
 class HomePageNew extends StatelessWidget {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
@@ -748,14 +750,49 @@ class _InvestmentListState extends State<InvestmentList>
                                                   );
                                                 },
                                               );
+                                              Navigator.of(context).pop();
 
                                               // Sell stock
                                               if (amount != null) {
-                                                bool success =
-                                                    await startSellStockFlow(
-                                                        context,
-                                                        amount,
-                                                        investment['symbol']);
+                                                // Password Pop Up
+                                                String? password =
+                                                    await showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return PasswordDialog();
+                                                  },
+                                                );
+
+                                                // Try User Password and start buy flow
+                                                final user = FirebaseAuth
+                                                    .instance.currentUser;
+                                                bool success = false;
+                                                if (user != null) {
+                                                  if (password != null) {
+                                                    final credential =
+                                                        EmailAuthProvider
+                                                            .credential(
+                                                      email: user.email!,
+                                                      password: password,
+                                                    );
+                                                    try {
+                                                      await user
+                                                          .reauthenticateWithCredential(
+                                                              credential);
+                                                      success =
+                                                          await startSellStockFlow(
+                                                              amount,
+                                                              investment[
+                                                                  'symbol']);
+                                                    } catch (e) {
+                                                      showToast(
+                                                          message:
+                                                              "Incorrect password");
+                                                      return;
+                                                    }
+                                                  }
+                                                }
 
                                                 // Refresh page if the stock was successfully sold
                                                 if (success) {
@@ -782,8 +819,8 @@ class _InvestmentListState extends State<InvestmentList>
                                                   });
                                                 }
                                               }
-                                              // Close the popup
-                                              Navigator.of(context).pop();
+                                              // // Close the popup
+                                              // Navigator.of(context).pop();
                                             },
                                           ),
                                         ),
