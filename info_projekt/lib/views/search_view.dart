@@ -22,6 +22,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPage extends State<SearchPage> {
   List<dynamic> _searchResults = [];
   late final SearchService _searchService;
+  bool _searchPerformed = false;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _SearchPage extends State<SearchPage> {
     if (mounted) {
       setState(() {
         _searchResults = results;
+        _searchPerformed = true;
       });
     }
   }
@@ -93,7 +95,6 @@ class _SearchPage extends State<SearchPage> {
     );
   }
 
-  /// Function to create the search results list view.
   Widget _searchListView() {
     return ListView.builder(
       itemCount: _searchResults.length,
@@ -105,7 +106,6 @@ class _SearchPage extends State<SearchPage> {
             onTap: () {
               Navigator.push(
                 context,
-                // go to charts_view.dart when clicking on a stock
                 MaterialPageRoute(
                   builder: (context) => ChartStock(
                     title: _searchResults[index]['symbol'],
@@ -184,23 +184,27 @@ class _SearchPage extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(title: _searchTextField()),
 
-      /// If the search results are empty, display the featured stocks list view.
+      /// If the search results are empty and a search has been performed, display the "No stock found" message.
+      /// If the search results are empty and no search has been performed, display the featured stocks list view.
       /// If the search results are not empty, display the search results list view.
-      body: _searchResults.isEmpty
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Top 10 Stocks of all time',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Expanded(child: _featuredStocks()),
-              ],
-            )
-          : _searchListView(),
+      body: _searchPerformed && _searchResults.isEmpty
+          ? Center(child: Text('No stock found'))
+          : _searchResults.isEmpty
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Top 10 Stocks of all time',
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(child: _featuredStocks()),
+                  ],
+                )
+              : _searchListView(),
     );
   }
 }
