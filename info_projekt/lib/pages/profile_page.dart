@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/services/iban_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
+import 'package:info_projekt/services/iban_service.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -20,10 +22,12 @@ class _ProfilePageState extends State<ProfilePage> {
   FirestoreService firestoreService = FirestoreService();
   DeleteProfile delete = DeleteProfile();
   UpdateEmail update = UpdateEmail();
+  IbanService ibanservice = IbanService();
 
   late User? _user;
   String? _email;
   String? _registrationDate;
+  String? _iban;
 
   @override
   void initState() {
@@ -36,16 +40,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (_user != null) {
       String? registrationDate = await firestoreService.fetchRegistrationDate();
+      String? iban = await ibanservice.fetchIban();
       //if (userInfo.exists) {
       setState(() {
         _email = _user!.email;
         _registrationDate = registrationDate;
+        _iban = iban;
       });
     }
   }
 
   //PASSWORTVERWALTUNG FUNKTIONIERT! =)
-  Future<void> _changePasswordDialog(BuildContext context) async {
+  Future<void> updatePassword(BuildContext context) async {
     String? oldPassword;
     String? newPassword1;
     String? newPassword2;
@@ -190,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 //EMAILVERWALTUNG: FUNKTIONIERT!! =)
 
-  Future<void> _changeEmailDialog(BuildContext context) async {
+  Future<void> updateEmail(BuildContext context) async {
     String? oldEmail;
     String? newEmail1;
     String? password;
@@ -334,7 +340,141 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _deleteProfileDialog(BuildContext context) async {
+  Future<void> updateIban(BuildContext context) async {
+    String? iban;
+    bool passwordVisible = false;
+    String? password;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update IBAN'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(labelText: 'New IBAN:'),
+                  onChanged: (value) => iban = value,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Close the IBAN dialog
+                Navigator.of(context).pop();
+
+                // Check if IBAN is null
+                if (iban == null || iban!.isEmpty) {
+                  showToast(message: "IBAN cannot be empty.");
+                  return;
+                }
+
+                // Show password confirmation dialog
+                await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return AlertDialog(
+                          title: const Text('Confirm With Password!'),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                    'Please enter your current password to proceed:'),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        passwordVisible
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          passwordVisible = !passwordVisible;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  obscureText: !passwordVisible,
+                                  onChanged: (value) => password = value,
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                // Close the password confirmation dialog
+                                Navigator.of(context).pop();
+
+                                // Check if password is null
+                                if (password == null || password!.isEmpty) {
+                                  showToast(
+                                      message: "Password cannot be empty.");
+                                  return;
+                                }
+
+                                try {
+                                  String? documentID =
+                                      await firestoreService.getDocumentId();
+                                  if (documentID == null) {
+                                    showToast(
+                                        message: "User document not found.");
+                                    return;
+                                  }
+
+                                  AuthCredential credentials = firestoreService
+                                      .getCredentials(password!);
+                                  await _user!.reauthenticateWithCredential(
+                                      credentials);
+
+                                  await ibanservice.updateIban(
+                                      iban!, documentID);
+                                  showToast(
+                                      message: "IBAN updated successfully!");
+                                } catch (e) {
+                                  print('Error: $e');
+                                  showToast(message: "Error updating IBAN: $e");
+                                }
+                              },
+                              child: const Text('Save'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deleteProfile(BuildContext context) async {
     bool deleteConfirmed = false;
     String? password;
     bool passwordVisible = false;
@@ -460,10 +600,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '$_email',
+                      '${_email ?? "No email found!"}',
                       style: const TextStyle(fontSize: 15),
                     ),
-                    const SizedBox(height: 10), // Adjust the height as needed
+                    //const SizedBox(height: 10), // Adjust the height as needed
 
                     const Text(
                       'Registration Date:',
@@ -471,7 +611,17 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${_registrationDate ?? "Loading..."}',
+                      '${_registrationDate ?? "No registration date found!"}',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+
+                    const Text(
+                      'IBAN:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${_iban ?? "No IBAN found!"}',
                       style: const TextStyle(fontSize: 15),
                     )
                   ],
@@ -483,19 +633,6 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(
-                  onPressed: () => _changeEmailDialog(context),
-                  child: const Text('Change Email'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _changePasswordDialog(context),
-                  child: const Text('Change Password'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _deleteProfileDialog(context),
-                  child: const Text('Delete Profile'),
-                  //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
-                ),
-                ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -505,6 +642,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   child: const Text('Stock Transaction History'),
                 ),
+                ElevatedButton(
+                  onPressed: () => updateIban(context),
+                  child: const Text('Update IBAN'),
+                ),
+                ElevatedButton(
+                  onPressed: () => updateEmail(context),
+                  child: const Text('Update Email'),
+                ),
+                ElevatedButton(
+                  onPressed: () => updatePassword(context),
+                  child: const Text('Update Password'),
+                ),
+                ElevatedButton(
+                  onPressed: () => deleteProfile(context),
+                  child: const Text('Delete Profile'),
+                ),
+
                 const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
