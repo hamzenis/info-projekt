@@ -778,6 +778,11 @@ class _InvestmentListState extends State<InvestmentList>
                                                             .isNotEmpty) {
                                                       soldInvestment[
                                                           'quantity'] -= amount;
+                                                      soldInvestment[
+                                                              'totalValue'] -=
+                                                          amount *
+                                                              soldInvestment[
+                                                                  'price'];
                                                     }
                                                   });
                                                 }
