@@ -7,30 +7,43 @@ class PasswordDialog extends StatefulWidget {
 
 class _PasswordDialogState extends State<PasswordDialog> {
   final TextEditingController _passwordController = TextEditingController();
+  bool _passwordVisible = false;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Enter Password'),
-      content: TextField(
+      title: const Text('Enter your Password'),
+      content: TextFormField(
+        keyboardType: TextInputType.text,
         controller: _passwordController,
-        obscureText: true,
-        decoration: InputDecoration(labelText: 'Password'),
+        obscureText: !_passwordVisible, // This will obscure text dynamically
+        decoration: InputDecoration(
+          hintText: 'Password',
+          suffixIcon: IconButton(
+            icon: Icon(
+              _passwordVisible ? Icons.visibility : Icons.visibility_off,
+              color: Theme.of(context).primaryColorDark,
+            ),
+            onPressed: () {
+              setState(() {
+                _passwordVisible = !_passwordVisible;
+              });
+            },
+          ),
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.pop(
-                context); // Close the dialog without returning any value
+            Navigator.pop(context);
           },
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
         ),
         TextButton(
           onPressed: () {
-            Navigator.pop(context,
-                _passwordController.text); // Return the password to the caller
+            Navigator.pop(context, _passwordController.text);
           },
-          child: Text('OK'),
+          child: const Text('OK'),
         ),
       ],
     );
