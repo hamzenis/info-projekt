@@ -390,7 +390,8 @@ class PortfolioOverview extends StatefulWidget {
 class _PortfolioOverviewState extends State<PortfolioOverview> {
   @override
   Widget build(BuildContext context) {
-    bool isProfit = widget.profitOrLoss >= 0;
+    bool isProfit = widget.profitOrLoss > 0;
+    bool isZero = widget.profitOrLoss == 0.00;
 
     return Align(
       alignment: Alignment.topLeft,
@@ -419,8 +420,12 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
                             Icon(
                               isProfit
                                   ? Icons.keyboard_arrow_up
-                                  : Icons.keyboard_arrow_down,
-                              color: isProfit ? Colors.green : Colors.red,
+                                  : (isZero
+                                      ? Icons.keyboard_arrow_right
+                                      : Icons.keyboard_arrow_down),
+                              color: isProfit
+                                  ? Colors.green
+                                  : (isZero ? Colors.grey : Colors.red),
                             ),
                             ValueListenableBuilder<bool>(
                               valueListenable: widget.showPercentage,
@@ -431,7 +436,9 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
                                       : '\$${widget.profitOrLoss.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontSize: 20,
-                                    color: isProfit ? Colors.green : Colors.red,
+                                    color: isProfit
+                                        ? Colors.green
+                                        : (isZero ? Colors.grey : Colors.red),
                                   ),
                                 );
                               },
@@ -594,6 +601,7 @@ class _InvestmentListState extends State<InvestmentList>
                         var investment = widget.investments[index];
                         bool isInvestmentProfit =
                             investment['profitOrLoss'] > 0;
+                        bool isZero = investment['profitOrLoss'] == 0.00;
 
                         return ListTile(
                           title: Row(
@@ -607,7 +615,7 @@ class _InvestmentListState extends State<InvestmentList>
                                 style: TextStyle(
                                   color: isInvestmentProfit
                                       ? Colors.green
-                                      : Colors.red,
+                                      : (isZero ? Colors.grey : Colors.red),
                                 ),
                               ),
                             ],
@@ -641,10 +649,14 @@ class _InvestmentListState extends State<InvestmentList>
                                         Icon(
                                           isInvestmentProfit
                                               ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
+                                              : (isZero
+                                                  ? Icons.keyboard_arrow_right
+                                                  : Icons.keyboard_arrow_down),
                                           color: isInvestmentProfit
                                               ? Colors.green
-                                              : Colors.red,
+                                              : (isZero
+                                                  ? Colors.grey
+                                                  : Colors.red),
                                         ),
                                         Text(
                                           showPercentage
@@ -653,7 +665,9 @@ class _InvestmentListState extends State<InvestmentList>
                                           style: TextStyle(
                                             color: isInvestmentProfit
                                                 ? Colors.green
-                                                : Colors.red,
+                                                : (isZero
+                                                    ? Colors.grey
+                                                    : Colors.red),
                                           ),
                                         ),
                                       ],

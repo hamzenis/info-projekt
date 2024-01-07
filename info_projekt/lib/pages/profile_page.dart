@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/services/iban_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
-import 'package:intl/intl.dart';
-//import 'package:image_picker/image_picker.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
 
@@ -16,14 +15,15 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirestoreService firestoreService = FirestoreService();
-  DeleteProfile delete = DeleteProfile();
-  UpdateEmail update = UpdateEmail();
+  DeleteProfile deleteservice = DeleteProfile();
+  UpdateEmail updateservice = UpdateEmail();
+  IbanService ibanservice = IbanService();
 
   late User? _user;
   String? _email;
   String? _registrationDate;
+  String? _iban;
 
   @override
   void initState() {
@@ -36,20 +36,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (_user != null) {
       String? registrationDate = await firestoreService.fetchRegistrationDate();
-      //if (userInfo.exists) {
+      String? iban = await ibanservice.fetchIban();
       setState(() {
         _email = _user!.email;
         _registrationDate = registrationDate;
+        _iban = iban;
       });
     }
   }
 
-  //PASSWORTVERWALTUNG FUNKTIONIERT! =)
-  Future<void> _changePasswordDialog(BuildContext context) async {
+  Future<void> updatePassword(BuildContext context) async {
     String? oldPassword;
     String? newPassword1;
     String? newPassword2;
-    bool passwordVisible = false;
     bool oldPasswordVisible = false;
     bool newPassword1Visible = false;
     bool newPassword2Visible = false;
@@ -60,14 +59,14 @@ class _ProfilePageState extends State<ProfilePage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: const Text('Change Password'),
+              title: const Text('Update password'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
                       decoration: InputDecoration(
-                        labelText: 'Old Password',
+                        labelText: 'Old password:',
                         suffixIcon: IconButton(
                           icon: Icon(
                             oldPasswordVisible
@@ -86,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     TextFormField(
                       decoration: InputDecoration(
-                        labelText: 'New Password',
+                        labelText: 'New password:',
                         suffixIcon: IconButton(
                           icon: Icon(
                             newPassword1Visible
@@ -105,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     TextFormField(
                       decoration: InputDecoration(
-                        labelText: 'Confirm New Password',
+                        labelText: 'Confirm new password:',
                         suffixIcon: IconButton(
                           icon: Icon(
                             newPassword2Visible
@@ -150,35 +149,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           await user.updatePassword(newPassword1!);
                           await _auth.signOut();
 
-                          showToast(message: "Password changed succesfully!");
-
-                          /*ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Password changed succesfully!'),
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                          */
-
+                          showToast(message: "Password changed successfully!");
                           Navigator.of(context).pop(); // Close the dialog
                           Navigator.pushReplacementNamed(context, '/login');
                         }
                       } catch (e) {
-                        print('Error: $e');
                         // Handle error - show error message or log
                       }
                     } else {
                       showToast(
                           message: "Passwords do not match or are empty.");
-                      /*ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Passwords do not match or are empty'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      ); */
                     }
                   },
-                  child: const Text('Save'),
+                  child: const Text('Confirm'),
                 ),
               ],
             );
@@ -188,10 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-//EMAILVERWALTUNG: FUNKTIONIERT!! =)
-
-  Future<void> _changeEmailDialog(BuildContext context) async {
-    String? oldEmail;
+  Future<void> updateEmail(BuildContext context) async {
     String? newEmail1;
     String? password;
     bool passwordVisible = false;
@@ -200,7 +180,10 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Change Email'),
+          title: const Align(
+            alignment: Alignment.center,
+            child: Text('Update Email'),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -221,8 +204,146 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton(
               onPressed: () async {
-                // Close the first dialog
                 Navigator.of(context).pop();
+
+                await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return AlertDialog(
+                          title: const Text('Update Email'),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('Enter your password to confirm:'),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        passwordVisible
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          passwordVisible = !passwordVisible;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  obscureText: !passwordVisible,
+                                  onChanged: (value) => password = value,
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                try {
+                                  AuthCredential credentials = firestoreService
+                                      .getCredentials(password!);
+                                  await _user!.reauthenticateWithCredential(
+                                      credentials);
+
+                                  await _user!.updateEmail(newEmail1!);
+
+                                  User? updatedUser =
+                                      FirebaseAuth.instance.currentUser;
+                                  if (updatedUser != null &&
+                                      updatedUser.email == newEmail1) {
+                                    await updatedUser.sendEmailVerification();
+
+                                    String? documentID =
+                                        await firestoreService.getDocumentId();
+                                    await updateservice.updateEmailFirestore(
+                                        newEmail1!, documentID);
+
+                                    showToast(
+                                        message:
+                                            "Change successful, please verify your Email!");
+
+                                    await _auth.signOut();
+                                  } else {
+                                    showToast(message: "Update failed!");
+                                  }
+
+                                  Navigator.of(context).pop();
+                                  Navigator.pushReplacementNamed(
+                                      context, '/login');
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: $e'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text('Save'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> updateIban(BuildContext context) async {
+    String? iban;
+    bool passwordVisible = false;
+    String? password;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update IBAN'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(labelText: 'New IBAN:'),
+                  onChanged: (value) => iban = value,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Close the IBAN dialog
+                Navigator.of(context).pop();
+
+                // Check if IBAN is null
+                if (iban == null || iban!.isEmpty) {
+                  showToast(message: "IBAN cannot be empty.");
+                  return;
+                }
 
                 // Show password confirmation dialog
                 await showDialog(
@@ -231,8 +352,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     return StatefulBuilder(
                       builder: (BuildContext context, StateSetter setState) {
                         return AlertDialog(
-                          title: const Text(
-                              'Confirm With Password! Be aware the change is permanent and you cannot log in with your old email anymore.'),
+                          title: const Text('Confirm With Password!'),
                           content: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -270,51 +390,37 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             TextButton(
                               onPressed: () async {
+                                // Close the password confirmation dialog
+                                Navigator.of(context).pop();
+
+                                // Check if password is null
+                                if (password == null || password!.isEmpty) {
+                                  showToast(
+                                      message: "Password cannot be empty.");
+                                  return;
+                                }
+
                                 try {
-                                  if (_user != null && password != null) {
-                                    String? documentID =
-                                        await firestoreService.getDocumentId();
-
-                                    // Re-authenticate the user using the credential
-                                    AuthCredential credentials =
-                                        firestoreService
-                                            .getCredentials(password!);
-                                    await _user!.reauthenticateWithCredential(
-                                        credentials);
-
-                                    await _user!.sendEmailVerification();
-
-                                    await update.updateEmailFirestore(
-                                        newEmail1!, documentID);
-
-                                    await _user!.updateEmail(newEmail1!);
-
+                                  String? documentID =
+                                      await firestoreService.getDocumentId();
+                                  if (documentID == null) {
                                     showToast(
-                                        message:
-                                            "Change succesfull, please verify your Email!");
-                                    /*ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Email changed successfully, please verify!'),
-                                        duration: Duration(seconds: 3),
-                                      ),
-                                    );
-                                    */
-
-                                    await _auth.signOut();
-
-                                    Navigator.of(context).pop();
-                                    Navigator.pushReplacementNamed(
-                                        context, '/login');
+                                        message: "User document not found.");
+                                    return;
                                   }
+
+                                  AuthCredential credentials = firestoreService
+                                      .getCredentials(password!);
+                                  await _user!.reauthenticateWithCredential(
+                                      credentials);
+
+                                  await ibanservice.updateIban(
+                                      iban!, documentID);
+                                  showToast(
+                                      message: "IBAN updated successfully!");
                                 } catch (e) {
                                   print('Error: $e');
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: $e'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
+                                  showToast(message: "Error updating IBAN: $e");
                                 }
                               },
                               child: const Text('Save'),
@@ -334,7 +440,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _deleteProfileDialog(BuildContext context) async {
+  Future<void> deleteProfile(BuildContext context) async {
     bool deleteConfirmed = false;
     String? password;
     bool passwordVisible = false;
@@ -388,7 +494,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () async {
                     try {
                       bool userDeleted =
-                          await delete.deleteUser(documentID, password!);
+                          await deleteservice.deleteUser(documentID, password!);
                       if (userDeleted) {
                         await _user!.delete();
                         setState(() {
@@ -460,10 +566,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '$_email',
+                      '${_email ?? "No email found!"}',
                       style: const TextStyle(fontSize: 15),
                     ),
-                    const SizedBox(height: 10), // Adjust the height as needed
+                    //const SizedBox(height: 10), // Adjust the height as needed
 
                     const Text(
                       'Registration Date:',
@@ -471,7 +577,17 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${_registrationDate ?? "Loading..."}',
+                      '${_registrationDate ?? "No registration date found!"}',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+
+                    const Text(
+                      'IBAN:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${_iban ?? "No IBAN found!"}',
                       style: const TextStyle(fontSize: 15),
                     )
                   ],
@@ -483,19 +599,6 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(
-                  onPressed: () => _changeEmailDialog(context),
-                  child: const Text('Change Email'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _changePasswordDialog(context),
-                  child: const Text('Change Password'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _deleteProfileDialog(context),
-                  child: const Text('Delete Profile'),
-                  //Hier muss generell noch eine Prüfung rein, ob offene Transaktionen o. Ä. bestehen
-                ),
-                ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -505,6 +608,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   child: const Text('Stock Transaction History'),
                 ),
+                ElevatedButton(
+                  onPressed: () => updateIban(context),
+                  child: const Text('Update IBAN'),
+                ),
+                ElevatedButton(
+                  onPressed: () => updateEmail(context),
+                  child: const Text('Update Email'),
+                ),
+                ElevatedButton(
+                  onPressed: () => updatePassword(context),
+                  child: const Text('Update Password'),
+                ),
+                ElevatedButton(
+                  onPressed: () => deleteProfile(context),
+                  child: const Text('Delete Profile'),
+                ),
+
                 const SizedBox(height: 40), // Spacing between buttons
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
