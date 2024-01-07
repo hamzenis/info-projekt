@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/transaction_buy_service.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
-import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
 
 final _auth = FirebaseAuth.instance;
 
@@ -60,22 +60,14 @@ class BuyPopup extends StatelessWidget {
                   return PasswordDialog();
                 },
               );
+              FirebaseAuthService auth = FirebaseAuthService();
+              bool correctPassword = await auth.reauthenticateUser(password);
 
-              // Try User Password and start buy flow
-              final user = _auth.currentUser;
-              if (user != null) {
-                if (password != null) {
-                  final credential = EmailAuthProvider.credential(
-                    email: user.email!,
-                    password: password,
-                  );
-                  try {
-                    await user.reauthenticateWithCredential(credential);
-                    await startBuyStockFlow(enteredAmount, stockSymbol);
-                  } catch (e) {
-                    showToast(message: "Incorrect password");
-                    return;
-                  }
+              if (correctPassword) {
+                try {
+                  await startBuyStockFlow(enteredAmount, stockSymbol);
+                } catch (e) {
+                  print(e); //TODO: DEBUG Line
                 }
               }
             }
