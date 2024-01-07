@@ -8,8 +8,9 @@ class FirestoreService {
   User? user = FirebaseAuth.instance.currentUser;
 
   //DateTime registrationDate = DateTime.now();
-  String iban = 'null';
+  String iban = 'No IBAN provided';
   num tax_pot = 0;
+  num balance = 0;
 
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
@@ -19,9 +20,10 @@ class FirestoreService {
     Map<String, dynamic> datatoSave = {
       'email': userName,
       'registrationDate': DateTime.now(),
+      'iban': iban,
       'UID': UID,
       'tax_pot': tax_pot,
-      'iban': iban
+      'balance': balance
     };
 
     try {
@@ -37,7 +39,7 @@ class FirestoreService {
     if (user != null) {
       final querySnapshot = await _firestore
           .collection('Users')
-          .where('UID', isEqualTo: user?.uid)
+          .where('UID', isEqualTo: user.uid)
           .get();
       final userDoc = querySnapshot.docs.first;
       final userData = userDoc.data();
@@ -48,8 +50,7 @@ class FirestoreService {
     }
   }
 
-  //Document ID /= User ID,deswegen brauchen wir ein Snapshot, um die DocumentID zu erhalten
-  //und darauf folgend Daten zu ändern oder auch zu löschen.
+//notwendig für die Änderung von z. B. Passwort und Iban
 
   Future<String?> getDocumentId() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -97,6 +98,7 @@ class FirestoreService {
 
           var format = DateFormat('yyyy-MM-dd HH:mm');
           var date = registrationDate.toDate();
+
           return format.format(date);
         } else {
           print('No matching document found for the current user.');
@@ -106,9 +108,6 @@ class FirestoreService {
         print('Error fetching registration date: $e');
         return null;
       }
-    } else {
-      print('No user is currently logged in.');
-      return null;
     }
   }
 }
