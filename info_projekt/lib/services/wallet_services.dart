@@ -36,8 +36,9 @@ class WalletServices {
                 controller: controller,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(hintText: 'Amount'),
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*[,\.]?\d{0,2}')),
                 ],
               ),
             ],
@@ -52,9 +53,10 @@ class WalletServices {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                double? amount = double.tryParse(controller.text);
-                if (amount == 0) {
-                  errorDialogCantBeZero(context);
+                double? amount =
+                    double.tryParse(controller.text.replaceAll(',', '.'));
+                if (amount == null || amount == 0) {
+                  errorDialogInvalidInput(context);
                 } else {
                   Navigator.of(context).pop(amount);
                 }
@@ -79,8 +81,10 @@ class WalletServices {
             controller: controller,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(hintText: 'Amount'),
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.digitsOnly
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(
+                RegExp(r'^\d*[,\.]?\d{0,2}'),
+              ),
             ],
           ),
           actions: [
@@ -93,12 +97,59 @@ class WalletServices {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                double? amount = double.tryParse(controller.text);
-                if (amount == 0) {
-                  errorDialogCantBeZero(context);
+                double? amount = double.tryParse(
+                  controller.text.replaceAll(',', '.'),
+                );
+                if (amount == null || amount == 0) {
+                  errorDialogInvalidInput(context);
+                } else if (amount < 10) {
+                  errorDialogAmountTooSmall(context);
                 } else {
                   Navigator.of(context).pop(amount);
                 }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Function that alerts the user via a popup that the amount he wants to deposit is too small.
+  void errorDialogAmountTooSmall(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Invalid Input'),
+          content: const Text('You can only deposit \$10 or more.'),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Function that alerts the user via a popup that the input he entered is invalid.
+  void errorDialogInvalidInput(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Invalid Input'),
+          content:
+              const Text('Please enter a valid number like 1.0, 1, .90 or 1,0'),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
               },
             ),
           ],
