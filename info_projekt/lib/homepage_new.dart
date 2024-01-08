@@ -413,6 +413,7 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
   Widget build(BuildContext context) {
     return Consumer<PortfolioValueNotifier>(
       builder: (context, portfolioValueNotifier, child) {
+    bool isZero = portfolioValueNotifier.portfolio.profitOrLoss == 0.00;
         bool isProfit = portfolioValueNotifier.portfolio.profitOrLoss >= 0;
 
         return Align(
@@ -621,6 +622,7 @@ class _InvestmentListState extends State<InvestmentList>
                         var investment = widget.investments[index];
                         bool isInvestmentProfit =
                             investment['profitOrLoss'] > 0;
+                        bool isZero = investment['profitOrLoss'] == 0.00;
 
                         return ListTile(
                           title: Row(
@@ -634,7 +636,7 @@ class _InvestmentListState extends State<InvestmentList>
                                 style: TextStyle(
                                   color: isInvestmentProfit
                                       ? Colors.green
-                                      : Colors.red,
+                                      : (isZero ? Colors.grey : Colors.red),
                                 ),
                               ),
                             ],
@@ -668,10 +670,14 @@ class _InvestmentListState extends State<InvestmentList>
                                         Icon(
                                           isInvestmentProfit
                                               ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
+                                              : (isZero
+                                                  ? Icons.keyboard_arrow_right
+                                                  : Icons.keyboard_arrow_down),
                                           color: isInvestmentProfit
                                               ? Colors.green
-                                              : Colors.red,
+                                              : (isZero
+                                                  ? Colors.grey
+                                                  : Colors.red),
                                         ),
                                         Text(
                                           showPercentage
@@ -680,7 +686,9 @@ class _InvestmentListState extends State<InvestmentList>
                                           style: TextStyle(
                                             color: isInvestmentProfit
                                                 ? Colors.green
-                                                : Colors.red,
+                                                : (isZero
+                                                    ? Colors.grey
+                                                    : Colors.red),
                                           ),
                                         ),
                                       ],
