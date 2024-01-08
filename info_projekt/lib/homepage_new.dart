@@ -414,7 +414,7 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
     return Consumer<PortfolioValueNotifier>(
       builder: (context, portfolioValueNotifier, child) {
         bool isZero = portfolioValueNotifier.portfolio.profitOrLoss == 0.00;
-        bool isProfit = portfolioValueNotifier.portfolio.profitOrLoss >= 0;
+        bool isProfit = portfolioValueNotifier.portfolio.profitOrLoss > 0;
 
         return Align(
           alignment: Alignment.topLeft,
@@ -466,12 +466,11 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
                                     String displayValue =
                                         '\$${portfolioValueNotifier.portfolio.profitOrLoss.toStringAsFixed(2)}';
                                     if (value) {
-                                      displayValue = portfolioValueNotifier
-                                              .portfolio
-                                              .percentageGainOrLoss
-                                              .isNaN
+                                      double percentage = portfolioValueNotifier
+                                          .portfolio.percentageGainOrLoss;
+                                      displayValue = percentage.isNaN
                                           ? '0.00%'
-                                          : '${portfolioValueNotifier.portfolio.percentageGainOrLoss.toStringAsFixed(2)}%';
+                                          : '${(percentage * 100).ceilToDouble() / 100.0}%';
                                     }
                                     return Text(
                                       displayValue,
@@ -709,8 +708,8 @@ class _InvestmentListState extends State<InvestmentList>
                                         ),
                                         Text(
                                           showPercentage
-                                              ? '${valueToPercentage(isInvestmentProfit, investment['percentageGainOrLoss'])}'
-                                              : '\$${valueToString(isInvestmentProfit, investment['profitOrLoss'])}',
+                                              ? '${investment['percentageGainOrLoss'].toStringAsFixed(2)}%'
+                                              : '\$${investment['profitOrLoss'].toStringAsFixed(2)}',
                                           style: TextStyle(
                                             color: isInvestmentProfit
                                                 ? Colors.green

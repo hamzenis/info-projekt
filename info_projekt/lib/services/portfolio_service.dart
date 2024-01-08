@@ -58,8 +58,9 @@ class PortfolioService {
       totalProfitOrLoss += profitOrLoss;
     }
 
-    double percentageGainOrLoss = totalProfitOrLoss / totalCurrentValue * 100;
-
+    double percentageGainOrLoss = totalCurrentValue != 0
+        ? totalProfitOrLoss / totalCurrentValue * 100
+        : 0.0;
     return Portfolio(
       portfolioValue: totalCurrentValue,
       profitOrLoss: totalProfitOrLoss,
