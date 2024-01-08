@@ -413,7 +413,7 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
   Widget build(BuildContext context) {
     return Consumer<PortfolioValueNotifier>(
       builder: (context, portfolioValueNotifier, child) {
-    bool isZero = portfolioValueNotifier.portfolio.profitOrLoss == 0.00;
+        bool isZero = portfolioValueNotifier.portfolio.profitOrLoss == 0.00;
         bool isProfit = portfolioValueNotifier.portfolio.profitOrLoss >= 0;
 
         return Align(
@@ -435,29 +435,57 @@ class _PortfolioOverviewState extends State<PortfolioOverview> {
                             style: TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(height: 8), // Reduced height
+                          SizedBox(height: 8),
                           GestureDetector(
                             onTap: widget.onTogglePercentage,
                             child: Row(
                               children: [
                                 Icon(
-                                  isProfit
+                                  portfolioValueNotifier
+                                              .portfolio.profitOrLoss >
+                                          0
                                       ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
-                                  color: isProfit ? Colors.green : Colors.red,
+                                      : (portfolioValueNotifier
+                                                  .portfolio.profitOrLoss ==
+                                              0.00
+                                          ? Icons.keyboard_arrow_right
+                                          : Icons.keyboard_arrow_down),
+                                  color: portfolioValueNotifier
+                                              .portfolio.profitOrLoss >
+                                          0
+                                      ? Colors.green
+                                      : (portfolioValueNotifier
+                                                  .portfolio.profitOrLoss ==
+                                              0.00
+                                          ? Colors.grey
+                                          : Colors.red),
                                 ),
                                 ValueListenableBuilder<bool>(
                                   valueListenable: widget.showPercentage,
                                   builder: (context, value, child) {
+                                    String displayValue =
+                                        '\$${portfolioValueNotifier.portfolio.profitOrLoss.toStringAsFixed(2)}';
+                                    if (value) {
+                                      displayValue = portfolioValueNotifier
+                                              .portfolio
+                                              .percentageGainOrLoss
+                                              .isNaN
+                                          ? '0.00%'
+                                          : '${portfolioValueNotifier.portfolio.percentageGainOrLoss.toStringAsFixed(2)}%';
+                                    }
                                     return Text(
-                                      value
-                                          ? '${portfolioValueNotifier.portfolio.percentageGainOrLoss.toStringAsFixed(2)}%'
-                                          : '\$${portfolioValueNotifier.portfolio.profitOrLoss.toStringAsFixed(2)}',
+                                      displayValue,
                                       style: TextStyle(
                                         fontSize: 20,
-                                        color: isProfit
+                                        color: portfolioValueNotifier
+                                                    .portfolio.profitOrLoss >
+                                                0
                                             ? Colors.green
-                                            : Colors.red,
+                                            : (portfolioValueNotifier.portfolio
+                                                        .profitOrLoss ==
+                                                    0.00
+                                                ? Colors.grey
+                                                : Colors.red),
                                       ),
                                     );
                                   },
@@ -785,7 +813,6 @@ class _InvestmentListState extends State<InvestmentList>
                                                   );
                                                 },
                                               );
-
                                               // Sell stock
                                               if (amount != null) {
                                                 bool success =
@@ -796,66 +823,50 @@ class _InvestmentListState extends State<InvestmentList>
 
                                                 // Refresh page if the stock was successfully sold
                                                 if (success) {
-                                                  setState(() {
-                                                    // Find the investment that matches the sold stock
-                                                    var soldInvestment = widget
-                                                        .investments
-                                                        .firstWhere(
-                                                      (inv) =>
-                                                          inv['symbol'] ==
-                                                          investment['symbol'],
-                                                      orElse: () =>
-                                                          <String, dynamic>{},
-                                                    );
+                                                  // Find the investment that matches the sold stock
+                                                  var soldInvestment = widget
+                                                      .investments
+                                                      .firstWhere(
+                                                    (inv) =>
+                                                        inv['symbol'] ==
+                                                        investment['symbol'],
+                                                    orElse: () =>
+                                                        <String, dynamic>{},
+                                                  );
 
-                                                    // If the investment was found, decrease its quantity
-                                                    if (soldInvestment !=
-                                                            null &&
-                                                        soldInvestment
-                                                            .isNotEmpty) {
-                                                      soldInvestment[
-                                                          'quantity'] -= amount;
-                                                      soldInvestment[
-                                                              'totalValue'] -=
-                                                          amount *
-                                                              soldInvestment[
-                                                                  'price'];
+                                                  // If the investment was found, decrease its quantity
+                                                  if (soldInvestment != null &&
+                                                      soldInvestment
+                                                          .isNotEmpty) {
+                                                    soldInvestment[
+                                                        'quantity'] -= amount;
+                                                    soldInvestment[
+                                                            'totalValue'] -=
+                                                        amount *
+                                                            soldInvestment[
+                                                                'price'];
 
-                                                      // Update the PortfolioValueNotifier with the new portfolio value
+                                                    // Create an instance of PortfolioService and call calculatePortfolioValue
+                                                    PortfolioService
+                                                        portfolioService =
+                                                        PortfolioService();
+                                                    Portfolio updatedPortfolio =
+                                                        await portfolioService
+                                                            .calculatePortfolioValue(
+                                                                user!.uid);
+
+                                                    // Update the PortfolioValueNotifier with the new portfolio
+                                                    setState(() {
                                                       var portfolioValueNotifier =
                                                           Provider.of<
                                                                   PortfolioValueNotifier>(
                                                               context,
                                                               listen: false);
-
-                                                      double newPortfolioValue =
-                                                          portfolioValueNotifier
-                                                                  .portfolio
-                                                                  .portfolioValue -
-                                                              amount *
-                                                                  soldInvestment[
-                                                                      'price'];
-
-                                                      Portfolio
-                                                          updatedPortfolio =
-                                                          Portfolio(
-                                                        portfolioValue:
-                                                            newPortfolioValue,
-                                                        profitOrLoss:
-                                                            portfolioValueNotifier
-                                                                .portfolio
-                                                                .profitOrLoss,
-                                                        percentageGainOrLoss:
-                                                            portfolioValueNotifier
-                                                                .portfolio
-                                                                .percentageGainOrLoss,
-                                                      );
-
                                                       portfolioValueNotifier
                                                           .setPortfolio(
                                                               updatedPortfolio);
-                                                    }
-                                                  });
+                                                    });
+                                                  }
                                                 }
                                               }
                                               // Close the popup
