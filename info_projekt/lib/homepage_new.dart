@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
@@ -782,6 +783,12 @@ class _InvestmentListState extends State<InvestmentList>
                                                       controller: controller,
                                                       keyboardType:
                                                           TextInputType.number,
+                                                      inputFormatters: <TextInputFormatter>[
+                                                        FilteringTextInputFormatter
+                                                            .allow(
+                                                          RegExp(r'[0-9]'),
+                                                        ),
+                                                      ],
                                                       decoration:
                                                           InputDecoration(
                                                         hintText: 'Amount',
