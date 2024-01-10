@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -39,23 +40,37 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Firebase',
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else {
+            if (snapshot.hasData) {
+              if (snapshot.data!.emailVerified) {
+                return HomePageNew();
+              } else {
+                return VerifyEmailPage();
+              }
+            } else {
+              return LoginPage();
+            }
+          }
+        },
+      ),
       routes: {
-        '/': (context) => SplashScreen(
-              child: const LoginPage(),
-            ),
         '/login': (context) => const LoginPage(),
         '/homePageNew': (context) => HomePageNew(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
-        '/profile': (context) => ProfilePage(), // Added ProfilePage route
-        '/home': (context) =>
-            HomePage(), // Old Homepage, not deleted yet because of hotreload route
+        '/profile': (context) => ProfilePage(),
+        '/home': (context) => HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
               future: getInitialLink(),
