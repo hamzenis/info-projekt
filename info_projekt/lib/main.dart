@@ -6,7 +6,6 @@ import 'package:info_projekt/firebase_options.dart';
 import 'package:info_projekt/homepage_new.dart';
 import 'package:info_projekt/pages/payment_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
-import 'package:info_projekt/views/splashScreen.dart';
 import 'package:info_projekt/pages/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
