@@ -80,7 +80,8 @@ class _WalletScreenState extends State<WalletScreen> {
                     if (iban.isEmpty ||
                         iban == '' ||
                         iban == 'null' ||
-                        iban == 'undefined') {
+                        iban == 'undefined' ||
+                        iban == 'No IBAN provided') {
                       walletServices.errorDialogNoIbanFound(context);
                     } else {
                       double? withdrawAmount = await walletServices
