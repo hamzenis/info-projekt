@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
@@ -819,13 +821,39 @@ class _InvestmentListState extends State<InvestmentList>
                                                   );
                                                 },
                                               );
+                                              // Pop the Amount Dialog
+                                              // Navigator.of(context).pop();
+
                                               // Sell stock
                                               if (amount != null) {
-                                                bool success =
-                                                    await startSellStockFlow(
-                                                        context,
-                                                        amount,
-                                                        investment['symbol']);
+                                                // Password Pop Up
+                                                String? password =
+                                                    await showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return PasswordDialog();
+                                                  },
+                                                );
+                                                FirebaseAuthService auth =
+                                                    FirebaseAuthService();
+                                                bool correctPassword =
+                                                    await auth
+                                                        .reauthenticateUser(
+                                                            password);
+                                                bool success = false;
+
+                                                if (correctPassword) {
+                                                  try {
+                                                    success =
+                                                        await startSellStockFlow(
+                                                            amount,
+                                                            investment[
+                                                                'symbol']);
+                                                  } catch (e) {
+                                                    print(e); //TODO: DEBUG Line
+                                                  }
+                                                }
 
                                                 // Refresh page if the stock was successfully sold
                                                 if (success) {
