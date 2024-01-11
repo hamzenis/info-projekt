@@ -117,21 +117,40 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
 // Retrieve tax_pot from Firestore
       double taxPot = (userDoc['tax_pot'] as num).toDouble();
 
-// Calculate new tax_pot
+// // Calculate new tax_pot and balance
       double profit = 0;
+      double loss = fee; // Start with the transaction fee as initial loss
       for (final stock in stockSnapshot.docs) {
         double purchasePrice =
             double.tryParse(stock['price'].toString()) ?? 0.0;
         int individualStockQuantity =
             int.tryParse(stock['quantity'].toString()) ?? 0;
-        profit += (singlePrice - purchasePrice) * individualStockQuantity;
+        double difference = singlePrice - purchasePrice;
+        if (difference < 0) {
+          // It's a loss
+          loss += difference * individualStockQuantity;
+        } else {
+          // It's a profit
+          profit += difference * individualStockQuantity;
+        }
       }
-      taxPot += profit;
-      taxPot -= fee; // subtract fee from tax pot
+
+// Add loss to taxPot
+      taxPot += loss;
+
+// If taxPot is positive, transfer the amount to profit
+      if (taxPot > 0) {
+        profit += taxPot;
+        taxPot = 0;
+      }
+
+// Tax the profit at 25% and add to balance
+      double taxedProfit = profit * 0.75;
+      double newBalance = userDoc['balance'] + taxedProfit;
 
 // Update balance and tax_pot in Firestore
       await _firestore.collection('Users').doc(userDoc.id).update({
-        'balance': FieldValue.increment(totalPriceAfterFee),
+        'balance': newBalance,
         'tax_pot': taxPot,
       });
 
