@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/iban_service.dart';
+import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -635,8 +638,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Sign Out',
                     style: TextStyle(fontSize: 24),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     FirebaseAuth.instance.signOut();
+
+                    // Reset the PortfolioValueNotifier
+                    var portfolioValueNotifier =
+                        Provider.of<PortfolioValueNotifier>(context,
+                            listen: false);
+                    portfolioValueNotifier.reset();
+
                     Navigator.pushNamed(context, "/login");
                     showToast(message: "Successfully signed out");
                   },
