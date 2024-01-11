@@ -12,25 +12,32 @@ class _PasswordDialogState extends State<PasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Enter your Password'),
-      content: TextFormField(
-        keyboardType: TextInputType.text,
-        controller: _passwordController,
-        obscureText: !_passwordVisible, // This will obscure text dynamically
-        decoration: InputDecoration(
-          hintText: 'Password',
-          suffixIcon: IconButton(
-            icon: Icon(
-              _passwordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Theme.of(context).primaryColorDark,
+      title: const Text('Confirm With Password'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Please enter your password to confirm this action:"),
+          TextFormField(
+            keyboardType: TextInputType.text,
+            controller: _passwordController,
+            obscureText:
+                !_passwordVisible, // This will obscure text dynamically
+            decoration: InputDecoration(
+              hintText: 'Password',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Theme.of(context).primaryColorDark,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _passwordVisible = !_passwordVisible;
+                  });
+                },
+              ),
             ),
-            onPressed: () {
-              setState(() {
-                _passwordVisible = !_passwordVisible;
-              });
-            },
           ),
-        ),
+        ],
       ),
       actions: [
         TextButton(
