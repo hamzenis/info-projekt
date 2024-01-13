@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +12,8 @@ import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
 import 'package:provider/provider.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -179,8 +183,11 @@ class _ProfilePageState extends State<ProfilePage> {
     String? password;
     bool passwordVisible = false;
 
+    // Store the context before showDialog
+    BuildContext dialogContext = context;
+
     await showDialog(
-      context: context,
+      context: dialogContext,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Align(
@@ -201,105 +208,59 @@ class _ProfilePageState extends State<ProfilePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop(); // Close the Email dialog
 
-                await showDialog(
+                // Show password confirmation dialog
+                String? password = await showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return AlertDialog(
-                          title: const Text('Update Email'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('Enter your password to confirm:'),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          passwordVisible = !passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  obscureText: !passwordVisible,
-                                  onChanged: (value) => password = value,
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                try {
-                                  AuthCredential credentials = firestoreService
-                                      .getCredentials(password!);
-                                  await _user!.reauthenticateWithCredential(
-                                      credentials);
-
-                                  await _user!.updateEmail(newEmail1!);
-
-                                  User? updatedUser =
-                                      FirebaseAuth.instance.currentUser;
-                                  if (updatedUser != null &&
-                                      updatedUser.email == newEmail1) {
-                                    await updatedUser.sendEmailVerification();
-
-                                    String? documentID =
-                                        await firestoreService.getDocumentId();
-                                    await updateservice.updateEmailFirestore(
-                                        newEmail1!, documentID);
-
-                                    showToast(
-                                        message:
-                                            "Change successful, please verify your Email!");
-
-                                    await _auth.signOut();
-                                  } else {
-                                    showToast(message: "Update failed!");
-                                  }
-
-                                  Navigator.of(context).pop();
-                                  Navigator.pushReplacementNamed(
-                                      context, '/login');
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: $e'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    return PasswordDialog();
                   },
                 );
+
+                FirebaseAuthService auth = FirebaseAuthService();
+                bool correctPassword = await auth.reauthenticateUser(password);
+
+                // Update Email to Firestore
+                if (correctPassword) {
+                  try {
+                    await _user!.updateEmail(newEmail1!);
+
+                    User? updatedUser = FirebaseAuth.instance.currentUser;
+                    if (updatedUser != null && updatedUser.email == newEmail1) {
+                      await updatedUser.sendEmailVerification();
+
+                      String? documentID =
+                          await firestoreService.getDocumentId();
+                      await updateservice.updateEmailFirestore(
+                          newEmail1!, documentID);
+
+                      showToast(
+                          message:
+                              "Change successful, please verify your Email!");
+
+                      await _auth.signOut();
+                    } else {
+                      showToast(message: "Update failed!");
+                    }
+                    Navigator.pushReplacementNamed(dialogContext, '/login');
+                    print("Login");
+                  } catch (e) {
+                    print(e);
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
               },
               child: const Text('Save'),
             ),
@@ -311,8 +272,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> updateIban(BuildContext context) async {
     String? iban;
-    bool passwordVisible = false;
-    String? password;
 
     await showDialog(
       context: context,
@@ -349,91 +308,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 }
 
                 // Show password confirmation dialog
-                await showDialog(
+                String? password = await showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return AlertDialog(
-                          title: const Text('Confirm With Password!'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                    'Please enter your current password to proceed:'),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          passwordVisible = !passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  obscureText: !passwordVisible,
-                                  onChanged: (value) => password = value,
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                // Close the password confirmation dialog
-                                Navigator.of(context).pop();
-
-                                // Check if password is null
-                                if (password == null || password!.isEmpty) {
-                                  showToast(
-                                      message: "Password cannot be empty.");
-                                  return;
-                                }
-
-                                try {
-                                  String? documentID =
-                                      await firestoreService.getDocumentId();
-                                  if (documentID == null) {
-                                    showToast(
-                                        message: "User document not found.");
-                                    return;
-                                  }
-
-                                  AuthCredential credentials = firestoreService
-                                      .getCredentials(password!);
-                                  await _user!.reauthenticateWithCredential(
-                                      credentials);
-
-                                  await ibanservice.updateIban(
-                                      iban!, documentID);
-                                  showToast(
-                                      message: "IBAN updated successfully!");
-                                } catch (e) {
-                                  print('Error: $e');
-                                  showToast(message: "Error updating IBAN: $e");
-                                }
-                              },
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    return PasswordDialog();
                   },
                 );
+                FirebaseAuthService auth = FirebaseAuthService();
+                bool correctPassword = await auth.reauthenticateUser(password);
+
+                // Write new IBAN to Firestore
+                if (correctPassword) {
+                  try {
+                    String? documentID = await firestoreService.getDocumentId();
+                    await ibanservice.updateIban(iban!, documentID);
+                    showToast(message: "IBAN updated successfully!");
+                  } catch (e) {
+                    print('Error: $e'); // TODO: DEBUG Remove
+                    showToast(message: "Error updating IBAN: $e");
+                  }
+                }
               },
               child: const Text('Save'),
             ),
