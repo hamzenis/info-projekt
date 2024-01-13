@@ -11,4 +11,10 @@ class PortfolioValueNotifier extends ChangeNotifier {
     _portfolio = newPortfolio;
     notifyListeners();
   }
+
+  void reset() {
+    _portfolio = Portfolio(
+        portfolioValue: 0.0, profitOrLoss: 0.0, percentageGainOrLoss: 0.0);
+    notifyListeners();
+  }
 }
