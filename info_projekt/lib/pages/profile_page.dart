@@ -169,20 +169,25 @@ class _ProfilePageState extends State<ProfilePage> {
                       if (newPassword1 != newPassword2) {
                         showToast(message: "Passwords do not match");
                       }
-                      if (newPassword1!.isEmpty || newPassword2!.isEmpty) {
-                        showToast(
-                            message:
-                                "Please provide a new password and repeat it");
+                      if (newPassword1!.isEmpty) {
+                        showToast(message: "Please provide a new password");
                       }
+
+                      if (newPassword2!.isEmpty) {
+                        showToast(message: "Please repeat the new password");
+                      }
+
                       if (oldPassword!.isEmpty) {
                         showToast(message: "Please provide your old password");
                       }
+
                       if ((newPassword1 == newPassword2) &&
                           (newPassword1 == oldPassword)) {
                         showToast(
                             message:
-                                "New password can't be the same as the old password");
+                                "New password can't be the same as old password");
                       }
+
                       if (!(newPassword1!.contains(RegExp(r'[A-Z]')) &&
                           newPassword1!.contains(RegExp(r'[0-9]')) &&
                           newPassword1!.contains(RegExp(r'[a-z]')) &&
@@ -192,7 +197,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             message:
                                 "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character");
                       }
-                      ;
                     }
                   },
                   child: const Text('Confirm'),
@@ -213,128 +217,111 @@ class _ProfilePageState extends State<ProfilePage> {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Align(
-            alignment: Alignment.center,
-            child: Text('Update Email'),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'New Email:'),
-                  onChanged: (value) => newEmail1 = value,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Align(
+                alignment: Alignment.center,
+                child: Text('Update Email'),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      decoration:
+                          const InputDecoration(labelText: 'New Email:'),
+                      onChanged: (value) => newEmail1 = value,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            passwordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              passwordVisible = !passwordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !passwordVisible,
+                      onChanged: (value) => password = value,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      if (password == null || password!.isEmpty) {
+                        showToast(message: "Password cannot be empty");
+                        return;
+                      }
+
+                      if (_user!.email == newEmail1) {
+                        showToast(
+                            message:
+                                "Old Email can't be the same as new Email");
+                        return;
+                      }
+
+                      if (newEmail1!.isEmpty) {
+                        showToast(message: "Please provide a new Email");
+                      }
+
+                      AuthCredential credentials =
+                          firestoreService.getCredentials(password!);
+                      await _user!.reauthenticateWithCredential(credentials);
+
+                      await _user!.updateEmail(newEmail1!);
+
+                      User? updatedUser = FirebaseAuth.instance.currentUser;
+                      if (updatedUser != null &&
+                          updatedUser.email == newEmail1) {
+                        await updatedUser.sendEmailVerification();
+
+                        String? documentID =
+                            await firestoreService.getDocumentId();
+                        await updateservice.updateEmailFirestore(
+                            newEmail1!, documentID);
+
+                        showToast(
+                            message:
+                                "Change successful, please verify your Email!");
+
+                        await _auth.signOut();
+
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'wrong-password') {
+                        showToast(
+                            message: "Incorrect password, please try again");
+                      } else {
+                        showToast(message: "An error occurred: ${e.message}");
+                      }
+                    } catch (e) {
+                      showToast(message: "An unexpected error occurred: $e");
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-
-                await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return AlertDialog(
-                          title: const Text('Update Email'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('Enter your password to confirm:'),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          passwordVisible = !passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  obscureText: !passwordVisible,
-                                  onChanged: (value) => password = value,
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                try {
-                                  AuthCredential credentials = firestoreService
-                                      .getCredentials(password!);
-                                  await _user!.reauthenticateWithCredential(
-                                      credentials);
-
-                                  await _user!.updateEmail(newEmail1!);
-
-                                  User? updatedUser =
-                                      FirebaseAuth.instance.currentUser;
-                                  if (updatedUser != null &&
-                                      updatedUser.email == newEmail1) {
-                                    await updatedUser.sendEmailVerification();
-
-                                    String? documentID =
-                                        await firestoreService.getDocumentId();
-                                    await updateservice.updateEmailFirestore(
-                                        newEmail1!, documentID);
-
-                                    showToast(
-                                        message:
-                                            "Change successful, please verify your Email!");
-
-                                    await _auth.signOut();
-                                  } else {
-                                    showToast(message: "Update failed!");
-                                  }
-
-                                  Navigator.of(context).pop();
-                                  Navigator.pushReplacementNamed(
-                                      context, '/login');
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: $e'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
