@@ -318,10 +318,18 @@ class _PortfolioPageState extends State<PortfolioPage> {
   @override
   void initState() {
     super.initState();
-    portfolioService.calculatePortfolioValue(user!.uid).then((portfolio) {
-      var portfolioValueNotifier =
-          Provider.of<PortfolioValueNotifier>(context, listen: false);
-      portfolioValueNotifier.setPortfolio(portfolio);
+
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user == null) {
+        print('User is currently signed out!');
+      } else {
+        print('User is signed in!');
+        portfolioService.calculatePortfolioValue(user.uid).then((portfolio) {
+          var portfolioValueNotifier =
+              Provider.of<PortfolioValueNotifier>(context, listen: false);
+          portfolioValueNotifier.setPortfolio(portfolio);
+        });
+      }
     });
   }
 
@@ -555,10 +563,14 @@ class _InvestmentListState extends State<InvestmentList>
   @override
   void initState() {
     super.initState();
-    Provider.of<WatchlistNotifier>(context, listen: false)
-        .loadWatchlist(user!.uid);
-    _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
-    fetchWatchlist();
+
+    if (user != null) {
+      Provider.of<WatchlistNotifier>(context, listen: false)
+          .loadWatchlist(user!.uid);
+      _watchlistFuture = PortfolioService().getWatchlist(user!.uid);
+      fetchWatchlist();
+    }
+
     _pageController = PageController(initialPage: _currentPage)
       ..addListener(() {
         setState(() {

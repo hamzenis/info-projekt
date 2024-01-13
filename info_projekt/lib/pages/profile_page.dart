@@ -532,8 +532,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Sign Out',
                     style: TextStyle(fontSize: 24),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     FirebaseAuth.instance.signOut();
+
+                    // Reset the PortfolioValueNotifier
+                    var portfolioValueNotifier =
+                        Provider.of<PortfolioValueNotifier>(context,
+                            listen: false);
+                    portfolioValueNotifier.reset();
+
                     Navigator.pushNamed(context, "/login");
                     showToast(message: "Successfully signed out");
                   },
