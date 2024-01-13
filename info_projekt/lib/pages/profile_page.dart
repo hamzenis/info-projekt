@@ -545,6 +545,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Button style for uniform size
+    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+      fixedSize: const Size(140, 40), // Set your desired width and height
+    );
+
+    // Placeholder for password representation. Adjust the number of asterisks as needed.
+    String passwordPlaceholder = '********';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
@@ -554,51 +562,22 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Transaction History and Show Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const Row(
                   children: [
-                    const Text(
-                      'Email:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    Icon(Icons.history), // Transaction History icon
+                    SizedBox(width: 8),
                     Text(
-                      '${_email ?? "No email found!"}',
-                      style: const TextStyle(fontSize: 15),
+                      'Transaction History',
+                      style: TextStyle(fontSize: 15),
                     ),
-                    //const SizedBox(height: 10), // Adjust the height as needed
-
-                    const Text(
-                      'Registration Date:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${_registrationDate ?? "No registration date found!"}',
-                      style: const TextStyle(fontSize: 15),
-                    ),
-
-                    const Text(
-                      'IBAN:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${_iban ?? "No IBAN found!"}',
-                      style: const TextStyle(fontSize: 15),
-                    )
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
                 ElevatedButton(
+                  style: buttonStyle,
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -606,46 +585,138 @@ class _ProfilePageState extends State<ProfilePage> {
                           builder: (context) => OwnedStocksPage()),
                     );
                   },
-                  child: const Text('Stock Transaction History'),
+                  child: const Text('Show'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Email and Update Email Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.email), // Email icon
+                    const SizedBox(width: 8),
+                    Text(
+                      _email ?? 'No email found!',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
                 ),
                 ElevatedButton(
-                  onPressed: () => updateIban(context),
-                  child: const Text('Update IBAN'),
-                ),
-                ElevatedButton(
+                  style: buttonStyle,
                   onPressed: () => updateEmail(context),
-                  child: const Text('Update Email'),
+                  child: const Text('Update'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Password and Update Password Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.lock), // Password icon
+                    const SizedBox(width: 8),
+                    Text(
+                      passwordPlaceholder,
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
                 ),
                 ElevatedButton(
+                  style: buttonStyle,
                   onPressed: () => updatePassword(context),
-                  child: const Text('Update Password'),
+                  child: const Text('Update'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // IBAN and Update IBAN Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.account_balance_wallet), // IBAN icon
+                    const SizedBox(width: 8),
+                    Text(
+                      _iban ?? 'No IBAN found!',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
                 ),
                 ElevatedButton(
+                  style: buttonStyle,
+                  onPressed: () => updateIban(context),
+                  child: const Text('Update'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Registration Date with "Delete Profile" Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons
+                              .calendar_today), // Calendar icon for registration date
+                          SizedBox(width: 8),
+                          Text(
+                            'Date of Registration:',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '        ' +
+                            (_registrationDate ??
+                                "No registration date found!"),
+                        style: const TextStyle(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: buttonStyle,
                   onPressed: () => deleteProfile(context),
                   child: const Text('Delete Profile'),
                 ),
-
-                const SizedBox(height: 40), // Spacing between buttons
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  icon: const Icon(Icons.arrow_back, size: 32),
-                  label: const Text(
-                    'Sign Out',
-                    style: TextStyle(fontSize: 24),
-                  ),
-                  onPressed: () {
-                    FirebaseAuth.instance.signOut();
-                    Navigator.pushNamed(context, "/login");
-                    showToast(message: "Successfully signed out");
-                  },
-                ),
               ],
-            )
+            ),
+
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushNamed(context, "/login");
+                showToast(message: "Successfully signed out");
+              },
+              child: const Text(
+                'Sign Out',
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+}
+
   }
 }
