@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/services/iban_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
@@ -19,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   DeleteProfile deleteservice = DeleteProfile();
   UpdateEmail updateservice = UpdateEmail();
   IbanService ibanservice = IbanService();
+  //Für isPasswordValid-Function
 
   late User? _user;
   String? _email;
@@ -133,9 +134,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    if (oldPassword != null &&
+                    if (newPassword1!.contains(RegExp(r'[A-Z]')) &&
+                        newPassword1!.contains(RegExp(r'[0-9]')) &&
+                        newPassword1!.contains(RegExp(r'[a-z]')) &&
+                        newPassword1!
+                            .contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')) &&
+                        newPassword1!.length >= 8 &&
+                        oldPassword != null &&
                         newPassword1 != null &&
                         newPassword2 != null &&
+                        oldPassword != newPassword1 &&
                         newPassword1 == newPassword2) {
                       try {
                         UserCredential userCredential =
@@ -150,15 +158,41 @@ class _ProfilePageState extends State<ProfilePage> {
                           await _auth.signOut();
 
                           showToast(message: "Password changed successfully!");
+
                           Navigator.of(context).pop(); // Close the dialog
                           Navigator.pushReplacementNamed(context, '/login');
                         }
                       } catch (e) {
-                        // Handle error - show error message or log
+                        showToast(message: "Current password is wrong");
                       }
                     } else {
-                      showToast(
-                          message: "Passwords do not match or are empty.");
+                      if (newPassword1 != newPassword2) {
+                        showToast(message: "Passwords do not match");
+                      }
+                      if (newPassword1!.isEmpty || newPassword2!.isEmpty) {
+                        showToast(
+                            message:
+                                "Please provide a new password and repeat it");
+                      }
+                      if (oldPassword!.isEmpty) {
+                        showToast(message: "Please provide your old password");
+                      }
+                      if ((newPassword1 == newPassword2) &&
+                          (newPassword1 == oldPassword)) {
+                        showToast(
+                            message:
+                                "New password can't be the same as the old password");
+                      }
+                      if (!(newPassword1!.contains(RegExp(r'[A-Z]')) &&
+                          newPassword1!.contains(RegExp(r'[0-9]')) &&
+                          newPassword1!.contains(RegExp(r'[a-z]')) &&
+                          newPassword1!
+                              .contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')))) {
+                        showToast(
+                            message:
+                                "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character");
+                      }
+                      ;
                     }
                   },
                   child: const Text('Confirm'),
@@ -717,4 +751,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
