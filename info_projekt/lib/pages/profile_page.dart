@@ -8,11 +8,14 @@ import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
 
 class ProfilePage extends StatefulWidget {
+  const ProfilePage({Key? key}) : super(key: key);
+
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   FirestoreService firestoreService = FirestoreService();
   DeleteProfile deleteservice = DeleteProfile();
@@ -132,17 +135,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    if (newPassword1!.contains(RegExp(r'[A-Z]')) &&
+                    if (newPassword1 == newPassword2 &&
+                        newPassword1 != oldPassword &&
+                        newPassword1 != null &&
+                        newPassword1!.isNotEmpty &&
+                        newPassword1!.contains(RegExp(r'[A-Z]')) &&
                         newPassword1!.contains(RegExp(r'[0-9]')) &&
                         newPassword1!.contains(RegExp(r'[a-z]')) &&
                         newPassword1!
                             .contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')) &&
-                        newPassword1!.length >= 8 &&
-                        oldPassword != null &&
-                        newPassword1 != null &&
-                        newPassword2 != null &&
-                        oldPassword != newPassword1 &&
-                        newPassword1 == newPassword2) {
+                        newPassword1!.length >= 8) {
                       try {
                         UserCredential userCredential =
                             await _auth.signInWithEmailAndPassword(
@@ -157,8 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           showToast(message: "Password changed successfully!");
 
-                          Navigator.of(context).pop(); // Close the dialog
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.of(_scaffoldKey.currentContext!).pop();
+                          Navigator.of(_scaffoldKey.currentContext!)
+                              .pushReplacementNamed('/login');
                         }
                       } catch (e) {
                         showToast(message: "Current password is wrong");
@@ -166,31 +169,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     } else {
                       if (newPassword1 != newPassword2) {
                         showToast(message: "Passwords do not match");
-                      }
-                      if (newPassword1!.isEmpty) {
+                      } else if (newPassword1!.isEmpty) {
                         showToast(message: "Please provide a new password");
-                      }
-
-                      if (newPassword2!.isEmpty) {
-                        showToast(message: "Please repeat the new password");
-                      }
-
-                      if (oldPassword!.isEmpty) {
+                      } else if (oldPassword!.isEmpty) {
                         showToast(message: "Please provide your old password");
-                      }
-
-                      if ((newPassword1 == newPassword2) &&
-                          (newPassword1 == oldPassword)) {
+                      } else if (newPassword1 == oldPassword) {
                         showToast(
                             message:
                                 "New password can't be the same as old password");
-                      }
-
-                      if (!(newPassword1!.contains(RegExp(r'[A-Z]')) &&
-                          newPassword1!.contains(RegExp(r'[0-9]')) &&
-                          newPassword1!.contains(RegExp(r'[a-z]')) &&
-                          newPassword1!
-                              .contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')))) {
+                      } else {
                         showToast(
                             message:
                                 "Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character");
@@ -298,11 +285,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         showToast(
                             message:
                                 "Change successful, please verify your Email!");
-
                         await _auth.signOut();
 
-                        Navigator.of(context).pop();
-                        Navigator.pushReplacementNamed(context, '/login');
+                        // Use the current context from the scaffold key
+                        Navigator.of(_scaffoldKey.currentContext!)
+                            .pop(); // Close the dialog
+                        Navigator.of(_scaffoldKey.currentContext!)
+                            .pushReplacementNamed('/login');
                       }
                     } on FirebaseAuthException catch (e) {
                       if (e.code == 'wrong-password') {
@@ -389,11 +378,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       return StatefulBuilder(
                         builder: (BuildContext context, StateSetter setState) {
                           return AlertDialog(
-                            title: const Text('Confirm With Password'),
+                            title: const Text('Confirm With Password!'),
                             content: SingleChildScrollView(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  const Text(
+                                      'Please enter your current password to proceed:'),
                                   TextFormField(
                                     decoration: InputDecoration(
                                       labelText: 'Password',
@@ -427,7 +418,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onPressed: () async {
 // Close the password confirmation dialog
                                   Navigator.of(context).pop();
-// Check if password is null or empty
+                                  // Check if password is null or empty
                                   if (password == null || password!.isEmpty) {
                                     showToast(
                                         message: "Password cannot be empty.");
@@ -436,7 +427,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                                   try {
                                     // Assuming _user is a valid Firebase User instance
-                                    User? _user =
+                                    User? user =
                                         FirebaseAuth.instance.currentUser;
 
                                     // Assuming firestoreService and ibanservice are defined and properly initialized
@@ -450,10 +441,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
                                     AuthCredential credentials =
                                         EmailAuthProvider.credential(
-                                            email: _user!.email!,
+                                            email: user!.email!,
                                             password: password!);
 
-                                    await _user.reauthenticateWithCredential(
+                                    await user.reauthenticateWithCredential(
                                         credentials);
                                     await ibanservice.updateIban(
                                         iban!, documentID);
@@ -490,128 +481,125 @@ class _ProfilePageState extends State<ProfilePage> {
     bool passwordVisible = false;
     String? documentID = await firestoreService.getDocumentId();
 
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          // Use StatefulBuilder to manage state inside the dialog
-          builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
-              title: const Text('Confirm With Password'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                        'Are you sure you want to delete your profile? If so, enter your password:'),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            passwordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+    // Function to show the confirmation dialog
+    Future<bool> showDeleteConfirmationDialog() async {
+      return await showDialog<bool>(
+            context: context,
+            builder: (BuildContext dialogContext) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return AlertDialog(
+                    title: const Text('Confirm With Password'),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                              'Are you sure you want to delete your profile? If so, enter your password:'),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  passwordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    passwordVisible = !passwordVisible;
+                                  });
+                                },
+                              ),
+                            ),
+                            obscureText: !passwordVisible,
+                            onChanged: (value) => password = value,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              passwordVisible = !passwordVisible;
-                            });
-                          },
-                        ),
+                        ],
                       ),
-                      obscureText: !passwordVisible,
-                      onChanged: (value) => password = value,
                     ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context)
-                        .pop(); // Close password confirmation dialog
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      bool userDeleted =
-                          await deleteservice.deleteUser(documentID, password!);
-                      if (userDeleted) {
-                        await _user!.delete();
-                        setState(() {
-                          _email = null;
-                          _registrationDate = null;
-                        });
-                        Navigator.of(context).pop();
-                        Navigator.pushReplacementNamed(context, '/login');
-                        showToast(message: "Profile deletetion succesfully!");
-                        /*ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Profile deleted'),
-                            duration: Duration(seconds: 3),
-                          ),
-                        ); */
-                      } else {
-                        // Handle the case when the user is not deleted
-                        showToast(
-                            message:
-                                "Profile not deleted. Check balance and open transactions.");
-                        /*ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Profile could not be deleted, check Balance and Open Transactions'),
-                            duration: Duration(seconds: 3),
-                          ),
-                        ); */
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: $e'),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Confirm'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ) ??
+          false;
+    }
+
+    // Show the dialog and get the confirmation result
+    deleteConfirmed = await showDeleteConfirmationDialog();
+
+    // If delete is confirmed, proceed with the deletion logic
+    if (deleteConfirmed) {
+      try {
+        bool userDeleted =
+            await deleteservice.deleteUser(documentID, password!);
+        if (userDeleted) {
+          User? user = FirebaseAuth.instance.currentUser;
+          await user!.delete();
+
+          // Use the current context from the scaffold key
+          Navigator.of(_scaffoldKey.currentContext!).pop(); // Close the dialog
+          Navigator.of(_scaffoldKey.currentContext!)
+              .pushReplacementNamed('/login');
+          showToast(message: "Profile deletion successful!");
+        } else {
+          showToast(
+              message:
+                  "Profile not deleted. Check balance and open transactions.");
+        }
+      } catch (e) {
+        showToast(message: "Error: $e");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // Button style for uniform size
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-      fixedSize: const Size(140, 40), // Set your desired width and height
+      fixedSize: const Size(140, 40),
     );
 
-    // Placeholder for password representation. Adjust the number of asterisks as needed.
+    //Feste Nummer von Asteriks, damit die Anzahl keine Information über das Password preisgibt
     String passwordPlaceholder = '********';
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('User Profile'),
+        actions: [
+          //Relaod der Profilseite
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              _getUserInfo();
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Transaction History and Show Button
+            //Transaction-History-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.history), // Transaction History icon
+                    Icon(Icons.history),
                     SizedBox(width: 8),
                     Text(
                       'Transaction History',
@@ -634,13 +622,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // Email and Update Email Button
+            //Email-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.email), // Email icon
+                    const Icon(Icons.email),
                     const SizedBox(width: 8),
                     Text(
                       _email ?? 'No email found!',
@@ -657,13 +645,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // Password and Update Password Button
+            // Passwort-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lock), // Password icon
+                    const Icon(Icons.lock),
                     const SizedBox(width: 8),
                     Text(
                       passwordPlaceholder,
@@ -680,13 +668,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // IBAN and Update IBAN Button
+            // IBAN-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.account_balance_wallet), // IBAN icon
+                    const Icon(Icons.account_balance_wallet),
                     const SizedBox(width: 8),
                     Text(
                       _iban ?? 'No IBAN found!',
@@ -703,7 +691,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // Registration Date with "Delete Profile" Button
+            // Registration Date- und Profil-löschen-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -723,9 +711,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                       Text(
-                        '        ' +
-                            (_registrationDate ??
-                                "No registration date found!"),
+                        '        $_registrationDate',
                         style: const TextStyle(fontSize: 15),
                       ),
                     ],
