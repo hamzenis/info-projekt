@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/services/iban_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
@@ -19,7 +18,6 @@ class _ProfilePageState extends State<ProfilePage> {
   DeleteProfile deleteservice = DeleteProfile();
   UpdateEmail updateservice = UpdateEmail();
   IbanService ibanservice = IbanService();
-  //Für isPasswordValid-Function
 
   late User? _user;
   String? _email;
@@ -260,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -332,133 +330,158 @@ class _ProfilePageState extends State<ProfilePage> {
     bool passwordVisible = false;
     String? password;
 
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Update IBAN'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'New IBAN:'),
-                  onChanged: (value) => iban = value,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                // Close the IBAN dialog
-                Navigator.of(context).pop();
+    ibanservice.fetchIban().then((currentIban) async {
+      // Perform your IBAN checks here
+      if (currentIban == null || currentIban.isEmpty) {
+        showToast(message: "Current IBAN not available");
+        return;
+      }
 
-                // Check if IBAN is null
-                if (iban == null || iban!.isEmpty) {
-                  showToast(message: "IBAN cannot be empty.");
-                  return;
-                }
+      // Show the dialog
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Update IBAN'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'New IBAN:'),
+                    onChanged: (value) => iban = value,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (iban == null || iban!.isEmpty) {
+                    showToast(message: "IBAN cannot be empty");
+                    return;
+                  }
 
-                // Show password confirmation dialog
-                await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return AlertDialog(
-                          title: const Text('Confirm With Password!'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                    'Please enter your current password to proceed:'),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
+                  if (iban == currentIban) {
+                    showToast(
+                        message: "New IBAN can't be the same as old IBAN");
+                    return;
+                  }
+
+                  if (!ibanservice.checkIban(iban!)) {
+                    showToast(message: "IBAN is not valid");
+                    return;
+                  }
+
+                  // Close the IBAN dialog
+                  Navigator.of(context).pop();
+
+                  // Show password confirmation dialog
+                  await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                          return AlertDialog(
+                            title: const Text('Confirm With Password'),
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextFormField(
+                                    decoration: InputDecoration(
+                                      labelText: 'Password',
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          passwordVisible
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            passwordVisible = !passwordVisible;
+                                          });
+                                        },
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          passwordVisible = !passwordVisible;
-                                        });
-                                      },
                                     ),
+                                    obscureText: !passwordVisible,
+                                    onChanged: (value) => password = value,
                                   ),
-                                  obscureText: !passwordVisible,
-                                  onChanged: (value) => password = value,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                // Close the password confirmation dialog
-                                Navigator.of(context).pop();
-
-                                // Check if password is null
-                                if (password == null || password!.isEmpty) {
-                                  showToast(
-                                      message: "Password cannot be empty.");
-                                  return;
-                                }
-
-                                try {
-                                  String? documentID =
-                                      await firestoreService.getDocumentId();
-                                  if (documentID == null) {
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+// Close the password confirmation dialog
+                                  Navigator.of(context).pop();
+// Check if password is null or empty
+                                  if (password == null || password!.isEmpty) {
                                     showToast(
-                                        message: "User document not found.");
+                                        message: "Password cannot be empty.");
                                     return;
                                   }
 
-                                  AuthCredential credentials = firestoreService
-                                      .getCredentials(password!);
-                                  await _user!.reauthenticateWithCredential(
-                                      credentials);
+                                  try {
+                                    // Assuming _user is a valid Firebase User instance
+                                    User? _user =
+                                        FirebaseAuth.instance.currentUser;
 
-                                  await ibanservice.updateIban(
-                                      iban!, documentID);
-                                  showToast(
-                                      message: "IBAN updated successfully!");
-                                } catch (e) {
-                                  print('Error: $e');
-                                  showToast(message: "Error updating IBAN: $e");
-                                }
-                              },
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
+                                    // Assuming firestoreService and ibanservice are defined and properly initialized
+                                    String? documentID =
+                                        await firestoreService.getDocumentId();
+                                    if (documentID == null) {
+                                      showToast(
+                                          message: "User document not found.");
+                                      return;
+                                    }
+
+                                    AuthCredential credentials =
+                                        EmailAuthProvider.credential(
+                                            email: _user!.email!,
+                                            password: password!);
+
+                                    await _user.reauthenticateWithCredential(
+                                        credentials);
+                                    await ibanservice.updateIban(
+                                        iban!, documentID);
+                                    showToast(
+                                        message: "IBAN updated successfully!");
+                                  } catch (e) {
+                                    showToast(
+                                        message: "Error updating IBAN: $e");
+                                  }
+                                },
+                                child: const Text('Save'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+    }).catchError((error) {
+      showToast(message: "Error fetching IBAN: $error");
+    });
   }
 
   Future<void> deleteProfile(BuildContext context) async {
@@ -545,11 +568,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         ); */
                       }
                     } catch (e) {
-                      print('Error: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Error: $e'),
-                          duration: Duration(seconds: 3),
+                          duration: const Duration(seconds: 3),
                         ),
                       );
                     }
