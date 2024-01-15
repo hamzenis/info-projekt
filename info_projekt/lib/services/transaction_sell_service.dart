@@ -16,19 +16,6 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
   try {
     final user = _auth.currentUser;
     if (user != null) {
-      // String? password = await getUserPassword(context);
-      // final credential = EmailAuthProvider.credential(
-      //   email: user.email!,
-      //   password: password,
-      // );
-
-      // try {
-      //   await user.reauthenticateWithCredential(credential);
-      // } catch (e) {
-      //   showToast(message: 'Password is wrong');
-      //   return false;
-      // }
-
       final userDoc = (await _firestore
               .collection('Users')
               .where('UID', isEqualTo: user.uid)
@@ -51,6 +38,11 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
 
       int sellQuantity = amount;
       int totalStocks = 0;
+      double totalProfit = 0;
+      double revenue = 0;
+      double totalBuyPrice = 0;
+      double singleSellPrice =
+          double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
       List<int> updateStockQuantity = [];
       for (final stock in stockSnapshot.docs) {
         totalStocks += int.tryParse(stock['quantity'].toString()) ?? 0;
@@ -68,11 +60,21 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
         int individualStockQuantity =
             // Get the individual stock quantity
             int.tryParse(stock['quantity'].toString()) ?? 0;
+
         // Compare the individual stock quantity with the amount of stocks to sell
         // FIFO: First in, first out. If the amount of stocks to sell is smaller/same than the individual stock quantity
         // Than add to list and set the amount of stocks to sell to 0
         if (sellQuantity <= individualStockQuantity) {
           updateStockQuantity.add(individualStockQuantity - sellQuantity);
+
+          // Calculate profit & revenue & totalBuyPrice
+          revenue += singleSellPrice * sellQuantity;
+          totalBuyPrice += (double.tryParse(stock['price'].toString()) ?? 0.0) *
+              sellQuantity;
+          totalProfit += (singleSellPrice -
+                  (double.tryParse(stock['price'].toString()) ?? 0.0)) *
+              sellQuantity;
+
           sellQuantity = 0;
           // If the amount of stocks to sell is bigger than the individual stock quantity
           // Than add 0 to list and subtract the individual stock quantity from the amount of stocks to sell
@@ -80,6 +82,14 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
         } else if (sellQuantity > individualStockQuantity) {
           updateStockQuantity.add(0);
           sellQuantity -= individualStockQuantity;
+
+          // Calculate profit & revenue & totalBuyPrice
+          revenue += singleSellPrice * individualStockQuantity;
+          totalBuyPrice += (double.tryParse(stock['price'].toString()) ?? 0.0) *
+              individualStockQuantity;
+          totalProfit += (singleSellPrice -
+                  (double.tryParse(stock['price'].toString()) ?? 0.0)) *
+              individualStockQuantity;
         }
       }
 
@@ -106,54 +116,56 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
         }
       }
 
-      // Store transaction to stock_transaction_history collection
-      double singlePrice =
-          double.tryParse(await getCurrentPrice(stockSymbol)) ?? 0.0;
-      double totalPrice = singlePrice * amount;
-      double fee = 1.0; // Transaction fee
-      double totalPriceAfterFee =
-          totalPrice - fee; // Subtract fee from total price
+      // Get the current tax pot
+      double oldTaxPot = double.tryParse(userDoc['tax_pot'].toString()) ?? 0.0;
 
-// Retrieve tax_pot from Firestore
-      double taxPot = (userDoc['tax_pot'] as num).toDouble();
+      double taxedProfit = 0;
+      double addToBalance = 0;
+      double newTaxPot = 0;
 
-// // Calculate new tax_pot and balance
-      double profit = 0;
-      double loss = fee; // Start with the transaction fee as initial loss
-      for (final stock in stockSnapshot.docs) {
-        double purchasePrice =
-            double.tryParse(stock['price'].toString()) ?? 0.0;
-        int individualStockQuantity =
-            int.tryParse(stock['quantity'].toString()) ?? 0;
-        double difference = singlePrice - purchasePrice;
-        if (difference < 0) {
-          // It's a loss
-          loss += difference * individualStockQuantity;
-        } else {
-          // It's a profit
-          profit += difference * individualStockQuantity;
-        }
+      // Calculate taxed profit
+      switch (totalProfit) {
+        case < 0:
+          newTaxPot = oldTaxPot + totalProfit;
+          addToBalance += revenue;
+          break;
+
+        case > 0:
+          if (oldTaxPot < 0) {
+            newTaxPot = oldTaxPot + totalProfit;
+            if (newTaxPot > 0) {
+              taxedProfit = calculateTaxedProfit(newTaxPot);
+              addToBalance += taxedProfit;
+              newTaxPot = 0;
+              addToBalance += (newTaxPot -
+                  oldTaxPot); // Nicht zu versteuernder Gewinn bis Taxpot 0 ist
+              addToBalance += totalBuyPrice;
+            } else {
+              addToBalance +=
+                  revenue; // Nicht zu versteuernder Gewinn, wenn Taxpot negativ ist
+            }
+          } else {
+            // Taxpot = 0, da taxpot nie positiv ist
+            taxedProfit = calculateTaxedProfit(totalProfit);
+            addToBalance += taxedProfit;
+            newTaxPot = 0;
+          }
+          break;
+
+        default:
+          print("Default");
+          break;
       }
 
-// Add loss to taxPot
-      taxPot += loss;
-
-// If taxPot is positive, transfer the amount to profit
-      if (taxPot > 0) {
-        profit += taxPot;
-        taxPot = 0;
-      }
-
-// Tax the profit at 25% and add to balance
-      double taxedProfit = profit * 0.75;
-      double newBalance = userDoc['balance'] + taxedProfit;
-
-// Update balance and tax_pot in Firestore
+      // Update balance and tax_pot in Firestore
+      double newBalance = double.tryParse(userDoc['balance'].toString()) ?? 0.0;
+      newBalance += addToBalance;
       await _firestore.collection('Users').doc(userDoc.id).update({
         'balance': newBalance,
-        'tax_pot': taxPot,
+        'tax_pot': newTaxPot,
       });
 
+      // Store transaction to stock_transaction_history collection
       await _firestore
           .collection('Users')
           .doc(userDoc.id)
@@ -161,7 +173,7 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
           .add({
         'amount': amount,
         'date': Timestamp.now(),
-        'price': totalPrice,
+        'price': revenue,
         'symbol': stockSymbol,
         'type': false,
       });
@@ -170,6 +182,7 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       return true;
     }
   } catch (e) {
+    print(e);
     showToast(message: 'Sell failed: ${e.toString()}');
   }
 
@@ -225,4 +238,29 @@ void errorDialogNotEnoughShares(BuildContext context) {
           ],
         );
       });
+}
+
+double calculateTaxedProfit(double profit) {
+  double taxedProfit = 0;
+
+  taxedProfit = profit * 0.75; // Kapitalertragsteuer
+  taxedProfit = taxedProfit * 0.945; // Solidaritätzuschlag
+
+  return taxedProfit;
+}
+
+double calculateTaxPot(double profit, double taxPot) {
+  // If the total profit is negative, add the total profit to the tax pot
+  if (profit < 0) {
+    taxPot += profit;
+    return taxPot;
+  }
+
+  // If the total profit is positive, add the total profit to the tax pot
+  if (profit > 0) {
+    double taxPotHelper = taxPot + profit;
+    return taxPotHelper;
+  }
+
+  return taxPot;
 }
