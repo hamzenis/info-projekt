@@ -6,6 +6,7 @@ import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
+import 'package:info_projekt/views/charts_view2.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
@@ -16,11 +17,14 @@ import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
 
-class HomePageNew extends StatelessWidget {
+class HomePageNew extends StatefulWidget {
+  @override
+  _HomePageNewState createState() => _HomePageNewState();
+}
+
+class _HomePageNewState extends State<HomePageNew> {
   static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
   final PortfolioService portfolioService = PortfolioService();
-
-  HomePageNew({super.key});
 
   void _showAction(BuildContext context, int index) {
     showDialog(
@@ -50,45 +54,48 @@ class HomePageNew extends StatelessWidget {
         distance: 100,
         children: [
           ActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const SearchPage(
                           title: 'Search Page',
                         )),
               );
+              setState(() {});
             },
             icon: const Icon(Icons.search),
           ),
           ActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const NewsPage()),
               );
+              setState(() {});
             },
             icon: const Icon(Icons.newspaper),
           ),
           ActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => ProfilePage(
                         // title: "User Profile",
                         )),
               );
+              setState(() {});
             },
             icon: const Icon(Icons.person),
           ),
           ActionButton(
-            onPressed: () {
-              // TODO: Remove shortcut to chart
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => WalletScreen()),
               );
+              setState(() {});
             },
             icon: const Icon(Icons.wallet),
           ),
@@ -691,10 +698,7 @@ class _InvestmentListState extends State<InvestmentList>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    '\$${investment['price'].toStringAsFixed(2)}',
-                                  ),
-                                  Text(
-                                    ' x ${investment['quantity'].toStringAsFixed(2)} ',
+                                    'Share${investment['quantity'].toDouble().toInt() == 1 ? '' : 's'}: ${investment['quantity'].toDouble().toInt()}',
                                   ),
                                 ],
                               ),
@@ -740,8 +744,8 @@ class _InvestmentListState extends State<InvestmentList>
                               ),
                             ],
                           ),
-                          onTap: () {
-                            showDialog(
+                          onTap: () async {
+                            await showDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
@@ -763,17 +767,23 @@ class _InvestmentListState extends State<InvestmentList>
                                         Expanded(
                                           child: TextButton(
                                             child: Text('Go to Chart'),
-                                            onPressed: () {
-                                              // Navigate to chart
-                                              Navigator.push(
+                                            onPressed: () async {
+                                              Navigator.of(context).pop();
+
+                                              final result = await Navigator
+                                                  .pushReplacement(
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
-                                                      ChartStock(
+                                                      ChartStock2(
                                                     title: investment['symbol'],
                                                   ),
                                                 ),
                                               );
+
+                                              if (result == 'stateChanged') {
+                                                setState(() {});
+                                              }
                                             },
                                           ),
                                         ),
@@ -902,21 +912,25 @@ class _InvestmentListState extends State<InvestmentList>
                                                                 user!.uid);
 
                                                     // Update the PortfolioValueNotifier with the new portfolio
-                                                    setState(() {
-                                                      var portfolioValueNotifier =
-                                                          Provider.of<
-                                                                  PortfolioValueNotifier>(
-                                                              context,
-                                                              listen: false);
-                                                      portfolioValueNotifier
-                                                          .setPortfolio(
-                                                              updatedPortfolio);
-                                                    });
+                                                    if (mounted) {
+                                                      setState(() {
+                                                        var portfolioValueNotifier =
+                                                            Provider.of<
+                                                                    PortfolioValueNotifier>(
+                                                                context,
+                                                                listen: false);
+                                                        portfolioValueNotifier
+                                                            .setPortfolio(
+                                                                updatedPortfolio);
+                                                      });
+                                                    }
                                                   }
                                                 }
                                               }
                                               // Close the popup
-                                              Navigator.of(context).pop();
+                                              if (mounted) {
+                                                Navigator.of(context).pop();
+                                              }
                                             },
                                           ),
                                         ),
