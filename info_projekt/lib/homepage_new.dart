@@ -691,10 +691,7 @@ class _InvestmentListState extends State<InvestmentList>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    '\$${investment['price'].toStringAsFixed(2)}',
-                                  ),
-                                  Text(
-                                    ' x ${investment['quantity'].toStringAsFixed(2)} ',
+                                    'Share${investment['quantity'].toDouble().toInt() == 1 ? '' : 's'}: ${investment['quantity'].toDouble().toInt()}',
                                   ),
                                 ],
                               ),
@@ -902,21 +899,25 @@ class _InvestmentListState extends State<InvestmentList>
                                                                 user!.uid);
 
                                                     // Update the PortfolioValueNotifier with the new portfolio
-                                                    setState(() {
-                                                      var portfolioValueNotifier =
-                                                          Provider.of<
-                                                                  PortfolioValueNotifier>(
-                                                              context,
-                                                              listen: false);
-                                                      portfolioValueNotifier
-                                                          .setPortfolio(
-                                                              updatedPortfolio);
-                                                    });
+                                                    if (mounted) {
+                                                      setState(() {
+                                                        var portfolioValueNotifier =
+                                                            Provider.of<
+                                                                    PortfolioValueNotifier>(
+                                                                context,
+                                                                listen: false);
+                                                        portfolioValueNotifier
+                                                            .setPortfolio(
+                                                                updatedPortfolio);
+                                                      });
+                                                    }
                                                   }
                                                 }
                                               }
                                               // Close the popup
-                                              Navigator.of(context).pop();
+                                              if (mounted) {
+                                                Navigator.of(context).pop();
+                                              }
                                             },
                                           ),
                                         ),
