@@ -1,11 +1,19 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/iban_service.dart';
+import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:info_projekt/views/stock_transaction_history_view.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
+import 'package:provider/provider.dart';
+
+import 'package:info_projekt/services/firebase_auth_services.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
