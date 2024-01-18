@@ -961,15 +961,16 @@ class _InvestmentListState extends State<InvestmentList>
                             itemCount: watchlist.length,
                             itemBuilder: (BuildContext context, int index) {
                               return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
+                                onTap: () async {
+                                  await Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ChartStock(
+                                      builder: (context) => ChartStock2(
                                         title: watchlist[index]['symbol'],
                                       ),
                                     ),
                                   );
+                                  setState(() {});
                                 },
                                 child: ListTile(
                                   title: Text(watchlist[index]['name']),
