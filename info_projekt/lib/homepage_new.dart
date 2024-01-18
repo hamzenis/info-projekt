@@ -750,16 +750,22 @@ class _InvestmentListState extends State<InvestmentList>
                                           children: <Widget>[
                                             Text(
                                                 'Symbol: ${investment['symbol']}'),
+                                            SizedBox(height: 10.0),
                                             Text(
                                                 'Quantity: ${investment['quantity'].toDouble().toInt()}'),
+                                            SizedBox(height: 10.0),
                                             Text(
                                                 'Total Value: \$${investment['totalValue'].toStringAsFixed(2)}'),
+                                            SizedBox(height: 10.0),
                                             Text(
                                                 'Current Price: \$${investment['price'].toStringAsFixed(2)}'),
+                                            SizedBox(height: 10.0),
                                             Text(
                                                 'Profit/Loss: \$${investment['profitOrLoss'].toStringAsFixed(2)}'),
+                                            SizedBox(height: 10.0),
                                             Text(
                                                 'Percentage Gain/Loss: ${investment['percentageGainOrLoss'].toStringAsFixed(2)}%'),
+                                            SizedBox(height: 20.0),
                                           ],
                                         ),
                                         Row(
