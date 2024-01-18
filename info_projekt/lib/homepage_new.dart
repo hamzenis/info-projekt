@@ -691,7 +691,7 @@ class _InvestmentListState extends State<InvestmentList>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Share${investment['quantity'].toDouble().toInt() == 1 ? '' : 's'}: ${investment['quantity'].toDouble().toInt()}',
+                                    'Quantity: ${investment['quantity'].toDouble().toInt()}',
                                   ),
                                 ],
                               ),
@@ -744,182 +744,213 @@ class _InvestmentListState extends State<InvestmentList>
                                 return AlertDialog(
                                   title: Text(investment['name']),
                                   content: SingleChildScrollView(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                    child: Column(
                                       children: <Widget>[
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Cancel'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
+                                        ListBody(
+                                          children: <Widget>[
+                                            Text(
+                                                'Symbol: ${investment['symbol']}'),
+                                            Text(
+                                                'Quantity: ${investment['quantity'].toDouble().toInt()}'),
+                                            Text(
+                                                'Total Value: \$${investment['totalValue'].toStringAsFixed(2)}'),
+                                            Text(
+                                                'Current Price: \$${investment['price'].toStringAsFixed(2)}'),
+                                            Text(
+                                                'Profit/Loss: \$${investment['profitOrLoss'].toStringAsFixed(2)}'),
+                                            Text(
+                                                'Percentage Gain/Loss: ${investment['percentageGainOrLoss'].toStringAsFixed(2)}%'),
+                                          ],
                                         ),
-                                        // Go To Chart Button
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Go to Chart'),
-                                            onPressed: () {
-                                              // Navigate to chart
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      ChartStock(
-                                                    title: investment['symbol'],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        // Sell Stock
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Sell Stock'),
-                                            onPressed: () async {
-                                              // Ask for the amount
-                                              int? amount =
-                                                  await showDialog<int>(
-                                                context: context,
-                                                builder: (context) {
-                                                  final TextEditingController
-                                                      controller =
-                                                      TextEditingController();
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'How many shares do you want to sell?'),
-                                                    content: TextField(
-                                                      controller: controller,
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      inputFormatters: <TextInputFormatter>[
-                                                        FilteringTextInputFormatter
-                                                            .allow(
-                                                          RegExp(r'[0-9]'),
-                                                        ),
-                                                      ],
-                                                      decoration:
-                                                          InputDecoration(
-                                                        hintText: 'Amount',
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                            ),
+                                            // Go To Chart Button
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Go to Chart'),
+                                                onPressed: () {
+                                                  // Navigate to chart
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ChartStock(
+                                                        title: investment[
+                                                            'symbol'],
                                                       ),
                                                     ),
-                                                    actions: [
-                                                      TextButton(
-                                                        child: const Text(
-                                                            'Cancel'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child: const Text('OK'),
-                                                        onPressed: () {
-                                                          int amount =
-                                                              int.tryParse(
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            // Sell Stock
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Sell Stock'),
+                                                onPressed: () async {
+                                                  // Ask for the amount
+                                                  int? amount =
+                                                      await showDialog<int>(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      final TextEditingController
+                                                          controller =
+                                                          TextEditingController();
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'How many shares do you want to sell?'),
+                                                        content: TextField(
+                                                          controller:
+                                                              controller,
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          inputFormatters: <TextInputFormatter>[
+                                                            FilteringTextInputFormatter
+                                                                .allow(
+                                                              RegExp(r'[0-9]'),
+                                                            ),
+                                                          ],
+                                                          decoration:
+                                                              InputDecoration(
+                                                            hintText: 'Amount',
+                                                          ),
+                                                        ),
+                                                        actions: [
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'Cancel'),
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                            },
+                                                          ),
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'OK'),
+                                                            onPressed: () {
+                                                              int amount = int.tryParse(
                                                                       controller
                                                                           .text) ??
                                                                   0;
-                                                          Navigator.of(context)
-                                                              .pop(amount);
-                                                        },
-                                                      ),
-                                                    ],
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(amount);
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
                                                   );
-                                                },
-                                              );
-                                              // Pop the Amount Dialog
-                                              // Navigator.of(context).pop();
+                                                  // Pop the Amount Dialog
+                                                  // Navigator.of(context).pop();
 
-                                              // Sell stock
-                                              if (amount != null) {
-                                                // Password Pop Up
-                                                String? password =
-                                                    await showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return PasswordDialog();
-                                                  },
-                                                );
-                                                FirebaseAuthService auth =
-                                                    FirebaseAuthService();
-                                                bool correctPassword =
-                                                    await auth
-                                                        .reauthenticateUser(
-                                                            password);
-                                                bool success = false;
+                                                  // Sell stock
+                                                  if (amount != null) {
+                                                    // Password Pop Up
+                                                    String? password =
+                                                        await showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return PasswordDialog();
+                                                      },
+                                                    );
+                                                    FirebaseAuthService auth =
+                                                        FirebaseAuthService();
+                                                    bool correctPassword =
+                                                        await auth
+                                                            .reauthenticateUser(
+                                                                password);
+                                                    bool success = false;
 
-                                                if (correctPassword) {
-                                                  try {
-                                                    success =
-                                                        await startSellStockFlow(
-                                                            amount,
+                                                    if (correctPassword) {
+                                                      try {
+                                                        success =
+                                                            await startSellStockFlow(
+                                                                amount,
+                                                                investment[
+                                                                    'symbol']);
+                                                      } catch (e) {
+                                                        print(
+                                                            e); //TODO: DEBUG Line
+                                                      }
+                                                    }
+
+                                                    // Refresh page if the stock was successfully sold
+                                                    if (success) {
+                                                      // Find the investment that matches the sold stock
+                                                      var soldInvestment =
+                                                          widget.investments
+                                                              .firstWhere(
+                                                        (inv) =>
+                                                            inv['symbol'] ==
                                                             investment[
-                                                                'symbol']);
-                                                  } catch (e) {
-                                                    print(e); //TODO: DEBUG Line
-                                                  }
-                                                }
+                                                                'symbol'],
+                                                        orElse: () =>
+                                                            <String, dynamic>{},
+                                                      );
 
-                                                // Refresh page if the stock was successfully sold
-                                                if (success) {
-                                                  // Find the investment that matches the sold stock
-                                                  var soldInvestment = widget
-                                                      .investments
-                                                      .firstWhere(
-                                                    (inv) =>
-                                                        inv['symbol'] ==
-                                                        investment['symbol'],
-                                                    orElse: () =>
-                                                        <String, dynamic>{},
-                                                  );
+                                                      // If the investment was found, decrease its quantity
+                                                      if (soldInvestment !=
+                                                              null &&
+                                                          soldInvestment
+                                                              .isNotEmpty) {
+                                                        soldInvestment[
+                                                                'quantity'] -=
+                                                            amount;
+                                                        soldInvestment[
+                                                                'totalValue'] -=
+                                                            amount *
+                                                                soldInvestment[
+                                                                    'price'];
 
-                                                  // If the investment was found, decrease its quantity
-                                                  if (soldInvestment != null &&
-                                                      soldInvestment
-                                                          .isNotEmpty) {
-                                                    soldInvestment[
-                                                        'quantity'] -= amount;
-                                                    soldInvestment[
-                                                            'totalValue'] -=
-                                                        amount *
-                                                            soldInvestment[
-                                                                'price'];
+                                                        // Create an instance of PortfolioService and call calculatePortfolioValue
+                                                        PortfolioService
+                                                            portfolioService =
+                                                            PortfolioService();
+                                                        Portfolio
+                                                            updatedPortfolio =
+                                                            await portfolioService
+                                                                .calculatePortfolioValue(
+                                                                    user!.uid);
 
-                                                    // Create an instance of PortfolioService and call calculatePortfolioValue
-                                                    PortfolioService
-                                                        portfolioService =
-                                                        PortfolioService();
-                                                    Portfolio updatedPortfolio =
-                                                        await portfolioService
-                                                            .calculatePortfolioValue(
-                                                                user!.uid);
-
-                                                    // Update the PortfolioValueNotifier with the new portfolio
-                                                    if (mounted) {
-                                                      setState(() {
-                                                        var portfolioValueNotifier =
-                                                            Provider.of<
-                                                                    PortfolioValueNotifier>(
-                                                                context,
-                                                                listen: false);
-                                                        portfolioValueNotifier
-                                                            .setPortfolio(
-                                                                updatedPortfolio);
-                                                      });
+                                                        // Update the PortfolioValueNotifier with the new portfolio
+                                                        if (mounted) {
+                                                          setState(() {
+                                                            var portfolioValueNotifier =
+                                                                Provider.of<
+                                                                        PortfolioValueNotifier>(
+                                                                    context,
+                                                                    listen:
+                                                                        false);
+                                                            portfolioValueNotifier
+                                                                .setPortfolio(
+                                                                    updatedPortfolio);
+                                                          });
+                                                        }
+                                                      }
                                                     }
                                                   }
-                                                }
-                                              }
-                                              // Close the popup
-                                              if (mounted) {
-                                                Navigator.of(context).pop();
-                                              }
-                                            },
-                                          ),
+                                                  // Close the popup
+                                                  if (mounted) {
+                                                    Navigator.of(context).pop();
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
