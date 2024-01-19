@@ -6,7 +6,6 @@ import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
-import 'package:info_projekt/views/charts_view2.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
@@ -16,32 +15,17 @@ import 'models/portfolio_model.dart';
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
+import 'widgets/menubutton.dart';
 
 class HomePageNew extends StatefulWidget {
+  HomePageNew({Key? key}) : super(key: key);
+
   @override
   _HomePageNewState createState() => _HomePageNewState();
 }
 
 class _HomePageNewState extends State<HomePageNew> {
-  static const _actionTitles = ['Search', 'News', 'Profile', 'Wallet'];
   final PortfolioService portfolioService = PortfolioService();
-
-  void _showAction(BuildContext context, int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          content: Text(_actionTitles[index]),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('CLOSE'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,264 +34,20 @@ class _HomePageNewState extends State<HomePageNew> {
         title: const Text('TradeMate'),
       ),
       body: PortfolioPage(),
-      floatingActionButton: ExpandableFab(
-        distance: 100,
+      floatingActionButton: MenuButton(
+        distance: 112.0,
         children: [
-          ActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const SearchPage(
-                          title: 'Search Page',
-                        )),
-              );
-              setState(() {});
-            },
-            icon: const Icon(Icons.search),
-          ),
-          ActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NewsPage()),
-              );
-              setState(() {});
-            },
-            icon: const Icon(Icons.newspaper),
-          ),
-          ActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ProfilePage(
-                        // title: "User Profile",
-                        )),
-              );
-              setState(() {});
-            },
-            icon: const Icon(Icons.person),
-          ),
-          ActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => WalletScreen()),
-              );
-              setState(() {});
-            },
-            icon: const Icon(Icons.wallet),
-          ),
+          Icon(Icons.search),
+          Icon(Icons.newspaper),
+          Icon(Icons.person),
+          Icon(Icons.wallet),
         ],
-      ),
-    );
-  }
-}
-
-@immutable
-class ExpandableFab extends StatefulWidget {
-  const ExpandableFab({
-    super.key,
-    this.initialOpen,
-    required this.distance,
-    required this.children,
-  });
-
-  final bool? initialOpen;
-  final double distance;
-  final List<Widget> children;
-
-  @override
-  State<ExpandableFab> createState() => _ExpandableFabState();
-}
-
-class _ExpandableFabState extends State<ExpandableFab>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _expandAnimation;
-  bool _open = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _open = widget.initialOpen ?? false;
-    _controller = AnimationController(
-      value: _open ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 250),
-      vsync: this,
-    );
-    _expandAnimation = CurvedAnimation(
-      curve: Curves.fastOutSlowIn,
-      reverseCurve: Curves.easeOutQuad,
-      parent: _controller,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() {
-      _open = !_open;
-      if (_open) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        clipBehavior: Clip.none,
-        children: [
-          _buildTapToCloseFab(),
-          ..._buildExpandingActionButtons(),
-          _buildTapToOpenFab(),
+        pageBuilders: [
+          (context) => SearchPage(),
+          (context) => NewsPage(),
+          (context) => ProfilePage(),
+          (context) => WalletScreen(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTapToCloseFab() {
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Center(
-        child: Material(
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          elevation: 4,
-          child: InkWell(
-            onTap: _toggle,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(
-                Icons.close,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildExpandingActionButtons() {
-    final children = <Widget>[];
-    final count = widget.children.length;
-    final step = 90.0 / (count - 1);
-    for (var i = 0, angleInDegrees = 0.0;
-        i < count;
-        i++, angleInDegrees += step) {
-      children.add(
-        _ExpandingActionButton(
-          directionInDegrees: angleInDegrees,
-          maxDistance: widget.distance,
-          progress: _expandAnimation,
-          child: widget.children[i],
-        ),
-      );
-    }
-    return children;
-  }
-
-  Widget _buildTapToOpenFab() {
-    return IgnorePointer(
-      ignoring: _open,
-      child: AnimatedContainer(
-        transformAlignment: Alignment.center,
-        transform: Matrix4.diagonal3Values(
-          _open ? 0.7 : 1.0,
-          _open ? 0.7 : 1.0,
-          1.0,
-        ),
-        duration: const Duration(milliseconds: 250),
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-        child: AnimatedOpacity(
-          opacity: _open ? 0.0 : 1.0,
-          curve: const Interval(0.25, 1.0, curve: Curves.easeInOut),
-          duration: const Duration(milliseconds: 250),
-          child: FloatingActionButton(
-            onPressed: _toggle,
-            child: const Icon(Icons.menu),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-@immutable
-class _ExpandingActionButton extends StatelessWidget {
-  const _ExpandingActionButton({
-    required this.directionInDegrees,
-    required this.maxDistance,
-    required this.progress,
-    required this.child,
-  });
-
-  final double directionInDegrees;
-  final double maxDistance;
-  final Animation<double> progress;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: progress,
-      builder: (context, child) {
-        final offset = Offset.fromDirection(
-          directionInDegrees * (math.pi / 180.0),
-          progress.value * maxDistance,
-        );
-        return Positioned(
-          right: 4.0 + offset.dx,
-          bottom: 4.0 + offset.dy,
-          child: Transform.rotate(
-            angle: (1.0 - progress.value) * math.pi / 2,
-            child: child!,
-          ),
-        );
-      },
-      child: FadeTransition(
-        opacity: progress,
-        child: child,
-      ),
-    );
-  }
-}
-
-@immutable
-class ActionButton extends StatelessWidget {
-  const ActionButton({
-    super.key,
-    this.onPressed,
-    required this.icon,
-  });
-
-  final VoidCallback? onPressed;
-  final Widget icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.secondary,
-      elevation: 4,
-      child: IconButton(
-        onPressed: onPressed,
-        icon: icon,
-        color: theme.colorScheme.onSecondary,
       ),
     );
   }
@@ -698,7 +438,7 @@ class _InvestmentListState extends State<InvestmentList>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Share${investment['quantity'].toDouble().toInt() == 1 ? '' : 's'}: ${investment['quantity'].toDouble().toInt()}',
+                                    'Quantity: ${investment['quantity'].toDouble().toInt()}',
                                   ),
                                 ],
                               ),
@@ -744,195 +484,223 @@ class _InvestmentListState extends State<InvestmentList>
                               ),
                             ],
                           ),
-                          onTap: () async {
-                            await showDialog(
+                          onTap: () {
+                            showDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: Text(investment['name']),
                                   content: SingleChildScrollView(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                    child: Column(
                                       children: <Widget>[
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Cancel'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
+                                        ListBody(
+                                          children: <Widget>[
+                                            Text(
+                                                'Symbol: ${investment['symbol']}'),
+                                            SizedBox(height: 10.0),
+                                            Text(
+                                                'Quantity: ${investment['quantity'].toDouble().toInt()}'),
+                                            SizedBox(height: 10.0),
+                                            Text(
+                                                'Total Value: \$${investment['totalValue'].toStringAsFixed(2)}'),
+                                            SizedBox(height: 10.0),
+                                            Text(
+                                                'Profit/Loss: \$${investment['profitOrLoss'].toStringAsFixed(2)}'),
+                                            SizedBox(height: 10.0),
+                                            Text(
+                                                'Percentage Gain/Loss: ${investment['percentageGainOrLoss'].toStringAsFixed(2)}%'),
+                                            SizedBox(height: 20.0),
+                                          ],
                                         ),
-                                        // Go To Chart Button
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Go to Chart'),
-                                            onPressed: () async {
-                                              Navigator.of(context).pop();
-
-                                              final result = await Navigator
-                                                  .pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      ChartStock2(
-                                                    title: investment['symbol'],
-                                                  ),
-                                                ),
-                                              );
-
-                                              if (result == 'stateChanged') {
-                                                setState(() {});
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                        // Sell Stock
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text('Sell Stock'),
-                                            onPressed: () async {
-                                              // Ask for the amount
-                                              int? amount =
-                                                  await showDialog<int>(
-                                                context: context,
-                                                builder: (context) {
-                                                  final TextEditingController
-                                                      controller =
-                                                      TextEditingController();
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'How many shares do you want to sell?'),
-                                                    content: TextField(
-                                                      controller: controller,
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      inputFormatters: <TextInputFormatter>[
-                                                        FilteringTextInputFormatter
-                                                            .allow(
-                                                          RegExp(r'[0-9]'),
-                                                        ),
-                                                      ],
-                                                      decoration:
-                                                          InputDecoration(
-                                                        hintText: 'Amount',
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                            ),
+                                            // Go To Chart Button
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Go to Chart'),
+                                                onPressed: () {
+                                                  // Navigate to chart
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ChartStock(
+                                                        title: investment[
+                                                            'symbol'],
                                                       ),
                                                     ),
-                                                    actions: [
-                                                      TextButton(
-                                                        child: const Text(
-                                                            'Cancel'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child: const Text('OK'),
-                                                        onPressed: () {
-                                                          int amount =
-                                                              int.tryParse(
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            // Sell Stock
+                                            Expanded(
+                                              child: TextButton(
+                                                child: Text('Sell Stock'),
+                                                onPressed: () async {
+                                                  // Ask for the amount
+                                                  int? amount =
+                                                      await showDialog<int>(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      final TextEditingController
+                                                          controller =
+                                                          TextEditingController();
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'How many shares do you want to sell?'),
+                                                        content: TextField(
+                                                          controller:
+                                                              controller,
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          inputFormatters: <TextInputFormatter>[
+                                                            FilteringTextInputFormatter
+                                                                .allow(
+                                                              RegExp(r'[0-9]'),
+                                                            ),
+                                                          ],
+                                                          decoration:
+                                                              InputDecoration(
+                                                            hintText: 'Amount',
+                                                          ),
+                                                        ),
+                                                        actions: [
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'Cancel'),
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                            },
+                                                          ),
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'OK'),
+                                                            onPressed: () {
+                                                              int amount = int.tryParse(
                                                                       controller
                                                                           .text) ??
                                                                   0;
-                                                          Navigator.of(context)
-                                                              .pop(amount);
-                                                        },
-                                                      ),
-                                                    ],
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(amount);
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
                                                   );
-                                                },
-                                              );
-                                              // Pop the Amount Dialog
-                                              // Navigator.of(context).pop();
+                                                  // Pop the Amount Dialog
+                                                  // Navigator.of(context).pop();
 
-                                              // Sell stock
-                                              if (amount != null) {
-                                                // Password Pop Up
-                                                String? password =
-                                                    await showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return PasswordDialog();
-                                                  },
-                                                );
-                                                FirebaseAuthService auth =
-                                                    FirebaseAuthService();
-                                                bool correctPassword =
-                                                    await auth
-                                                        .reauthenticateUser(
-                                                            password);
-                                                bool success = false;
+                                                  // Sell stock
+                                                  if (amount != null) {
+                                                    // Password Pop Up
+                                                    String? password =
+                                                        await showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return PasswordDialog();
+                                                      },
+                                                    );
+                                                    FirebaseAuthService auth =
+                                                        FirebaseAuthService();
+                                                    bool correctPassword =
+                                                        await auth
+                                                            .reauthenticateUser(
+                                                                password);
+                                                    bool success = false;
 
-                                                if (correctPassword) {
-                                                  try {
-                                                    success =
-                                                        await startSellStockFlow(
-                                                            amount,
+                                                    if (correctPassword) {
+                                                      try {
+                                                        success =
+                                                            await startSellStockFlow(
+                                                                amount,
+                                                                investment[
+                                                                    'symbol']);
+                                                      } catch (e) {
+                                                        print(
+                                                            e); //TODO: DEBUG Line
+                                                      }
+                                                    }
+
+                                                    // Refresh page if the stock was successfully sold
+                                                    if (success) {
+                                                      // Find the investment that matches the sold stock
+                                                      var soldInvestment =
+                                                          widget.investments
+                                                              .firstWhere(
+                                                        (inv) =>
+                                                            inv['symbol'] ==
                                                             investment[
-                                                                'symbol']);
-                                                  } catch (e) {
-                                                    print(e); //TODO: DEBUG Line
-                                                  }
-                                                }
+                                                                'symbol'],
+                                                        orElse: () =>
+                                                            <String, dynamic>{},
+                                                      );
 
-                                                // Refresh page if the stock was successfully sold
-                                                if (success) {
-                                                  // Find the investment that matches the sold stock
-                                                  var soldInvestment = widget
-                                                      .investments
-                                                      .firstWhere(
-                                                    (inv) =>
-                                                        inv['symbol'] ==
-                                                        investment['symbol'],
-                                                    orElse: () =>
-                                                        <String, dynamic>{},
-                                                  );
+                                                      // If the investment was found, decrease its quantity
+                                                      if (soldInvestment !=
+                                                              null &&
+                                                          soldInvestment
+                                                              .isNotEmpty) {
+                                                        soldInvestment[
+                                                                'quantity'] -=
+                                                            amount;
+                                                        soldInvestment[
+                                                                'totalValue'] -=
+                                                            amount *
+                                                                soldInvestment[
+                                                                    'price'];
 
-                                                  // If the investment was found, decrease its quantity
-                                                  if (soldInvestment != null &&
-                                                      soldInvestment
-                                                          .isNotEmpty) {
-                                                    soldInvestment[
-                                                        'quantity'] -= amount;
-                                                    soldInvestment[
-                                                            'totalValue'] -=
-                                                        amount *
-                                                            soldInvestment[
-                                                                'price'];
+                                                        // Create an instance of PortfolioService and call calculatePortfolioValue
+                                                        PortfolioService
+                                                            portfolioService =
+                                                            PortfolioService();
+                                                        Portfolio
+                                                            updatedPortfolio =
+                                                            await portfolioService
+                                                                .calculatePortfolioValue(
+                                                                    user!.uid);
 
-                                                    // Create an instance of PortfolioService and call calculatePortfolioValue
-                                                    PortfolioService
-                                                        portfolioService =
-                                                        PortfolioService();
-                                                    Portfolio updatedPortfolio =
-                                                        await portfolioService
-                                                            .calculatePortfolioValue(
-                                                                user!.uid);
-
-                                                    // Update the PortfolioValueNotifier with the new portfolio
-                                                    if (mounted) {
-                                                      setState(() {
-                                                        var portfolioValueNotifier =
-                                                            Provider.of<
-                                                                    PortfolioValueNotifier>(
-                                                                context,
-                                                                listen: false);
-                                                        portfolioValueNotifier
-                                                            .setPortfolio(
-                                                                updatedPortfolio);
-                                                      });
+                                                        // Update the PortfolioValueNotifier with the new portfolio
+                                                        if (mounted) {
+                                                          setState(() {
+                                                            var portfolioValueNotifier =
+                                                                Provider.of<
+                                                                        PortfolioValueNotifier>(
+                                                                    context,
+                                                                    listen:
+                                                                        false);
+                                                            portfolioValueNotifier
+                                                                .setPortfolio(
+                                                                    updatedPortfolio);
+                                                          });
+                                                        }
+                                                      }
                                                     }
                                                   }
-                                                }
-                                              }
-                                              // Close the popup
-                                              if (mounted) {
-                                                Navigator.of(context).pop();
-                                              }
-                                            },
-                                          ),
+                                                  // Close the popup
+                                                  if (mounted) {
+                                                    Navigator.of(context).pop();
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -961,16 +729,15 @@ class _InvestmentListState extends State<InvestmentList>
                             itemCount: watchlist.length,
                             itemBuilder: (BuildContext context, int index) {
                               return GestureDetector(
-                                onTap: () async {
-                                  await Navigator.pushReplacement(
+                                onTap: () {
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ChartStock2(
+                                      builder: (context) => ChartStock(
                                         title: watchlist[index]['symbol'],
                                       ),
                                     ),
                                   );
-                                  setState(() {});
                                 },
                                 child: ListTile(
                                   title: Text(watchlist[index]['name']),
