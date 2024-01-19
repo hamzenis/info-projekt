@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:info_projekt/pages/portfolio_overview.dart';
 import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
@@ -33,7 +34,11 @@ class _HomePageNewState extends State<HomePageNew> {
       appBar: AppBar(
         title: const Text('TradeMate'),
       ),
-      body: PortfolioPage(),
+      body: SingleChildScrollView(
+        child: PortfolioOverview(
+          uid: FirebaseAuth.instance.currentUser!.uid,
+        ),
+      ),
       floatingActionButton: MenuButton(
         distance: 112.0,
         children: [
@@ -49,238 +54,6 @@ class _HomePageNewState extends State<HomePageNew> {
           (context) => WalletScreen(),
         ],
       ),
-    );
-  }
-}
-
-class PortfolioPage extends StatefulWidget {
-  @override
-  _PortfolioPageState createState() => _PortfolioPageState();
-}
-
-class _PortfolioPageState extends State<PortfolioPage> {
-  final PortfolioService portfolioService = PortfolioService();
-  ValueNotifier<bool> showPercentage = ValueNotifier<bool>(false);
-
-  @override
-  void initState() {
-    super.initState();
-
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-        portfolioService.calculatePortfolioValue(user.uid).then((portfolio) {
-          var portfolioValueNotifier =
-              Provider.of<PortfolioValueNotifier>(context, listen: false);
-          portfolioValueNotifier.setPortfolio(portfolio);
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    User? user = FirebaseAuth.instance.currentUser;
-    return user == null
-        ? Center(child: Text('Please log in'))
-        : FutureBuilder<Portfolio>(
-            future: portfolioService.calculatePortfolioValue(user.uid),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else {
-                WidgetsBinding.instance!.addPostFrameCallback((_) {
-                  var portfolioValueNotifier =
-                      Provider.of<PortfolioValueNotifier>(context,
-                          listen: false);
-                  portfolioValueNotifier.setPortfolio(snapshot.data!);
-                });
-
-                return Consumer<PortfolioValueNotifier>(
-                  builder: (context, portfolioValueNotifier, child) {
-                    return PortfolioOverview(
-                      portfolioValue:
-                          portfolioValueNotifier.portfolio.portfolioValue,
-                      profitOrLoss:
-                          portfolioValueNotifier.portfolio.profitOrLoss,
-                      percentageGainOrLoss:
-                          portfolioValueNotifier.portfolio.percentageGainOrLoss,
-                      showPercentage: showPercentage,
-                      onTogglePercentage: () {
-                        showPercentage.value = !showPercentage.value;
-                      },
-                      individualInvestments:
-                          FutureBuilder<List<Map<String, dynamic>>>(
-                        future:
-                            portfolioService.getIndividualInvestments(user.uid),
-                        builder: (context, investmentSnapshot) {
-                          if (investmentSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          } else if (investmentSnapshot.hasError) {
-                            return Center(
-                                child:
-                                    Text('Error: ${investmentSnapshot.error}'));
-                          } else {
-                            return InvestmentList(investmentSnapshot.data!);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                );
-              }
-            },
-          );
-  }
-
-  String valueToString(bool isProfit, double value) {
-    return showPercentage.value
-        ? '${value.toStringAsFixed(2)}%'
-        : '\$${value.toStringAsFixed(2)}';
-  }
-}
-
-class PortfolioOverview extends StatefulWidget {
-  final double portfolioValue;
-  final double profitOrLoss;
-  final double percentageGainOrLoss;
-  final ValueNotifier<bool> showPercentage;
-  final VoidCallback onTogglePercentage;
-  final Widget individualInvestments;
-
-  PortfolioOverview({
-    required this.portfolioValue,
-    required this.profitOrLoss,
-    required this.percentageGainOrLoss,
-    required this.showPercentage,
-    required this.onTogglePercentage,
-    required this.individualInvestments,
-  });
-
-  @override
-  _PortfolioOverviewState createState() => _PortfolioOverviewState();
-}
-
-class _PortfolioOverviewState extends State<PortfolioOverview> {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<PortfolioValueNotifier>(
-      builder: (context, portfolioValueNotifier, child) {
-        bool isZero = portfolioValueNotifier.portfolio.profitOrLoss == 0.00;
-        bool isProfit = portfolioValueNotifier.portfolio.profitOrLoss > 0;
-
-        return Align(
-          alignment: Alignment.topLeft,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${portfolioValueNotifier.portfolio.portfolioValue.toStringAsFixed(2)}',
-                            style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: widget.onTogglePercentage,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  portfolioValueNotifier
-                                              .portfolio.profitOrLoss >
-                                          0
-                                      ? Icons.keyboard_arrow_up
-                                      : (portfolioValueNotifier
-                                                  .portfolio.profitOrLoss ==
-                                              0.00
-                                          ? Icons.keyboard_arrow_right
-                                          : Icons.keyboard_arrow_down),
-                                  color: portfolioValueNotifier
-                                              .portfolio.profitOrLoss >
-                                          0
-                                      ? Colors.green
-                                      : (portfolioValueNotifier
-                                                  .portfolio.profitOrLoss ==
-                                              0.00
-                                          ? Colors.grey
-                                          : Colors.red),
-                                ),
-                                ValueListenableBuilder<bool>(
-                                  valueListenable: widget.showPercentage,
-                                  builder: (context, value, child) {
-                                    String displayValue =
-                                        '\$${portfolioValueNotifier.portfolio.profitOrLoss.toStringAsFixed(2)}';
-                                    if (value) {
-                                      double percentage = portfolioValueNotifier
-                                          .portfolio.percentageGainOrLoss;
-                                      displayValue = percentage.isNaN
-                                          ? '0.00%'
-                                          : '${(percentage * 100).ceilToDouble() / 100.0}%';
-                                    }
-                                    return Text(
-                                      displayValue,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        color: portfolioValueNotifier
-                                                    .portfolio.profitOrLoss >
-                                                0
-                                            ? Colors.green
-                                            : (portfolioValueNotifier.portfolio
-                                                        .profitOrLoss ==
-                                                    0.00
-                                                ? Colors.grey
-                                                : Colors.red),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: IconButton(
-                        icon: Icon(Icons.refresh),
-                        onPressed: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            PageRouteBuilder(
-                              pageBuilder: (BuildContext context,
-                                  Animation<double> animation,
-                                  Animation<double> secondaryAnimation) {
-                                return HomePageNew();
-                              },
-                              transitionDuration: Duration.zero,
-                            ),
-                            (Route<dynamic> route) => false,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Expanded(child: widget.individualInvestments),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
