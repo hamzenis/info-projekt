@@ -758,9 +758,6 @@ class _InvestmentListState extends State<InvestmentList>
                                                 'Total Value: \$${investment['totalValue'].toStringAsFixed(2)}'),
                                             SizedBox(height: 10.0),
                                             Text(
-                                                'Current Price: \$${investment['price'].toStringAsFixed(2)}'),
-                                            SizedBox(height: 10.0),
-                                            Text(
                                                 'Profit/Loss: \$${investment['profitOrLoss'].toStringAsFixed(2)}'),
                                             SizedBox(height: 10.0),
                                             Text(
