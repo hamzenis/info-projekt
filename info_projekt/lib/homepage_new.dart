@@ -17,6 +17,7 @@ import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
 import 'widgets/menubutton.dart';
+import 'widgets/tab_bar.dart';
 
 class HomePageNew extends StatefulWidget {
   HomePageNew({Key? key}) : super(key: key);
@@ -35,8 +36,22 @@ class _HomePageNewState extends State<HomePageNew> {
         title: const Text('TradeMate'),
       ),
       body: SingleChildScrollView(
-        child: PortfolioOverview(
-          uid: FirebaseAuth.instance.currentUser!.uid,
+        child: Column(
+          children: [
+            PortfolioOverview(
+              uid: FirebaseAuth.instance.currentUser!.uid,
+            ),
+            TabBarClass(
+              tabs: [
+                Tab(text: 'Investments'),
+                Tab(text: 'Watchlist'),
+              ],
+              tabBarViews: [
+                Container(child: Text('Tab 1 View')),
+                Container(child: Text('Tab 2 View')),
+              ],
+            ),
+          ],
         ),
       ),
       floatingActionButton: MenuButton(
