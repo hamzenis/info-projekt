@@ -81,7 +81,7 @@ class PortfolioService {
   }
 
   Future<List<Map<String, dynamic>>> getIndividualInvestments(
-      String uid) async {
+      {required String uid}) async {
     var userQuery = await FirebaseFirestore.instance
         .collection('Users')
         .where('UID', isEqualTo: uid)

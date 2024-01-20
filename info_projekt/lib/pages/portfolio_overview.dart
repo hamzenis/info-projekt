@@ -1,6 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:info_projekt/homepage_new.dart';
 import 'package:info_projekt/models/portfolio_model.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
@@ -9,13 +7,13 @@ import 'package:provider/provider.dart';
 class PortfolioOverview extends StatefulWidget {
   final String uid;
 
-  PortfolioOverview({required this.uid});
+  PortfolioOverview({Key? key, required this.uid}) : super(key: key);
 
   @override
-  _PortfolioOverviewState createState() => _PortfolioOverviewState();
+  PortfolioOverviewState createState() => PortfolioOverviewState();
 }
 
-class _PortfolioOverviewState extends State<PortfolioOverview>
+class PortfolioOverviewState extends State<PortfolioOverview>
     with SingleTickerProviderStateMixin {
   Portfolio? portfolio;
   ValueNotifier<bool> showPercentage = ValueNotifier<bool>(false);
@@ -49,11 +47,12 @@ class _PortfolioOverviewState extends State<PortfolioOverview>
 
   @override
   Widget build(BuildContext context) {
-    if (portfolio == null) {
-      return CircularProgressIndicator();
-    } else {
-      return Consumer<PortfolioValueNotifier>(
-        builder: (context, portfolioValueNotifier, child) {
+    return Consumer<PortfolioValueNotifier>(
+      builder: (context, portfolioValueNotifier, child) {
+        Portfolio portfolio = portfolioValueNotifier.portfolio;
+        if (portfolio == null) {
+          return CircularProgressIndicator();
+        } else {
           return Align(
             alignment: Alignment.center,
             child: Padding(
@@ -61,28 +60,28 @@ class _PortfolioOverviewState extends State<PortfolioOverview>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  buildPortfolioHeader(context),
+                  buildPortfolioHeader(context, portfolio),
                   SizedBox(height: 16),
                 ],
               ),
             ),
           );
-        },
-      );
-    }
+        }
+      },
+    );
   }
 
-  Widget buildPortfolioHeader(BuildContext context) {
+  Widget buildPortfolioHeader(BuildContext context, Portfolio portfolio) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(child: buildPortfolioValueAndChange()),
+        Expanded(child: buildPortfolioValueAndChange(portfolio)),
         buildRefreshButton(context),
       ],
     );
   }
 
-  Widget buildPortfolioValueAndChange() {
+  Widget buildPortfolioValueAndChange(Portfolio portfolio) {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Column(
@@ -92,13 +91,13 @@ class _PortfolioOverviewState extends State<PortfolioOverview>
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
-          buildProfitOrLossToggle(),
+          buildProfitOrLossToggle(portfolio),
         ],
       ),
     );
   }
 
-  Widget buildProfitOrLossToggle() {
+  Widget buildProfitOrLossToggle(Portfolio portfolio) {
     return GestureDetector(
       onTap: onTogglePercentage,
       child: ValueListenableBuilder<bool>(
@@ -134,7 +133,9 @@ class _PortfolioOverviewState extends State<PortfolioOverview>
       ),
       onPressed: () {
         _controller?.repeat();
-        fetchPortfolioData().then((_) {
+        Provider.of<PortfolioValueNotifier>(context, listen: false)
+            .fetchPortfolioValue()
+            .then((_) {
           _controller?.stop();
         });
       },

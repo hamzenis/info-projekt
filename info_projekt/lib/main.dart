@@ -30,7 +30,6 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => WatchlistNotifier()),
-        ChangeNotifierProvider(create: (context) => PortfolioValueNotifier()),
       ],
       child: MyApp(),
     ),
