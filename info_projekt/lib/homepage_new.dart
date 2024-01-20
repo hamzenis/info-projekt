@@ -25,6 +25,7 @@ class HomePageNew extends StatefulWidget {
 
 class _HomePageNewState extends State<HomePageNew> {
   final PortfolioService portfolioService = PortfolioService();
+  final portfolioValueNotifierKey = GlobalKey();
   final uid = FirebaseAuth.instance.currentUser!.uid;
 
   @override
@@ -47,8 +48,9 @@ class _HomePageNewState extends State<HomePageNew> {
                   Tab(text: 'Watchlist'),
                 ],
                 tabBarViews: [
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: portfolioService.getIndividualInvestments(uid: uid),
+                  StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: portfolioService.getIndividualInvestmentsStream(
+                        uid: uid),
                     builder: (BuildContext context,
                         AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                       if (snapshot.hasError) {

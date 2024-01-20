@@ -23,6 +23,7 @@ class InvestmentPage extends StatefulWidget {
 
 class _InvestmentPageState extends State<InvestmentPage> {
   bool showPercentage = false;
+  final portfolioValueNotifierKey = GlobalKey();
 
   @override
   void initState() {
@@ -30,14 +31,14 @@ class _InvestmentPageState extends State<InvestmentPage> {
     _fetchInvestments();
   }
 
-  void _fetchInvestments() async {
-    setState(() {
-      widget.investments.value = [];
-    });
-    var investments =
-        await PortfolioService().getIndividualInvestments(uid: widget.uid);
-    setState(() {
-      widget.investments.value = investments;
+  void _fetchInvestments() {
+    widget.investments.value = [];
+    PortfolioService()
+        .getIndividualInvestmentsStream(uid: widget.uid)
+        .listen((investments) {
+      setState(() {
+        widget.investments.value = investments;
+      });
     });
   }
 
@@ -51,6 +52,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final portfolioValueNotifier =
+        Provider.of<PortfolioValueNotifier>(context, listen: false);
     return widget.investments.value.isEmpty
         ? Text(
             'Here appears your investments',
@@ -73,10 +76,11 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     onTap: () async {
                       int? amount = await _showAmountDialog(context);
                       if (amount != null) {
-                        bool success =
-                            await _sellStock(context, amount, investment);
+                        bool success = await _sellStock(context, amount,
+                            investment, portfolioValueNotifier);
                         if (success) {
-                          await _updateInvestment(context, amount, investment);
+                          await _updateInvestment(context, amount, investment,
+                              portfolioValueNotifier);
                         }
                       }
                     },
@@ -157,7 +161,10 @@ class _InvestmentPageState extends State<InvestmentPage> {
   }
 
   Future<void> _updateInvestment(
-      BuildContext context, int amount, Map<String, dynamic> investment) async {
+      BuildContext context,
+      int amount,
+      Map<String, dynamic> investment,
+      PortfolioValueNotifier portfolioValueNotifier) async {
     // Find the investment that matches the sold stock
     var soldInvestment = widget.investments.value.firstWhere(
       (inv) => inv['symbol'] == investment['symbol'],
@@ -190,12 +197,14 @@ class _InvestmentPageState extends State<InvestmentPage> {
         widget.investments.value = List.from(widget.investments.value)
           ..remove(soldInvestment);
       } else {
-        // Create a new list that contains the updated investment
-        setState(() {
-          widget.investments.value = List.from(widget.investments.value)
-            ..[widget.investments.value.indexOf(soldInvestment)] =
-                soldInvestment;
-        });
+        // Check if soldInvestment is in the list before trying to update it
+        int index = widget.investments.value.indexOf(soldInvestment);
+        if (index != -1) {
+          setState(() {
+            widget.investments.value = List.from(widget.investments.value)
+              ..[index] = soldInvestment;
+          });
+        }
       }
 
       // Create an instance of PortfolioService and call calculatePortfolioValue
@@ -205,11 +214,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
 
       // Update the PortfolioValueNotifier with the new portfolio
       if (mounted) {
-        setState(() {
-          var portfolioValueNotifier =
-              Provider.of<PortfolioValueNotifier>(context, listen: false);
-          portfolioValueNotifier.setPortfolio(updatedPortfolio);
-        });
+        portfolioValueNotifier.fetchPortfolioValue();
       }
     }
   }
@@ -254,7 +259,10 @@ class _InvestmentPageState extends State<InvestmentPage> {
   }
 
   Future<bool> _sellStock(
-      BuildContext context, int amount, Map<String, dynamic> investment) async {
+      BuildContext context,
+      int amount,
+      Map<String, dynamic> investment,
+      PortfolioValueNotifier portfolioValueNotifier) async {
     String? password = await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -274,11 +282,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
     }
 
     // Refresh page if the stock was successfully sold
-    if (success) {
-      Future.delayed(Duration.zero, () {
-        Provider.of<PortfolioValueNotifier>(context, listen: false)
-            .fetchPortfolioValue();
-      });
+    if (success && mounted) {
+      portfolioValueNotifier.fetchPortfolioValue();
     }
 
     return success;
