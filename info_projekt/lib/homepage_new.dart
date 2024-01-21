@@ -64,7 +64,7 @@ class _HomePageNewState extends State<HomePageNew> {
                       }
                     },
                   ),
-                  Container(child: WatchlistPage()),
+                  Container(child: WatchlistPage(uid: uid)),
                 ],
               ),
             ],

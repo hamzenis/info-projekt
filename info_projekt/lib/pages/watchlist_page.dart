@@ -3,7 +3,25 @@ import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:provider/provider.dart';
 
-class WatchlistPage extends StatelessWidget {
+class WatchlistPage extends StatefulWidget {
+  final String uid;
+
+  WatchlistPage({required this.uid});
+
+  @override
+  _WatchlistPageState createState() => _WatchlistPageState();
+}
+
+class _WatchlistPageState extends State<WatchlistPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      await Provider.of<WatchlistNotifier>(context, listen: false)
+          .loadWatchlist(widget.uid);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
