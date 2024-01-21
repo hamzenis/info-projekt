@@ -7,6 +7,7 @@ import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/services/transaction_sell_service.dart';
+import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -248,19 +249,71 @@ class _InvestmentPageState extends State<InvestmentPage> {
               hintText: 'Amount',
             ),
           ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                int amount = int.tryParse(controller.text) ?? 0;
-                Navigator.of(context).pop(amount);
-              },
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  child: const Icon(Icons.info),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Stock Information'),
+                          content: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Name: ${widget.investments.value[0]['name']},\n'
+                                  'Symbol: ${widget.investments.value[0]['symbol']},\n'
+                                  'Quantity: ${widget.investments.value[0]['quantity'].toDouble().toInt()},\n'
+                                  'Total Value: \$${widget.investments.value[0]['totalValue'].toStringAsFixed(2)},\n'
+                                  'Profit/Loss: \$${widget.investments.value[0]['profitOrLoss'].toStringAsFixed(2)},\n'
+                                  'Percentage Gain/Loss: ${widget.investments.value[0]['percentageGainOrLoss'].toStringAsFixed(2)}%',
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+                TextButton(
+                  child: const Icon(Icons.show_chart),
+                  onPressed: () {
+                    MaterialPageRoute route = MaterialPageRoute(
+                      builder: (context) => ChartStock(
+                        title: widget.investments.value[0]['symbol'],
+                      ),
+                    );
+                    Navigator.push(context, route);
+                  },
+                ),
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Sell'),
+                  onPressed: () {
+                    int amount = int.tryParse(controller.text) ?? 0;
+                    Navigator.of(context).pop(amount);
+                  },
+                ),
+              ],
             ),
           ],
         );
