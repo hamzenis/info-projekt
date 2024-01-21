@@ -13,9 +13,12 @@ import 'package:provider/provider.dart';
 class InvestmentPage extends StatefulWidget {
   final ValueNotifier<List<Map<String, dynamic>>> investments;
   final String uid;
+  final ValueNotifier<bool> refreshNotifier;
   PortfolioOverview? portfolioOverview;
 
-  InvestmentPage(this.investments, this.uid);
+  InvestmentPage(this.investments, this.uid, this.refreshNotifier) {
+    portfolioOverview = PortfolioOverview(refreshNotifier, uid);
+  }
 
   @override
   _InvestmentPageState createState() => _InvestmentPageState();
@@ -29,6 +32,13 @@ class _InvestmentPageState extends State<InvestmentPage> {
   void initState() {
     super.initState();
     _fetchInvestments();
+    widget.refreshNotifier.addListener(_fetchInvestments);
+  }
+
+  @override
+  void dispose() {
+    widget.refreshNotifier.removeListener(_fetchInvestments);
+    super.dispose();
   }
 
   void _fetchInvestments() {

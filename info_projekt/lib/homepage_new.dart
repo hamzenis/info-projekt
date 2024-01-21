@@ -19,6 +19,8 @@ class HomePageNew extends StatefulWidget {
   static final GlobalKey<PortfolioOverviewState> portfolioOverviewKey =
       GlobalKey<PortfolioOverviewState>();
 
+  final ValueNotifier<bool> refreshNotifier = ValueNotifier(false);
+
   @override
   _HomePageNewState createState() => _HomePageNewState();
 }
@@ -39,9 +41,8 @@ class _HomePageNewState extends State<HomePageNew> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              PortfolioOverview(
-                uid: uid,
-              ),
+              PortfolioOverview(widget.refreshNotifier, uid,
+                  key: portfolioValueNotifierKey),
               TabBarClass(
                 tabs: [
                   Tab(text: 'Investments'),
@@ -57,7 +58,9 @@ class _HomePageNewState extends State<HomePageNew> {
                         return Text('Error: ${snapshot.error}');
                       } else {
                         return InvestmentPage(
-                            ValueNotifier(snapshot.data ?? []), uid);
+                            ValueNotifier(snapshot.data ?? []),
+                            uid,
+                            widget.refreshNotifier);
                       }
                     },
                   ),

@@ -5,9 +5,11 @@ import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:provider/provider.dart';
 
 class PortfolioOverview extends StatefulWidget {
+  final ValueNotifier<bool> refreshNotifier;
   final String uid;
 
-  PortfolioOverview({Key? key, required this.uid}) : super(key: key);
+  PortfolioOverview(this.refreshNotifier, this.uid, {Key? key})
+      : super(key: key);
 
   @override
   PortfolioOverviewState createState() => PortfolioOverviewState();
@@ -138,6 +140,7 @@ class PortfolioOverviewState extends State<PortfolioOverview>
             .then((_) {
           _controller?.stop();
         });
+        widget.refreshNotifier.value = !widget.refreshNotifier.value;
       },
     );
   }
