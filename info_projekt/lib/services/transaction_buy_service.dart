@@ -13,7 +13,13 @@ final _firestore = FirebaseFirestore.instance;
 /// It checks if the user is logged in
 /// If the user has enough money, it subtracts the amount of money from the user's balance and adds the stock to his transaction history.
 Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
-  try {
+    try {
+    // Check if the market is open
+    if (!await isMarketOpen()) {
+      showToast(message: "The stock market is currently closed. Please try again during opening hours.");
+      return;
+    }
+    
     final user = _auth.currentUser;
     if (user != null) {
       final querySnapshot = await _firestore
@@ -25,9 +31,9 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         String? singlePriceString = await getCurrentPrice(stockSymbol);
         double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
         double fee = 1.0; // Transaction fee
-        singlePrice = (fee / amount) + singlePrice; // Add fee to total price
+        double totalCost = singlePrice * amount + fee; // Total cost including fee
 
-        if (singlePrice > userDoc['balance'] && !kDebugMode) {
+        if (totalCost > userDoc['balance']) {
           showToast(message: "Not enough money");
           return;
         }
@@ -39,7 +45,7 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         taxPot -= fee;
 
         await _firestore.collection('Users').doc(userDoc.id).update({
-          'balance': FieldValue.increment(-singlePrice * amount),
+          'balance': FieldValue.increment(-totalCost),
           // update tax_pot: subtract the fee from the tax pot
           'tax_pot': taxPot,
         });
