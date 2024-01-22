@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
+import 'package:info_projekt/globals.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
@@ -13,7 +14,6 @@ final _firestore = FirebaseFirestore.instance;
 /// It checks if the user is logged in
 /// If the user has enough money, it subtracts the amount of money from the user's balance and adds the stock to his transaction history.
 Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
-  bool overrideMarketOpen = false; // Override market open for testing
   try {
     // Check if the market is open
     if (!await isMarketOpen() && !overrideMarketOpen) {
