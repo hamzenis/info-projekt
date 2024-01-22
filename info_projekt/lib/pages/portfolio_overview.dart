@@ -4,6 +4,7 @@ import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:provider/provider.dart';
 
+/// This Class is responsible for displaying the portfolio value and the profit/loss of the user.
 class PortfolioOverview extends StatefulWidget {
   final ValueNotifier<bool> refreshNotifier;
   final String uid;

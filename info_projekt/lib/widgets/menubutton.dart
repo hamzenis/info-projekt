@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+/// This widget is responsible for displaying the menu button in the [HomePage].
 @immutable
 class MenuButton extends StatefulWidget {
   final bool? initialOpen;

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:info_projekt/models/portfolio_model.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
 
+/// State management for the portfolio value.
 class PortfolioValueNotifier extends ChangeNotifier {
   Portfolio _portfolio =
       Portfolio(portfolioValue: 0, profitOrLoss: 0, percentageGainOrLoss: 0);

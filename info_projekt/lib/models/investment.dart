@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Model for the Investments of the user.
+/// Displaying on the [InvestmentPage].
 class Investment {
   final String symbol;
   final double quantity;

@@ -4,10 +4,15 @@ import 'dart:convert';
 
 import '../models/portfolio_model.dart';
 
+/// The brain of the portfolio.
+/// This class is responsible for calculating the portfolio value and the profit/loss of the user.
+/// It also provides the stream for the individual investments of the user.
+/// It also provides the methods for the watchlist.
 class PortfolioService {
   final CollectionReference portfolioCollection =
       FirebaseFirestore.instance.collection('portfolio');
 
+  /// Calculates the portfolio value and the profit/loss of the user.
   Future<Portfolio> calculatePortfolioValue(String uid) async {
     var userQuery = await FirebaseFirestore.instance
         .collection('Users')
@@ -68,6 +73,7 @@ class PortfolioService {
     );
   }
 
+  /// Gets the current price of a stock.
   Future<double?> getCurrentPrice(String symbol) async {
     final response = await http.get(Uri.parse(
         'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
@@ -80,6 +86,8 @@ class PortfolioService {
     }
   }
 
+  /// Gets the stream of the individual investments of the user.
+  /// The stream is updated whenever the user buys or sells a stock.
   Stream<List<Map<String, dynamic>>> getIndividualInvestmentsStream(
       {required String uid}) {
     return FirebaseFirestore.instance

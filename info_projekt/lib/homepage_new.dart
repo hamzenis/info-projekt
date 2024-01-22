@@ -13,6 +13,10 @@ import 'services/portfolio_service.dart';
 import 'widgets/menubutton.dart';
 import 'widgets/tab_bar.dart';
 
+/// The home page of the app aka. the portfolio page of the user.<br />
+/// It contains the [PortfolioOverview] widget and a [TabBarClass] widget.<br />
+/// The [TabBarClass] widget contains the [InvestmentPage] and the [WatchlistPage].<br />
+/// It also contains the [MenuButton] widget.<br />
 class HomePageNew extends StatefulWidget {
   HomePageNew({Key? key}) : super(key: key);
 

@@ -10,6 +10,7 @@ import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:provider/provider.dart';
 
+/// This Class is responsible for displaying the investments of the user.
 class InvestmentPage extends StatefulWidget {
   final ValueNotifier<List<Map<String, dynamic>>> investments;
   final String uid;
@@ -172,6 +173,7 @@ class InvestmentPageState extends State<InvestmentPage> {
           );
   }
 
+  /// This method updates the investment after the user sold a stock.
   Future<void> _updateInvestment(
       BuildContext context,
       int amount,

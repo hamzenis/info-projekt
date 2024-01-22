@@ -3,6 +3,7 @@ import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:provider/provider.dart';
 
+/// This Class is responsible for displaying the watchlist of the user.
 class WatchlistPage extends StatefulWidget {
   final String uid;
 
