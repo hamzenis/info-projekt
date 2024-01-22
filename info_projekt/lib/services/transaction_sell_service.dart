@@ -122,6 +122,8 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       double taxedProfit = 0;
       double addToBalance = 0;
       double newTaxPot = 0;
+      double fees = 1;
+      totalProfit -= fees;
 
       // Calculate taxed profit
       switch (totalProfit) {
@@ -148,6 +150,7 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
             // Taxpot = 0, da taxpot nie positiv ist
             taxedProfit = calculateTaxedProfit(totalProfit);
             addToBalance += taxedProfit;
+            addToBalance += totalBuyPrice;
             newTaxPot = 0;
           }
           break;
@@ -243,24 +246,10 @@ void errorDialogNotEnoughShares(BuildContext context) {
 double calculateTaxedProfit(double profit) {
   double taxedProfit = 0;
 
-  taxedProfit = profit * 0.75; // Kapitalertragsteuer
-  taxedProfit = taxedProfit * 0.945; // Solidaritätzuschlag
+  double kapitalertragssteuer = profit * 0.25; // Kapitalertragsteuer
+  double mitSoli = kapitalertragssteuer * 0.055; // Solidaritätzuschlag
+
+  taxedProfit = profit - kapitalertragssteuer - mitSoli;
 
   return taxedProfit;
-}
-
-double calculateTaxPot(double profit, double taxPot) {
-  // If the total profit is negative, add the total profit to the tax pot
-  if (profit < 0) {
-    taxPot += profit;
-    return taxPot;
-  }
-
-  // If the total profit is positive, add the total profit to the tax pot
-  if (profit > 0) {
-    double taxPotHelper = taxPot + profit;
-    return taxPotHelper;
-  }
-
-  return taxPot;
 }
