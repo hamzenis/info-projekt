@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:info_projekt/models/portfolio_model.dart';
 import 'package:info_projekt/pages/portfolio_overview.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
@@ -15,17 +14,17 @@ class InvestmentPage extends StatefulWidget {
   final ValueNotifier<List<Map<String, dynamic>>> investments;
   final String uid;
   final ValueNotifier<bool> refreshNotifier;
-  PortfolioOverview? portfolioOverview;
+  final PortfolioOverview portfolioOverview;
 
-  InvestmentPage(this.investments, this.uid, this.refreshNotifier) {
-    portfolioOverview = PortfolioOverview(refreshNotifier, uid);
-  }
+  InvestmentPage(this.investments, this.uid, this.refreshNotifier, {Key? key})
+      : portfolioOverview = PortfolioOverview(refreshNotifier, uid),
+        super(key: key);
 
   @override
-  _InvestmentPageState createState() => _InvestmentPageState();
+  InvestmentPageState createState() => InvestmentPageState();
 }
 
-class _InvestmentPageState extends State<InvestmentPage> {
+class InvestmentPageState extends State<InvestmentPage> {
   bool showPercentage = false;
   final portfolioValueNotifierKey = GlobalKey();
 
@@ -66,7 +65,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     final portfolioValueNotifier =
         Provider.of<PortfolioValueNotifier>(context, listen: false);
     return widget.investments.value.isEmpty
-        ? Text(
+        ? const Text(
             'Here appears your investments',
             style: TextStyle(color: Colors.grey),
           )
@@ -87,9 +86,11 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     onTap: () async {
                       int? amount = await _showAmountDialog(context);
                       if (amount != null) {
+                        // ignore: use_build_context_synchronously
                         bool success = await _sellStock(context, amount,
                             investment, portfolioValueNotifier);
                         if (success) {
+                          // ignore: use_build_context_synchronously
                           await _updateInvestment(context, amount, investment,
                               portfolioValueNotifier);
                         }
@@ -183,12 +184,12 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
 
     // If the investment was found, decrease its quantity
-    if (soldInvestment != null && soldInvestment.isNotEmpty) {
+    if (soldInvestment.isNotEmpty) {
       soldInvestment['quantity'] -= amount;
 
       // Get the current price of the stock
       double currentPrice =
-          double.parse(await getCurrentPrice(soldInvestment['symbol'])) ?? 0.0;
+          double.parse(await getCurrentPrice(soldInvestment['symbol']));
 
       // Calculate the new total value
       soldInvestment['totalValue'] = currentPrice * soldInvestment['quantity'];
@@ -218,11 +219,6 @@ class _InvestmentPageState extends State<InvestmentPage> {
         }
       }
 
-      // Create an instance of PortfolioService and call calculatePortfolioValue
-      PortfolioService portfolioService = PortfolioService();
-      Portfolio updatedPortfolio =
-          await portfolioService.calculatePortfolioValue(widget.uid);
-
       // Update the PortfolioValueNotifier with the new portfolio
       if (mounted) {
         portfolioValueNotifier.fetchPortfolioValue();
@@ -245,7 +241,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
                 RegExp(r'[0-9]'),
               ),
             ],
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Amount',
             ),
           ),
@@ -340,7 +336,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
       try {
         success = await startSellStockFlow(amount, investment['symbol']);
       } catch (e) {
-        print(e); //TODO: DEBUG Line
+        //TODO: DEBUG Line
       }
     }
 

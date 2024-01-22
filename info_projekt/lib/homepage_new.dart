@@ -22,10 +22,10 @@ class HomePageNew extends StatefulWidget {
   final ValueNotifier<bool> refreshNotifier = ValueNotifier(false);
 
   @override
-  _HomePageNewState createState() => _HomePageNewState();
+  HomePageNewState createState() => HomePageNewState();
 }
 
-class _HomePageNewState extends State<HomePageNew> {
+class HomePageNewState extends State<HomePageNew> {
   final PortfolioService portfolioService = PortfolioService();
   final portfolioValueNotifierKey = GlobalKey();
   final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -44,7 +44,7 @@ class _HomePageNewState extends State<HomePageNew> {
               PortfolioOverview(widget.refreshNotifier, uid,
                   key: portfolioValueNotifierKey),
               TabBarClass(
-                tabs: [
+                tabs: const [
                   Tab(text: 'Investments'),
                   Tab(text: 'Watchlist'),
                 ],
@@ -64,7 +64,7 @@ class _HomePageNewState extends State<HomePageNew> {
                       }
                     },
                   ),
-                  Container(child: WatchlistPage(uid: uid)),
+                  WatchlistPage(uid: uid),
                 ],
               ),
             ],
@@ -72,17 +72,17 @@ class _HomePageNewState extends State<HomePageNew> {
         ),
         floatingActionButton: MenuButton(
           distance: 112.0,
-          children: [
+          pageBuilders: [
+            (context) => const SearchPage(),
+            (context) => const NewsPage(),
+            (context) => ProfilePage(),
+            (context) => const WalletScreen(),
+          ],
+          children: const [
             Icon(Icons.search),
             Icon(Icons.newspaper),
             Icon(Icons.person),
             Icon(Icons.wallet),
-          ],
-          pageBuilders: [
-            (context) => SearchPage(),
-            (context) => NewsPage(),
-            (context) => ProfilePage(),
-            (context) => WalletScreen(),
           ],
         ),
       ),

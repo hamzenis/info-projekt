@@ -8,7 +8,7 @@ class PortfolioOverview extends StatefulWidget {
   final ValueNotifier<bool> refreshNotifier;
   final String uid;
 
-  PortfolioOverview(this.refreshNotifier, this.uid, {Key? key})
+  const PortfolioOverview(this.refreshNotifier, this.uid, {Key? key})
       : super(key: key);
 
   @override
@@ -52,30 +52,26 @@ class PortfolioOverviewState extends State<PortfolioOverview>
     return Consumer<PortfolioValueNotifier>(
       builder: (context, portfolioValueNotifier, child) {
         Portfolio portfolio = portfolioValueNotifier.portfolio;
-        if (portfolio == null) {
-          return CircularProgressIndicator();
-        } else {
-          return Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  buildPortfolioHeader(context, portfolio),
-                  SizedBox(height: 16),
-                ],
-              ),
+        return Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                buildPortfolioHeader(context, portfolio),
+                const SizedBox(height: 16),
+              ],
             ),
-          );
-        }
+          ),
+        );
       },
     );
   }
 
   Widget buildPortfolioHeader(BuildContext context, Portfolio portfolio) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Expanded(child: buildPortfolioValueAndChange(portfolio)),
         buildRefreshButton(context),
@@ -84,18 +80,16 @@ class PortfolioOverviewState extends State<PortfolioOverview>
   }
 
   Widget buildPortfolioValueAndChange(Portfolio portfolio) {
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Column(
-        children: [
-          Text(
-            '\$${portfolio?.portfolioValue.toStringAsFixed(2)}',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          buildProfitOrLossToggle(portfolio),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '\$${portfolio.portfolioValue.toStringAsFixed(2)}',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        buildProfitOrLossToggle(portfolio),
+      ],
     );
   }
 
@@ -106,21 +100,42 @@ class PortfolioOverviewState extends State<PortfolioOverview>
         valueListenable: showPercentage,
         builder: (context, value, child) {
           String displayValue =
-              '\$${portfolio?.profitOrLoss.toStringAsFixed(2)}';
+              '\$${portfolio.profitOrLoss.toStringAsFixed(2)}';
           if (value) {
             displayValue =
-                '${portfolio?.percentageGainOrLoss.toStringAsFixed(2)}%';
+                '${portfolio.percentageGainOrLoss.toStringAsFixed(2)}%';
           }
-          return Text(
-            displayValue,
-            style: TextStyle(
-              fontSize: 20,
-              color: portfolio!.profitOrLoss > 0
-                  ? Colors.green
-                  : (portfolio?.profitOrLoss == 0.00
-                      ? Colors.grey
-                      : Colors.red),
-            ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    portfolio.profitOrLoss > 0
+                        ? Icons.keyboard_arrow_up
+                        : (portfolio.profitOrLoss == 0.00
+                            ? Icons.keyboard_arrow_right
+                            : Icons.keyboard_arrow_down),
+                    color: portfolio.profitOrLoss > 0
+                        ? Colors.green
+                        : (portfolio.profitOrLoss == 0.00
+                            ? Colors.grey
+                            : Colors.red),
+                  ),
+                  Text(
+                    displayValue,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: portfolio.profitOrLoss > 0
+                          ? Colors.green
+                          : (portfolio.profitOrLoss == 0.00
+                              ? Colors.grey
+                              : Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           );
         },
       ),
@@ -131,7 +146,7 @@ class PortfolioOverviewState extends State<PortfolioOverview>
     return IconButton(
       icon: RotationTransition(
         turns: _controller!,
-        child: Icon(Icons.refresh),
+        child: const Icon(Icons.refresh),
       ),
       onPressed: () {
         _controller?.repeat();
