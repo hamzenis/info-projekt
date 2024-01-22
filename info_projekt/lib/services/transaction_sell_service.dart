@@ -14,6 +14,12 @@ final _firestore = FirebaseFirestore.instance;
 /// If the user has the stock and enough amount, it adds the amount of money to the user's balance and updates his transaction history.
 Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
   try {
+    // Check if the market is open
+    if (!await isMarketOpen()) {
+      showToast(message: "The stock market is currently closed. Please try again during opening hours.");
+      return false;
+    }
+    
     final user = _auth.currentUser;
     if (user != null) {
       final userDoc = (await _firestore
