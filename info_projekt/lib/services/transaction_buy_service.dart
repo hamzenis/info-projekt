@@ -25,9 +25,9 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         String? singlePriceString = await getCurrentPrice(stockSymbol);
         double singlePrice = double.tryParse(singlePriceString) ?? 0.0;
         double fee = 1.0; // Transaction fee
-        singlePrice = (fee / amount) + singlePrice; // Add fee to total price
+        double totalCost = singlePrice * amount + fee; // Total cost including fee
 
-        if (singlePrice > userDoc['balance'] && !kDebugMode) {
+        if (totalCost > userDoc['balance']) {
           showToast(message: "Not enough money");
           return;
         }
@@ -39,7 +39,7 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         taxPot -= fee;
 
         await _firestore.collection('Users').doc(userDoc.id).update({
-          'balance': FieldValue.increment(-singlePrice * amount),
+          'balance': FieldValue.increment(-totalCost),
           // update tax_pot: subtract the fee from the tax pot
           'tax_pot': taxPot,
         });
