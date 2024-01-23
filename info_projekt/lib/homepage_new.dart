@@ -42,12 +42,12 @@ class HomePageNewState extends State<HomePageNew> {
         appBar: AppBar(
           title: const Text('TradeMate'),
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              PortfolioOverview(widget.refreshNotifier, uid,
-                  key: portfolioValueNotifierKey),
-              TabBarClass(
+        body: Column(
+          children: [
+            PortfolioOverview(widget.refreshNotifier, uid,
+                key: portfolioValueNotifierKey),
+            Expanded(
+              child: TabBarClass(
                 tabs: const [
                   Tab(text: 'Investments'),
                   Tab(text: 'Watchlist'),
@@ -71,8 +71,8 @@ class HomePageNewState extends State<HomePageNew> {
                   WatchlistPage(uid: uid),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         floatingActionButton: MenuButton(
           distance: 112.0,

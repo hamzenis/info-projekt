@@ -76,22 +76,18 @@ class InvestmentPageState extends State<InvestmentPage> {
               return ListView.builder(
                 itemCount: value.length,
                 itemBuilder: (context, index) {
-                  var investment = value.firstWhere(
-                    (inv) => inv['symbol'] == value[index]['symbol'],
-                    orElse: () => <String, dynamic>{},
-                  );
+                  var investment = value[index];
                   bool isInvestmentProfit = investment['profitOrLoss'] > 0;
                   bool isZero = investment['profitOrLoss'] == 0.00;
 
                   return GestureDetector(
                     onTap: () async {
-                      int? amount = await _showAmountDialog(context);
+                      int? amount =
+                          await _showAmountDialog(context, investment);
                       if (amount != null) {
-                        // ignore: use_build_context_synchronously
                         bool success = await _sellStock(context, amount,
                             investment, portfolioValueNotifier);
                         if (success) {
-                          // ignore: use_build_context_synchronously
                           await _updateInvestment(context, amount, investment,
                               portfolioValueNotifier);
                         }
@@ -228,7 +224,8 @@ class InvestmentPageState extends State<InvestmentPage> {
     }
   }
 
-  Future<int?> _showAmountDialog(BuildContext context) async {
+  Future<int?> _showAmountDialog(
+      BuildContext context, Map<String, dynamic> investment) async {
     return await showDialog<int>(
       context: context,
       builder: (context) {
@@ -264,12 +261,12 @@ class InvestmentPageState extends State<InvestmentPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Name: ${widget.investments.value[0]['name']},\n'
-                                  'Symbol: ${widget.investments.value[0]['symbol']},\n'
-                                  'Quantity: ${widget.investments.value[0]['quantity'].toDouble().toInt()},\n'
-                                  'Total Value: \$${widget.investments.value[0]['totalValue'].toStringAsFixed(2)},\n'
-                                  'Profit/Loss: \$${widget.investments.value[0]['profitOrLoss'].toStringAsFixed(2)},\n'
-                                  'Percentage Gain/Loss: ${widget.investments.value[0]['percentageGainOrLoss'].toStringAsFixed(2)}%',
+                                  'Name: ${investment['name']},\n'
+                                  'Symbol: ${investment['symbol']},\n'
+                                  'Quantity: ${investment['quantity'].toDouble().toInt()},\n'
+                                  'Total Value: \$${investment['totalValue'].toStringAsFixed(2)},\n'
+                                  'Profit/Loss: \$${investment['profitOrLoss'].toStringAsFixed(2)},\n'
+                                  'Percentage Gain/Loss: ${investment['percentageGainOrLoss'].toStringAsFixed(2)}%',
                                 ),
                               ],
                             ),
@@ -292,7 +289,7 @@ class InvestmentPageState extends State<InvestmentPage> {
                   onPressed: () {
                     MaterialPageRoute route = MaterialPageRoute(
                       builder: (context) => ChartStock(
-                        title: widget.investments.value[0]['symbol'],
+                        title: investment['symbol'],
                       ),
                     );
                     Navigator.push(context, route);
