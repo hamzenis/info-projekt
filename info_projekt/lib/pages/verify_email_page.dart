@@ -89,7 +89,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                   minimumSize: Size.fromHeight(50),
                 ),
                 child: Text(
-                  'Cancel',
+                  'Continue to Login',
                   style: TextStyle(fontSize: 24),
                 ),
                 onPressed: () => Navigator.pushNamed(context, "/login"),

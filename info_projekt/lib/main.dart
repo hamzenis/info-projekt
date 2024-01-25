@@ -31,7 +31,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => WatchlistNotifier()),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           } else {
             if (snapshot.hasData) {
               if (snapshot.data!.emailVerified) {
@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
                 return VerifyEmailPage();
               }
             } else {
-              return LoginPage();
+              return const LoginPage();
             }
           }
         },
