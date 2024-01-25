@@ -4,84 +4,16 @@ import 'dart:convert';
 
 import '../models/portfolio_model.dart';
 
+/// The brain of the portfolio.
+/// This class is responsible for calculating the portfolio value and the profit/loss of the user.
+/// It also provides the stream for the individual investments of the user.
+/// It also provides the methods for the watchlist.
 class PortfolioService {
   final CollectionReference portfolioCollection =
       FirebaseFirestore.instance.collection('portfolio');
 
+  /// Calculates the portfolio value and the profit/loss of the user.
   Future<Portfolio> calculatePortfolioValue(String uid) async {
-    var userQuery = await FirebaseFirestore.instance
-        .collection('Users')
-        .where('UID', isEqualTo: uid)
-        .get();
-
-    if (userQuery.docs.isEmpty) {
-      throw Exception('No user found with this uid');
-    }
-
-    var userDoc = userQuery.docs.first;
-    var portfolioSnapshot =
-        await userDoc.reference.collection('portfolio').get();
-
-    Map<String, Map<String, double>> stocks = {};
-
-    for (var portfolioDoc in portfolioSnapshot.docs) {
-      var portfolio = portfolioDoc.data();
-      var symbol = portfolio['symbol'];
-      var quantity = (portfolio['quantity'] as num).toDouble();
-      var price = (portfolio['price'] as num).toDouble();
-
-      if (!stocks.containsKey(symbol)) {
-        stocks[symbol] = {
-          'quantity': quantity,
-          'totalSpent': quantity * price,
-        };
-      } else {
-        var stock = stocks[symbol];
-        if (stock != null) {
-          stock['quantity'] = (stock['quantity'] ?? 0.0) + quantity;
-          stock['totalSpent'] = (stock['totalSpent'] ?? 0.0) + quantity * price;
-        }
-      }
-    }
-
-    double totalCurrentValue = 0.0;
-    double totalProfitOrLoss = 0.0;
-
-    for (var symbol in stocks.keys) {
-      var stock = stocks[symbol];
-      var quantity = stock?['quantity'] ?? 0.0;
-      var totalSpent = stock?['totalSpent'] ?? 0.0;
-      var currentValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
-      var profitOrLoss = currentValue - totalSpent;
-
-      totalCurrentValue += currentValue;
-      totalProfitOrLoss += profitOrLoss;
-    }
-
-    double percentageGainOrLoss = totalCurrentValue != 0
-        ? totalProfitOrLoss / totalCurrentValue * 100
-        : 0.0;
-    return Portfolio(
-      portfolioValue: totalCurrentValue,
-      profitOrLoss: totalProfitOrLoss,
-      percentageGainOrLoss: percentageGainOrLoss,
-    );
-  }
-
-  Future<double?> getCurrentPrice(String symbol) async {
-    final response = await http.get(Uri.parse(
-        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
-
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      return data[0]['price'];
-    } else {
-      throw Exception('Failed to load stock price');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getIndividualInvestments(
-      String uid) async {
     var userQuery = await FirebaseFirestore.instance
         .collection('Users')
         .where('UID', isEqualTo: uid)
@@ -105,12 +37,13 @@ class PortfolioService {
       var purchaseDate = (portfolio['purchaseDate'] as Timestamp).toDate();
       var totalValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
       var profitOrLoss = totalValue - quantity * price;
-      var percentageGainOrLoss = profitOrLoss / totalValue * 100;
+      var percentageGainOrLoss = totalValue * 100 / (price * quantity) - 100;
 
       if (investments.containsKey(symbol)) {
         investments[symbol]?['quantity'] += quantity;
         investments[symbol]?['totalValue'] += totalValue;
         investments[symbol]?['profitOrLoss'] += profitOrLoss;
+        investments[symbol]?['percentageGainOrLoss'] += percentageGainOrLoss;
       } else {
         investments[symbol] = {
           'name': portfolio['name'],
@@ -125,7 +58,108 @@ class PortfolioService {
       }
     }
 
-    return investments.values.toList();
+    double totalCurrentValue = 0.0;
+    double totalCostBasis = 0.0;
+    double totalProfitOrLoss = 0.0;
+    double totalPercentageGainOrLoss = 0.0;
+
+    for (var portfolio in portfolioSnapshot.docs) {
+      var investment = portfolio.data();
+      var costBasis = investment['quantity'] * investment['price'];
+
+      totalCostBasis += costBasis;
+    }
+
+    for (var investment in investments.values) {
+      totalCurrentValue += investment['totalValue'];
+      totalProfitOrLoss += investment['profitOrLoss'];
+    }
+
+    totalPercentageGainOrLoss = totalCurrentValue * 100 / totalCostBasis - 100;
+
+    return Portfolio(
+      portfolioValue: totalCurrentValue,
+      profitOrLoss: totalProfitOrLoss,
+      percentageGainOrLoss: totalPercentageGainOrLoss,
+    );
+  }
+
+  /// Gets the current price of a stock.
+  Future<double?> getCurrentPrice(String symbol) async {
+    final response = await http.get(Uri.parse(
+        'https://financialmodelingprep.com/api/v3/profile/$symbol?apikey=KKCRslaWI36ENKmv2yKfduM44Z5EDm0X'));
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return data[0]['price'];
+    } else {
+      throw Exception('Failed to load stock price');
+    }
+  }
+
+  /// Gets the stream of the individual investments of the user.
+  /// The stream is updated whenever the user buys or sells a stock.
+  Stream<List<Map<String, dynamic>>> getIndividualInvestmentsStream(
+      {required String uid}) {
+    return FirebaseFirestore.instance
+        .collection('Users')
+        .where('UID', isEqualTo: uid)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      if (snapshot.docs.isEmpty) {
+        throw Exception('No user found with this uid');
+      }
+
+      var userDoc = snapshot.docs.first;
+      var portfolioSnapshot =
+          await userDoc.reference.collection('portfolio').get();
+
+      Map<String, Map<String, dynamic>> investments = {};
+
+      for (var portfolioDoc in portfolioSnapshot.docs) {
+        var portfolio = portfolioDoc.data();
+        var symbol = portfolio['symbol'];
+        var quantity = (portfolio['quantity'] as num).toDouble();
+        var price = (portfolio['price'] as num).toDouble();
+        var purchaseDate = (portfolio['purchaseDate'] as Timestamp).toDate();
+        var totalValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
+        var profitOrLoss = totalValue - quantity * price;
+
+        if (investments.containsKey(symbol)) {
+          investments[symbol]?['quantity'] += quantity;
+          investments[symbol]?['totalValue'] += totalValue;
+          investments[symbol]?['profitOrLoss'] += profitOrLoss;
+          investments[symbol]?['purchases']
+              .add({'quantity': quantity, 'price': price});
+        } else {
+          investments[symbol] = {
+            'name': portfolio['name'],
+            'symbol': symbol,
+            'quantity': quantity,
+            'price': price,
+            'purchaseDate': purchaseDate,
+            'totalValue': totalValue,
+            'profitOrLoss': profitOrLoss,
+            'purchases': [
+              {'quantity': quantity, 'price': price}
+            ],
+          };
+        }
+      }
+
+      for (var symbol in investments.keys) {
+        var totalValue = investments[symbol]?['totalValue'] as double;
+        var totalCost = 0.0;
+        for (var purchase in investments[symbol]?['purchases']) {
+          totalCost += purchase['quantity'] * purchase['price'];
+        }
+
+        investments[symbol]?['percentageGainOrLoss'] =
+            totalValue * 100 / totalCost - 100;
+      }
+
+      return investments.values.toList();
+    });
   }
 
   Future<List<Map<String, dynamic>>> getWatchlist(String uid) async {

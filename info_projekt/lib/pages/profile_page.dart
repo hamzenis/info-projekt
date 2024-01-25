@@ -724,6 +724,11 @@ class ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   ),
+                    // Reset the PortfolioValueNotifier
+                    // var portfolioValueNotifier =
+                    //     Provider.of<PortfolioValueNotifier>(context,
+                    //         listen: false);
+                    // portfolioValueNotifier.reset();
                 ),
                 ElevatedButton(
                   style: buttonStyle,
