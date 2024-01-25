@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/iban_service.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
@@ -724,11 +725,11 @@ class ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   ),
-                    // Reset the PortfolioValueNotifier
-                    // var portfolioValueNotifier =
-                    //     Provider.of<PortfolioValueNotifier>(context,
-                    //         listen: false);
-                    // portfolioValueNotifier.reset();
+                  // Reset the PortfolioValueNotifier
+                  // var portfolioValueNotifier =
+                  //     Provider.of<PortfolioValueNotifier>(context,
+                  //         listen: false);
+                  // portfolioValueNotifier.reset();
                 ),
                 ElevatedButton(
                   style: buttonStyle,
@@ -745,7 +746,8 @@ class ProfilePageState extends State<ProfilePage> {
               ),
               onPressed: () {
                 FirebaseAuth.instance.signOut();
-                Navigator.pushNamed(context, "/login");
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                    "/login", (Route<dynamic> route) => false);
                 showToast(message: "Successfully signed out");
               },
               child: const Text(
