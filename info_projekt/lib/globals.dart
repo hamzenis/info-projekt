@@ -1,1 +1,1 @@
-bool overrideMarketOpen = false; // Override market open for testing
+bool overrideMarketOpen = true; // Override market open for testing
