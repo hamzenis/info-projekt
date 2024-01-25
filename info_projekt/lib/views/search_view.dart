@@ -7,11 +7,8 @@ import 'charts_view.dart';
 /// Class to create the Search Page View on the TradeMate App.
 /// This class works with the [SearchService] class to search for stocks.
 class SearchPage extends StatefulWidget {
-  final String title;
-
   const SearchPage({
     Key? key,
-    required this.title,
   }) : super(key: key);
 
   @override
