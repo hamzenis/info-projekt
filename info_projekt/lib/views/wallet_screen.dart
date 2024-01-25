@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/services/wallet_services.dart';
 import 'package:info_projekt/models/transaction_history.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 /// Class to create the Wallet Screen View on the TradeMate App.
 /// This class works with the [WalletServices] class to deposit and withdraw money.
@@ -53,8 +54,9 @@ class _WalletScreenState extends State<WalletScreen> {
               if (value == null) {
                 return const CircularProgressIndicator();
               } else {
+                final formatter = NumberFormat("#,##0.00", "en_US");
                 return Text(
-                  'Balance: \$${value.toStringAsFixed(2)}',
+                  'Balance: \$${formatter.format(value)}',
                   style: const TextStyle(fontSize: 24.0),
                 );
               }
@@ -231,6 +233,8 @@ class _TransactionListState extends State<TransactionList> {
 
   @override
   Widget build(BuildContext context) {
+    final formatter = NumberFormat("#,##0.00", "en_US");
+
     return RefreshIndicator(
       onRefresh: _refresh,
       child: ListView.builder(
@@ -245,8 +249,8 @@ class _TransactionListState extends State<TransactionList> {
                 ? Colors.red
                 : Colors.green;
             final amountString = transaction.type == TransactionType.withdrawal
-                ? '-\$${transaction.amount.toStringAsFixed(2)}'
-                : '\$${transaction.amount.toStringAsFixed(2)}';
+                ? '-\$${formatter.format(transaction.amount)}'
+                : '\$${formatter.format(transaction.amount)}';
 
             return ListTile(
               title: Text(transaction.description),

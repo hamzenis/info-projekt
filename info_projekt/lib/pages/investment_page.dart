@@ -9,6 +9,7 @@ import 'package:info_projekt/services/transaction_sell_service.dart';
 import 'package:info_projekt/views/charts_view.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 /// This Class is responsible for displaying the investments of the user.
 class InvestmentPage extends StatefulWidget {
@@ -65,6 +66,9 @@ class InvestmentPageState extends State<InvestmentPage> {
   Widget build(BuildContext context) {
     final portfolioValueNotifier =
         Provider.of<PortfolioValueNotifier>(context, listen: false);
+    final formatter = NumberFormat("#,##0.00", "en_US");
+    final intFormatter = NumberFormat("#,##0", "en_US");
+    final percentFormatter = NumberFormat("#,##0.00", "en_US");
     return widget.investments.value.isEmpty
         ? const Text(
             'Here appears your investments',
@@ -101,7 +105,7 @@ class InvestmentPageState extends State<InvestmentPage> {
                             child: Text(investment['name']),
                           ),
                           Text(
-                            '\$${investment['totalValue'].toStringAsFixed(2)}',
+                            '\$${formatter.format(investment['totalValue'])}',
                             style: TextStyle(
                               color: isInvestmentProfit
                                   ? Colors.green
@@ -117,7 +121,7 @@ class InvestmentPageState extends State<InvestmentPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Quantity: ${investment['quantity'].toDouble().toInt()}',
+                                'Quantity: ${intFormatter.format(investment['quantity'].toDouble().toInt())}',
                               ),
                             ],
                           ),
@@ -144,8 +148,8 @@ class InvestmentPageState extends State<InvestmentPage> {
                                     ),
                                     Text(
                                       showPercentage
-                                          ? '${investment['percentageGainOrLoss'].toStringAsFixed(2)}%'
-                                          : '\$${investment['profitOrLoss'].toStringAsFixed(2)}',
+                                          ? '${investment['percentageGainOrLoss'] != null ? percentFormatter.format(investment['percentageGainOrLoss']) : '0.00'}%'
+                                          : '\$${formatter.format(investment['profitOrLoss'])}',
                                       style: TextStyle(
                                         color: isInvestmentProfit
                                             ? Colors.green

@@ -3,6 +3,7 @@ import 'package:info_projekt/models/portfolio_model.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 /// This Class is responsible for displaying the portfolio value and the profit/loss of the user.
 class PortfolioOverview extends StatefulWidget {
@@ -81,11 +82,12 @@ class PortfolioOverviewState extends State<PortfolioOverview>
   }
 
   Widget buildPortfolioValueAndChange(Portfolio portfolio) {
+    final formatter = NumberFormat("#,##0.00", "en_US");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '\$${portfolio.portfolioValue.toStringAsFixed(2)}',
+          '\$${formatter.format(portfolio.portfolioValue)}',
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
@@ -95,16 +97,17 @@ class PortfolioOverviewState extends State<PortfolioOverview>
   }
 
   Widget buildProfitOrLossToggle(Portfolio portfolio) {
+    final formatter = NumberFormat("#,##0.00", "en_US");
+    final percentFormatter = NumberFormat("#,##0.00", "en_US");
     return GestureDetector(
       onTap: onTogglePercentage,
       child: ValueListenableBuilder<bool>(
         valueListenable: showPercentage,
         builder: (context, value, child) {
-          String displayValue =
-              '\$${portfolio.profitOrLoss.toStringAsFixed(2)}';
+          String displayValue = '\$${formatter.format(portfolio.profitOrLoss)}';
           if (value) {
             displayValue =
-                '${portfolio.percentageGainOrLoss.toStringAsFixed(2)}%';
+                '${percentFormatter.format(portfolio.percentageGainOrLoss)}%';
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
