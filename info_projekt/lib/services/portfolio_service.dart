@@ -27,49 +27,60 @@ class PortfolioService {
     var portfolioSnapshot =
         await userDoc.reference.collection('portfolio').get();
 
-    Map<String, Map<String, double>> stocks = {};
+    Map<String, Map<String, dynamic>> investments = {};
 
     for (var portfolioDoc in portfolioSnapshot.docs) {
       var portfolio = portfolioDoc.data();
       var symbol = portfolio['symbol'];
       var quantity = (portfolio['quantity'] as num).toDouble();
       var price = (portfolio['price'] as num).toDouble();
+      var purchaseDate = (portfolio['purchaseDate'] as Timestamp).toDate();
+      var totalValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
+      var profitOrLoss = totalValue - quantity * price;
+      var percentageGainOrLoss = totalValue * 100 / (price * quantity) - 100;
 
-      if (!stocks.containsKey(symbol)) {
-        stocks[symbol] = {
-          'quantity': quantity,
-          'totalSpent': quantity * price,
-        };
+      if (investments.containsKey(symbol)) {
+        investments[symbol]?['quantity'] += quantity;
+        investments[symbol]?['totalValue'] += totalValue;
+        investments[symbol]?['profitOrLoss'] += profitOrLoss;
+        investments[symbol]?['percentageGainOrLoss'] += percentageGainOrLoss;
       } else {
-        var stock = stocks[symbol];
-        if (stock != null) {
-          stock['quantity'] = (stock['quantity'] ?? 0.0) + quantity;
-          stock['totalSpent'] = (stock['totalSpent'] ?? 0.0) + quantity * price;
-        }
+        investments[symbol] = {
+          'name': portfolio['name'],
+          'symbol': symbol,
+          'quantity': quantity,
+          'price': price,
+          'purchaseDate': purchaseDate,
+          'totalValue': totalValue,
+          'profitOrLoss': profitOrLoss,
+          'percentageGainOrLoss': percentageGainOrLoss,
+        };
       }
     }
 
     double totalCurrentValue = 0.0;
+    double totalCostBasis = 0.0;
     double totalProfitOrLoss = 0.0;
+    double totalPercentageGainOrLoss = 0.0;
 
-    for (var symbol in stocks.keys) {
-      var stock = stocks[symbol];
-      var quantity = stock?['quantity'] ?? 0.0;
-      var totalSpent = stock?['totalSpent'] ?? 0.0;
-      var currentValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
-      var profitOrLoss = currentValue - totalSpent;
+    for (var portfolio in portfolioSnapshot.docs) {
+      var investment = portfolio.data();
+      var costBasis = investment['quantity'] * investment['price'];
 
-      totalCurrentValue += currentValue;
-      totalProfitOrLoss += profitOrLoss;
+      totalCostBasis += costBasis;
     }
 
-    double percentageGainOrLoss = totalCurrentValue != 0
-        ? totalProfitOrLoss / totalCurrentValue * 100
-        : 0.0;
+    for (var investment in investments.values) {
+      totalCurrentValue += investment['totalValue'];
+      totalProfitOrLoss += investment['profitOrLoss'];
+    }
+
+    totalPercentageGainOrLoss = totalCurrentValue * 100 / totalCostBasis - 100;
+
     return Portfolio(
       portfolioValue: totalCurrentValue,
       profitOrLoss: totalProfitOrLoss,
-      percentageGainOrLoss: percentageGainOrLoss,
+      percentageGainOrLoss: totalPercentageGainOrLoss,
     );
   }
 
@@ -113,12 +124,13 @@ class PortfolioService {
         var purchaseDate = (portfolio['purchaseDate'] as Timestamp).toDate();
         var totalValue = quantity * (await getCurrentPrice(symbol) ?? 0.0);
         var profitOrLoss = totalValue - quantity * price;
-        var percentageGainOrLoss = profitOrLoss / totalValue * 100;
 
         if (investments.containsKey(symbol)) {
           investments[symbol]?['quantity'] += quantity;
           investments[symbol]?['totalValue'] += totalValue;
           investments[symbol]?['profitOrLoss'] += profitOrLoss;
+          investments[symbol]?['purchases']
+              .add({'quantity': quantity, 'price': price});
         } else {
           investments[symbol] = {
             'name': portfolio['name'],
@@ -128,9 +140,22 @@ class PortfolioService {
             'purchaseDate': purchaseDate,
             'totalValue': totalValue,
             'profitOrLoss': profitOrLoss,
-            'percentageGainOrLoss': percentageGainOrLoss,
+            'purchases': [
+              {'quantity': quantity, 'price': price}
+            ],
           };
         }
+      }
+
+      for (var symbol in investments.keys) {
+        var totalValue = investments[symbol]?['totalValue'] as double;
+        var totalCost = 0.0;
+        for (var purchase in investments[symbol]?['purchases']) {
+          totalCost += purchase['quantity'] * purchase['price'];
+        }
+
+        investments[symbol]?['percentageGainOrLoss'] =
+            totalValue * 100 / totalCost - 100;
       }
 
       return investments.values.toList();
