@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/globals.dart';
+import 'package:intl/intl.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
@@ -131,10 +134,10 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       double taxedProfit = 0;
       double addToBalance = 0;
       double newTaxPot = 0;
-      double fees = 1;
-      totalProfit -= fees;
+      double fee = 1;
+      totalProfit -= fee;
 
-      // Calculate taxed profit
+      // Calculate taxed profit TODO: Rewrite this
       switch (totalProfit) {
         case < 0:
           newTaxPot = oldTaxPot + totalProfit;
@@ -190,11 +193,54 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
         'type': false,
       });
 
+      // Send Mail to user TODO: Rewrite this
+      final DateTime now = DateTime.now();
+      Random random = Random();
+      int receiptID = 10000 + random.nextInt(90000);
+      String companyName = await getCompanyName(stockSymbol);
+      double taxZwischen = (revenue - addToBalance - fee);
+      double tax = taxZwischen < 0 ? 0 : taxZwischen;
+      double kapiTax = ((tax / 26.3750) * 100) * 0.25;
+      double soliTax = ((tax / 26.3750) * 100) * 0.01375;
+      await _firestore.collection("mail").add({
+        'to': user.email,
+        'template': {
+          'name': "sell",
+          'data': {
+            'purchase_date': DateFormat('dd.MM.yyyy HH:mm').format(now),
+            'date': DateFormat('HH:mm dd.MM.yyyy').format(now),
+            'receipt_id': receiptID,
+            'description': "$companyName ($stockSymbol)",
+            'amount': amount,
+            'singlePrice': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(singleSellPrice),
+            'fee': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(fee),
+            'kapiTax': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(kapiTax),
+            'soliTax': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(soliTax),
+            'total': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(addToBalance),
+          },
+        },
+      });
+
       showToast(message: 'Stocks sold successfully');
       return true;
     }
   } catch (e) {
-    print(e);
+    print(e); // TODO: DEBUG Remove this
     showToast(message: 'Sell failed: ${e.toString()}');
   }
 
