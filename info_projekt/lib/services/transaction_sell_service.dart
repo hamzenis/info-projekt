@@ -1,18 +1,21 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/globals.dart';
+import 'package:intl/intl.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
-/// TODO: Wrong password handling, taxes & fees: fees = 1 euro per transaction, taxes = 1000 euro tax free, and when you lose money taxes = amount of money lost + 1000 euro tax free	and when you make money taxes = amount of money made - 1000 euro tax free
-/// Function that starts the sell flow.
-/// It checks if the user is logged in and if he is, it checks if the password he entered is correct.
-/// If the password is correct, it checks if the user has the stock and enough amount to sell.
+/// Function that starts the sell flow, if the market is open.
+/// It checks if the user has the stock and enough amount to sell in FIFO order.
 /// If the user has the stock and enough amount, it adds the amount of money to the user's balance and updates his transaction history.
+/// Taxes are calculated and subtracted from the profit, if the user's tax pot is not negative.
+/// Transaction fees are subtracted from the profit.
 Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
   try {
     // Check if the market is open
@@ -131,10 +134,10 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       double taxedProfit = 0;
       double addToBalance = 0;
       double newTaxPot = 0;
-      double fees = 1;
-      totalProfit -= fees;
+      double fee = 1;
+      totalProfit -= fee;
 
-      // Calculate taxed profit
+      // Calculate taxed profit TODO: Rewrite this
       switch (totalProfit) {
         case < 0:
           newTaxPot = oldTaxPot + totalProfit;
@@ -190,48 +193,58 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
         'type': false,
       });
 
+      // Send Mail to user TODO: Rewrite this
+      final DateTime now = DateTime.now();
+      Random random = Random();
+      int receiptID = 10000 + random.nextInt(90000);
+      String companyName = await getCompanyName(stockSymbol);
+      double taxZwischen = (revenue - addToBalance - fee);
+      double tax = taxZwischen < 0 ? 0 : taxZwischen;
+      double kapiTax = ((tax / 26.3750) * 100) * 0.25;
+      double soliTax = ((tax / 26.3750) * 100) * 0.01375;
+      await _firestore.collection("mail").add({
+        'to': user.email,
+        'template': {
+          'name': "sell",
+          'data': {
+            'purchase_date': DateFormat('dd.MM.yyyy HH:mm').format(now),
+            'date': DateFormat('HH:mm dd.MM.yyyy').format(now),
+            'receipt_id': receiptID,
+            'description': "$companyName ($stockSymbol)",
+            'amount': amount,
+            'singlePrice': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(singleSellPrice),
+            'fee': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(fee),
+            'kapiTax': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(kapiTax),
+            'soliTax': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(soliTax),
+            'total': NumberFormat.currency(
+              locale: 'en_US',
+              symbol: '\$',
+            ).format(addToBalance),
+          },
+        },
+      });
+
       showToast(message: 'Stocks sold successfully');
       return true;
     }
   } catch (e) {
-    print(e);
+    print(e); // TODO: DEBUG Remove this
     showToast(message: 'Sell failed: ${e.toString()}');
   }
 
   return false;
-}
-
-/// It creates a popup with the password of the user.
-/// It acts as security feature, so that only the user that knows the password can withdraw money.
-Future<String?> getUserPassword(BuildContext context) async {
-  final controller = TextEditingController();
-  return showDialog<String>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Enter your password'),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          decoration: const InputDecoration(hintText: 'Password'),
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: const Text('OK'),
-            onPressed: () {
-              Navigator.of(context).pop(controller.text);
-            },
-          ),
-        ],
-      );
-    },
-  );
 }
 
 void errorDialogNotEnoughShares(BuildContext context) {
@@ -252,6 +265,8 @@ void errorDialogNotEnoughShares(BuildContext context) {
       });
 }
 
+/// Function that calculates the taxed profit.
+/// Taxes in Germany are 25% Kapitalertragsteuer and 5.5% Solidaritätszuschlag.
 double calculateTaxedProfit(double profit) {
   double taxedProfit = 0;
 

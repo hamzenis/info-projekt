@@ -1,18 +1,19 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/globals.dart';
+import 'package:intl/intl.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 
-/// TODO: Pop up not enough money
-/// Function that starts the buy flow.
-/// It checks if the user is logged in
-/// If the user has enough money, it subtracts the amount of money from the user's balance and adds the stock to his transaction history.
+/// Function that starts the buy flow, if the market is open.
+/// If the user has enough money, it subtracts the amount of money from the user's balance
+/// and adds the stock to his transaction history.
+/// Transaction fees are added to the tax pot and subtracted from the user's balance.
 Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
   try {
     // Check if the market is open
@@ -68,6 +69,7 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
 
         String? companyName = await getCompanyName(stockSymbol);
 
+        // Add stock to portfolio
         await _firestore
             .collection('Users')
             .doc(userDoc.id)
@@ -80,6 +82,37 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
           'symbol': stockSymbol,
         });
 
+        // Send Mail to user
+        final DateTime now = DateTime.now();
+        Random random = Random();
+        int receiptID = 10000 + random.nextInt(90000);
+        await _firestore.collection("mail").add({
+          'to': user.email,
+          'template': {
+            'name': "buy",
+            'data': {
+              'purchase_date': DateFormat('dd.MM.yyyy HH:mm').format(now),
+              'date': DateFormat('HH:mm dd.MM.yyyy').format(now),
+              'receipt_id': receiptID,
+              'description': "$companyName ($stockSymbol)",
+              'amount': amount,
+              'singlePrice': NumberFormat.currency(
+                locale: 'en_US',
+                symbol: '\$',
+              ).format(singlePrice),
+              'fee': NumberFormat.currency(
+                locale: 'en_US',
+                symbol: '\$',
+              ).format(fee),
+              'total': NumberFormat.currency(
+                locale: 'en_US',
+                symbol: '\$',
+              ).format(totalCost),
+            },
+          },
+        });
+
+        // Show toast
         showToast(message: "Transaction successful");
       } else {
         showToast(message: "User not found");
