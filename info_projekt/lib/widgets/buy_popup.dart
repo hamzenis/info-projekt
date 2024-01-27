@@ -1,5 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/transaction_buy_service.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
+import 'package:info_projekt/services/firebase_auth_services.dart';
+
+final _auth = FirebaseAuth.instance;
 
 class BuyPopup extends StatelessWidget {
   final String stockSymbol;
@@ -35,9 +40,8 @@ class BuyPopup extends StatelessWidget {
         ),
         ElevatedButton(
           onPressed: () async {
+            // TODO: Rewrite onPressed in a seperate function
             int enteredAmount = int.tryParse(amountController.text) ?? 0;
-            print(
-                'User entered: $enteredAmount'); // TODO: Remove this DEBUG line
             if (enteredAmount == 0) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -48,8 +52,24 @@ class BuyPopup extends StatelessWidget {
               Navigator.of(context).pop();
             } else {
               Navigator.of(context).pop();
-              print("Starting Buy Flow"); // TODO: Remove this DEBUG line
-              await startBuyStockFlow(context, enteredAmount, stockSymbol);
+
+              // Password Pop Up
+              String? password = await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return PasswordDialog();
+                },
+              );
+              FirebaseAuthService auth = FirebaseAuthService();
+              bool correctPassword = await auth.reauthenticateUser(password);
+
+              if (correctPassword) {
+                try {
+                  await startBuyStockFlow(enteredAmount, stockSymbol);
+                } catch (e) {
+                  print(e); //TODO: DEBUG Line
+                }
+              }
             }
           },
           child: const Text('Buy'),

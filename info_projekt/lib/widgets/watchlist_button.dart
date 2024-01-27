@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:provider/provider.dart';
 
+/// This widget is responsible for displaying the watchlist Button in the [ChartPage].
 class WatchlistButton extends StatefulWidget {
   final bool isInWatchlist;
   final String title;
@@ -61,6 +62,7 @@ class _WatchlistButtonState extends State<WatchlistButton> {
   }
 }
 
+/// StateNotifier for the [WatchlistPage].
 class WatchlistNotifier extends ChangeNotifier {
   final PortfolioService portfolioService = PortfolioService();
   List<Map<String, dynamic>> _watchlist = [];

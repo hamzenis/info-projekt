@@ -75,7 +75,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 hintText: "Confirm Password",
                 isPasswordField: true,
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               GestureDetector(
                 onTap: () {
                   _signUp();
@@ -89,10 +89,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   child: Center(
                     child: isSigningUp
-                        ? CircularProgressIndicator(
+                        ? const CircularProgressIndicator(
                             color: Colors.white,
                           )
-                        : Text(
+                        : const Text(
                             "Sign Up",
                             style: TextStyle(
                                 color: Colors.white,
@@ -119,7 +119,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               builder: (context) => const LoginPage()),
                           (route) => false);
                     },
-                    child: Text(
+                    child: const Text(
                       "Login",
                       style: TextStyle(
                           color: Colors.blue, fontWeight: FontWeight.bold),

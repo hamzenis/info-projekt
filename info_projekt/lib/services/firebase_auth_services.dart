@@ -67,4 +67,27 @@ class FirebaseAuthService {
       return false;
     }
   }
+
+  Future<bool> reauthenticateUser(String? password) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      if (password != null) {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        try {
+          await user.reauthenticateWithCredential(credential);
+          return true;
+        } catch (e) {
+          showToast(message: "Incorrect password");
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
 }

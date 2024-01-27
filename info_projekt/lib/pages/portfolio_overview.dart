@@ -1,0 +1,166 @@
+import 'package:flutter/material.dart';
+import 'package:info_projekt/models/portfolio_model.dart';
+import 'package:info_projekt/provider/portfolio.dart';
+import 'package:info_projekt/services/portfolio_service.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+
+/// This Class is responsible for displaying the portfolio value and the profit/loss of the user.
+class PortfolioOverview extends StatefulWidget {
+  final ValueNotifier<bool> refreshNotifier;
+  final String uid;
+
+  const PortfolioOverview(this.refreshNotifier, this.uid, {Key? key})
+      : super(key: key);
+
+  @override
+  PortfolioOverviewState createState() => PortfolioOverviewState();
+}
+
+class PortfolioOverviewState extends State<PortfolioOverview>
+    with SingleTickerProviderStateMixin {
+  Portfolio? portfolio;
+  ValueNotifier<bool> showPercentage = ValueNotifier<bool>(false);
+  VoidCallback? onTogglePercentage;
+  AnimationController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPortfolioData();
+    onTogglePercentage = () {
+      showPercentage.value = !showPercentage.value;
+    };
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> fetchPortfolioData() async {
+    PortfolioService portfolioService = PortfolioService();
+    portfolio = await portfolioService.calculatePortfolioValue(widget.uid);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PortfolioValueNotifier>(
+      builder: (context, portfolioValueNotifier, child) {
+        Portfolio portfolio = portfolioValueNotifier.portfolio;
+        return Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                buildPortfolioHeader(context, portfolio),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildPortfolioHeader(BuildContext context, Portfolio portfolio) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Expanded(child: buildPortfolioValueAndChange(portfolio)),
+        buildRefreshButton(context),
+      ],
+    );
+  }
+
+  Widget buildPortfolioValueAndChange(Portfolio portfolio) {
+    final formatter = NumberFormat("#,##0.00", "en_US");
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '\$${formatter.format(portfolio.portfolioValue)}',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        buildProfitOrLossToggle(portfolio),
+      ],
+    );
+  }
+
+  Widget buildProfitOrLossToggle(Portfolio portfolio) {
+    final formatter = NumberFormat("#,##0.00", "en_US");
+    final percentFormatter = NumberFormat("#,##0.00", "en_US");
+    return GestureDetector(
+      onTap: onTogglePercentage,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: showPercentage,
+        builder: (context, value, child) {
+          String displayValue = '\$${formatter.format(portfolio.profitOrLoss)}';
+          if (value) {
+            displayValue =
+                '${percentFormatter.format(portfolio.percentageGainOrLoss)}%';
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    portfolio.profitOrLoss > 0
+                        ? Icons.keyboard_arrow_up
+                        : (portfolio.profitOrLoss == 0.00
+                            ? Icons.keyboard_arrow_right
+                            : Icons.keyboard_arrow_down),
+                    color: portfolio.profitOrLoss > 0
+                        ? Colors.green
+                        : (portfolio.profitOrLoss == 0.00
+                            ? Colors.grey
+                            : Colors.red),
+                  ),
+                  Text(
+                    displayValue,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: portfolio.profitOrLoss > 0
+                          ? Colors.green
+                          : (portfolio.profitOrLoss == 0.00
+                              ? Colors.grey
+                              : Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildRefreshButton(BuildContext context) {
+    return IconButton(
+      icon: RotationTransition(
+        turns: _controller!,
+        child: const Icon(Icons.refresh),
+      ),
+      onPressed: () {
+        _controller?.repeat();
+        Provider.of<PortfolioValueNotifier>(context, listen: false)
+            .fetchPortfolioValue()
+            .then((_) {
+          _controller?.stop();
+        });
+        widget.refreshNotifier.value = !widget.refreshNotifier.value;
+      },
+    );
+  }
+}

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:info_projekt/services/firestore_service.dart';
 
 class IbanService {
   Future<String?> fetchIban() async {
@@ -18,22 +17,53 @@ class IbanService {
           String? iban = userDocument.get('iban');
           return iban;
         } else {
-          print('No matching document found for the current user.');
           return null;
         }
       } catch (e) {
-        print('Error fetching iban: $e');
         return null;
       }
     }
   }
-
-  User? user = FirebaseAuth.instance.currentUser;
 
   Future<void> updateIban(String iban, String? documentID) async {
     FirebaseFirestore.instance
         .collection('Users')
         .doc(documentID)
         .update({"iban": iban});
+  }
+
+  bool checkIban(String iban) {
+    // IBAN muss in Deutschland 22 Zeichen haben. Möchte man ausländische IBANs miteinbeziehen,
+    //muss man das Land abfragen und entsprechend konditionale Bedingungen einbauen.
+    //Algorithmus: https://en.wikipedia.org/wiki/International_Bank_Account_Number#Algorithms
+    if (iban.length != 22) {
+      return false;
+    }
+
+    //"Move the four initial characters to the end of the string"
+    String moveIban = iban.substring(4) + iban.substring(0, 4);
+
+    //"Replace each letter in the string with two digits, thereby expanding the string, where A = 10, B = 11, ..., Z = 35"
+    String integerIban = moveIban.split('').map((char) {
+      int code = char.codeUnitAt(0);
+      return code >= 'A'.codeUnitAt(0) && code <= 'Z'.codeUnitAt(0)
+          ? (code - 'A'.codeUnitAt(0) + 10).toString()
+          : char;
+    }).join();
+
+    // "Interpret the string as a decimal integer and compute the remainder of that number on division by 97"
+    //Blöckeweise arbeiten, da Dart Integer Wertebereich nur von (-2^63) bis (2^63-1) geht
+    int rest = 0;
+    int blockSize = 9;
+    for (int i = 0; i < integerIban.length; i += blockSize) {
+      String block = rest.toString() +
+          integerIban.substring(
+              i,
+              i + blockSize > integerIban.length
+                  ? integerIban.length
+                  : i + blockSize);
+      rest = int.parse(block) % 97;
+    }
+    return rest == 1;
   }
 }

@@ -237,3 +237,15 @@ String insertNewLine(String companyAbout) {
   }
   return newText;
 }
+Future<bool> isMarketOpen() async {
+  String url = 'https://financialmodelingprep.com/api/v3/is-the-market-open?apikey=$apiKey';
+  http.Response response = await http.get(Uri.parse(url), headers: {'Authorization': 'Bearer $apiKey'});
+
+  // Decode the response body
+  Map<String, dynamic> jsonData = json.decode(response.body);
+
+  // Extract the market status
+  bool isMarketOpen = jsonData['isTheStockMarketOpen'];
+
+  return isMarketOpen;
+}
