@@ -11,6 +11,8 @@ class FirestoreService {
   String iban = 'No IBAN provided';
   num tax_pot = 0;
   num balance = 0;
+  bool isDisabled = false;
+  num disableCounter = 0;
 
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
@@ -23,14 +25,16 @@ class FirestoreService {
       'iban': iban,
       'UID': UID,
       'tax_pot': tax_pot,
-      'balance': balance
+      'balance': balance,
+      'isDisabled': isDisabled,
+      'disableCounter': disableCounter
     };
 
     try {
       //DocumentReference userDocRef =
       await FirebaseFirestore.instance.collection('Users').add(datatoSave);
     } catch (e) {
-      print('Error saving user data: $e');
+      //print('Error saving user data: $e');
     }
   }
 
@@ -67,10 +71,10 @@ class FirestoreService {
 
         return documentId;
       } else {
-        print('No document found for the current user.');
+        //print('No document found for the current user.');
       }
     } else {
-      print('No user is currently logged in.');
+      //print('No user is currently logged in.');
     }
     return null;
   }
@@ -101,13 +105,12 @@ class FirestoreService {
 
           return format.format(date);
         } else {
-          print('No matching document found for the current user.');
-          return null;
+          //print('No matching document found for the current user.');
         }
       } catch (e) {
-        print('Error fetching registration date: $e');
-        return null;
+        //print('Error fetching registration date: $e');
       }
     }
+    return null;
   }
 }
