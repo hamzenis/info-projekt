@@ -192,7 +192,7 @@ class InvestmentPageState extends State<InvestmentPage>
 
     // If the investment was found, decrease its quantity
     if (soldInvestment.isNotEmpty) {
-      soldInvestment['quantity'] -= amount;
+      //soldInvestment['quantity'] -= amount; // TODO: CHECK IF THIS IS NEEDED
 
       // Get the current price of the stock
       double currentPrice =
