@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
@@ -33,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text("Login"),
+        title: const Text(""),
       ),
       body: Center(
         child: Padding(
@@ -41,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Spacer(),
               const Text(
                 "Login",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
@@ -63,26 +63,30 @@ class _LoginPageState extends State<LoginPage> {
               ),
               InkWell(
                 onTap: () async {
-              if (_emailController.text.isEmpty) {
-                showToast(message: "Please enter your email address.");
-                return;
-              }
-              try {
-                // Check if the email is registered
-                bool isRegistered = await _auth.isEmailRegistered(_emailController.text);
-                print("Is email registered: $isRegistered"); // Debugging log
+                  if (_emailController.text.isEmpty) {
+                    showToast(message: "Please enter your email address.");
+                    return;
+                  }
+                  try {
+                    // Check if the email is registered
+                    bool isRegistered =
+                        await _auth.isEmailRegistered(_emailController.text);
+                    print(
+                        "Is email registered: $isRegistered"); // Debugging log
 
-                if (isRegistered) {
-                  await _firebaseAuth.sendPasswordResetEmail(email: _emailController.text);
-                  showToast(message: "Password reset email sent.");
-                } else {
-                  showToast(message: "This email address is not registered.");
-                }
-              } catch (e) {
-                showToast(message: "An error occurred: $e");
-                print("Error: $e"); // Debugging log
-              }
-            },
+                    if (isRegistered) {
+                      await _firebaseAuth.sendPasswordResetEmail(
+                          email: _emailController.text);
+                      showToast(message: "Password reset email sent.");
+                    } else {
+                      showToast(
+                          message: "This email address is not registered.");
+                    }
+                  } catch (e) {
+                    showToast(message: "An error occurred: $e");
+                    print("Error: $e"); // Debugging log
+                  }
+                },
                 child: Container(
                   margin: const EdgeInsets.only(top: 10, bottom: 20),
                   alignment: Alignment.topRight,
@@ -128,40 +132,6 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(
                 height: 10,
               ),
-              GestureDetector(
-                onTap: () {
-                  _signInWithGoogle();
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          FontAwesomeIcons.google,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        const Text(
-                          "Sign in with Google",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(
                 height: 20,
               ),
@@ -191,6 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
+              const Spacer(flex: 2),
             ],
           ),
         ),
@@ -248,35 +219,5 @@ class _LoginPageState extends State<LoginPage> {
         _isSigning = false;
       });
     }
-  }
-
-  _signInWithGoogle() async {
-    await _signOutGoogle(); // Clear previous session
-
-    final GoogleSignIn googleSignIn = GoogleSignIn();
-
-    try {
-      final GoogleSignInAccount? googleSignInAccount =
-          await googleSignIn.signIn();
-
-      if (googleSignInAccount != null) {
-        final GoogleSignInAuthentication googleSignInAuthentication =
-            await googleSignInAccount.authentication;
-
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          idToken: googleSignInAuthentication.idToken,
-          accessToken: googleSignInAuthentication.accessToken,
-        );
-
-        await _firebaseAuth.signInWithCredential(credential);
-        Navigator.pushNamed(context, "/home");
-      }
-    } catch (e) {
-      showToast(message: "some error occured $e");
-    }
-  }
-
-  Future<void> _signOutGoogle() async {
-    await GoogleSignIn().signOut();
   }
 }
