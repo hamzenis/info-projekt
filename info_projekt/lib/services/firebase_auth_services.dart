@@ -37,16 +37,6 @@ class FirebaseAuthService {
 
   Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {
-    bool? _isDisabled = await firestoreService.fetchDisabledStatus(isDisabled!);
-    print("Is disabled: $_isDisabled");
-    if (_isDisabled == true) {
-      showToast(
-          message:
-              "Account is disabled. Please check your email for a link to login.");
-      //setState(() => logInPage._setSTate = false);
-      return null;
-    }
-
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -105,5 +95,19 @@ class FirebaseAuthService {
     } else {
       return false;
     }
+  }
+
+  Future<String?> getUidByEmail(String email) async {
+    try {
+      final result = await _auth.fetchSignInMethodsForEmail(email);
+      if (result.isNotEmpty) {
+        var user = _auth.currentUser;
+        return user?.uid;
+      }
+    } catch (e) {
+      print('Error getting UID by email: $e');
+      return null;
+    }
+    return null;
   }
 }

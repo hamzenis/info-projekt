@@ -136,4 +136,45 @@ class FirestoreService {
     }
     return null;
   }
+
+  Future<num?> fetchDisabledCounter(num disableDCounter) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('UID', isEqualTo: user.uid)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot userDocument = querySnapshot.docs.first;
+
+          num disableCounter = userDocument.get('disableCounter');
+          return disableCounter;
+        }
+      } catch (e) {
+        print('Error fetching disableCounter: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> fetchUserStatus(String userId) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('UID', isEqualTo: user!.uid)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userDocument = querySnapshot.docs.first;
+        return userDocument.data() as Map<String, dynamic>?;
+      }
+    } catch (e) {
+      print('Error fetching user status: $e');
+      return null;
+    }
+    return null;
+  }
 }
