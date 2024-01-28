@@ -642,8 +642,8 @@ class ProfilePageState extends State<ProfilePage> {
                     const SizedBox(width: 8),
                     Text(
                       _email ?? 'No email found!',
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 15),
+                      overflow: TextOverflow.fade,
+                      //style: TextStyle(fontSize: 15),
                     ),
                   ],
                 ),
@@ -690,7 +690,6 @@ class ProfilePageState extends State<ProfilePage> {
                     const SizedBox(width: 8),
                     Text(
                       _iban ?? 'No IBAN found!',
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 15),
                     ),
                   ],
@@ -719,7 +718,6 @@ class ProfilePageState extends State<ProfilePage> {
                           SizedBox(width: 8),
                           Text(
                             'Date of Registration:',
-                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 15),
                           ),
                         ],

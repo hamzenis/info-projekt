@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
+import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,6 +20,9 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FirestoreService firestoreService = FirestoreService();
+
+  bool? isDisabled = false;
 
   @override
   void dispose() {
@@ -168,6 +172,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _signIn() async {
+    //Falls der User deaktiviert ist: return
+
     setState(() {
       _isSigning = true;
     });

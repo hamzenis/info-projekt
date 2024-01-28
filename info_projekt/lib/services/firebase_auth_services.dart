@@ -1,8 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/pages/login_page.dart';
+import 'package:info_projekt/services/firestore_service.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService firestoreService = FirestoreService();
+  final LoginPage logInPage = LoginPage();
+
+  bool? isDisabled = false;
   String? userEmail; // Variable to store the user's email address
 
   Future<User?> signUpWithEmailAndPassword(
@@ -31,6 +37,16 @@ class FirebaseAuthService {
 
   Future<UserCredential?> signInWithEmailAndPassword(
       String email, String password) async {
+    bool? _isDisabled = await firestoreService.fetchDisabledStatus(isDisabled!);
+    print("Is disabled: $_isDisabled");
+    if (_isDisabled == true) {
+      showToast(
+          message:
+              "Account is disabled. Please check your email for a link to login.");
+      //setState(() => logInPage._setSTate = false);
+      return null;
+    }
+
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,

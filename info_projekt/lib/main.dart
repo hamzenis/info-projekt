@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
         '/homePageNew': (context) => HomePageNew(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
-        '/profile': (context) => ProfilePage(),
+        '/profile': (context) => const ProfilePage(),
         '/home': (context) => HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(

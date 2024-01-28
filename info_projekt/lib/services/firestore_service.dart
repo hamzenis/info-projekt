@@ -113,4 +113,27 @@ class FirestoreService {
     }
     return null;
   }
+
+  Future<bool?> fetchDisabledStatus(bool isDisabled) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('UID', isEqualTo: user.uid)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot userDocument = querySnapshot.docs.first;
+
+          bool isDisabled = userDocument.get('isDisabled');
+          return isDisabled;
+        }
+      } catch (e) {
+        print('Error fetching isDisabled: $e');
+      }
+    }
+    return null;
+  }
 }
