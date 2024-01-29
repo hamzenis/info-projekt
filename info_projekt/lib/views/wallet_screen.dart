@@ -95,6 +95,9 @@ class _WalletScreenState extends State<WalletScreen> {
                         double? newBalance =
                             await walletServices.fetchBalance();
                         balance.value = newBalance;
+
+                        // Fetch the transaction history again
+                        setState(() {});
                       }
                     }
                   }
