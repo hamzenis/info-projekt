@@ -51,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
+                inputType: TextInputType.emailAddress,
               ),
               const SizedBox(
                 height: 10,
@@ -59,6 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
+                inputType: TextInputType.visiblePassword,
               ),
               InkWell(
                 onTap: () async {
