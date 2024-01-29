@@ -184,95 +184,54 @@ class TransactionList extends StatefulWidget {
 class _TransactionListState extends State<TransactionList> {
   final _firestore = FirebaseFirestore.instance;
   List<DocumentSnapshot> documentList = [];
-  bool isLoading = false;
-  DocumentSnapshot? lastDocument;
-  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadMore();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        _loadMore();
-      }
-    });
+    _loadTransactions();
   }
 
-  Future<void> _refresh() async {
-    documentList.clear();
-    lastDocument = null;
-    _loadMore();
-  }
+  Future<void> _loadTransactions() async {
+    Query query = _firestore
+        .collection('Users')
+        .doc(widget.userId)
+        .collection('balance_history')
+        .orderBy('date', descending: true);
 
-  void _loadMore() {
-    if (!isLoading) {
-      setState(() {
-        isLoading = true;
-      });
-
-      Query query = _firestore
-          .collection('Users')
-          .doc(widget.userId)
-          .collection('balance_history')
-          .orderBy('date', descending: true)
-          .limit(30);
-
-      if (lastDocument != null) {
-        query = query.startAfterDocument(lastDocument!);
-      }
-
-      query.get().then((querySnapshot) {
+    query.get().then((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
         documentList.addAll(querySnapshot.docs);
-        isLoading = false;
-        if (querySnapshot.docs.isNotEmpty) {
-          lastDocument = querySnapshot.docs.last;
-        }
-        setState(() {});
-      });
-    }
+      }
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat("#,##0.00", "en_US");
 
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: documentList.length + 1,
-        itemBuilder: (BuildContext context, int index) {
-          if (index < documentList.length) {
-            final transaction =
-                TransactionHistory.fromFirestore(documentList[index]);
+    return ListView.builder(
+      itemCount: documentList.length,
+      itemBuilder: (BuildContext context, int index) {
+        final transaction =
+            TransactionHistory.fromFirestore(documentList[index]);
 
-            final color = transaction.type == TransactionType.withdrawal
-                ? Colors.red
-                : Colors.green;
-            final amountString = transaction.type == TransactionType.withdrawal
-                ? '-\$${formatter.format(transaction.amount)}'
-                : '\$${formatter.format(transaction.amount)}';
+        final color = transaction.type == TransactionType.withdrawal
+            ? Colors.red
+            : Colors.green;
+        final amountString = transaction.type == TransactionType.withdrawal
+            ? '-\$${formatter.format(transaction.amount)}'
+            : '\$${formatter.format(transaction.amount)}';
 
-            return ListTile(
-              title: Text(transaction.description),
-              subtitle: Text(transaction.date.toString()),
-              trailing: Text(
-                amountString,
-                style: TextStyle(color: color),
-              ),
-            );
-          } else if (isLoading) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          } else {
-            return null;
-          }
-        },
-      ),
+        return ListTile(
+          title: Text(transaction.description),
+          subtitle: Text(transaction.date.toString()),
+          trailing: Text(
+            amountString,
+            style: TextStyle(color: color),
+          ),
+        );
+      },
     );
   }
 }
