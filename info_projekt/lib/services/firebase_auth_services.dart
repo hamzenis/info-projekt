@@ -50,6 +50,7 @@ class FirebaseAuthService {
         showToast(message: 'The email address is already in use.');
       } else {
         showToast(message: 'An error occurred: ${e.code}');
+        rethrow; // TODO: BugFix?
       }
       return null; // Stop further execution after handling the exception
     }

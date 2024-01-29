@@ -88,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
                     }
                   } catch (e) {
                     showToast(message: "An error occurred: $e");
-                    //print("Error: $e"); // Debugging log
                   }
                 },
                 child: Container(
@@ -191,7 +190,7 @@ class _LoginPageState extends State<LoginPage> {
         //zieht infos über disable counter und disable status aus der Datenbank
         Map<String, dynamic>? userStatus =
             await _disableLogIn.fetchUserStatus(credential.user!.uid);
-        //Kein Login, wenn der disable-Status true ist
+        // Kein Login, wenn der disable-Status true ist
         if (userStatus != null && userStatus['isDisabled'] == true) {
           showToast(message: "Your account is disabled.");
           return;
@@ -232,8 +231,12 @@ class _LoginPageState extends State<LoginPage> {
       String email = _emailController.text.trim();
       String? userId = await _auth.getUidByEmail(email);
 
+      print(e.code);
       if (e.code == 'wrong-password') {
-        showToast(message: 'Invalid password.');
+        showToast(message: 'Invalid passwordi.');
+        print("In if");
+        print(userId);
+        print(email);
         if (userId != null) {
           //fetcht Status von DisableCounter und Disable Status
           Map<String, dynamic>? userStatus =
@@ -263,7 +266,7 @@ class _LoginPageState extends State<LoginPage> {
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         showToast(message: 'Invalid email or password.');
       } else {
-        showToast(message: 'An error occurred: ${e.code}');
+        showToast(message: 'Hello: ${e.code}');
       }
     } finally {
       setState(() {
