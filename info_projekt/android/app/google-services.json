@@ -8,42 +8,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1078843075023:android:cc7bc2d5c0b0b282200aba",
-        "android_client_info": {
-          "package_name": "com.example.firstproject"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "1078843075023-23m5gfe8hi13rm3ghni2lk1n7t629nmf.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.gtkFlutter"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:1078843075023:android:ea383c2fa2e68a0f200aba",
         "android_client_info": {
           "package_name": "com.example.gtk_flutter"
@@ -94,6 +58,42 @@
             "certificate_hash": "d12933a1ec0d004814aeddca96803ccee0664e19"
           }
         },
+        {
+          "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1078843075023-23m5gfe8hi13rm3ghni2lk1n7t629nmf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.gtkFlutter"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078843075023:android:9b9d1185df7f1f8b200aba",
+        "android_client_info": {
+          "package_name": "de.frauas.trademate"
+        }
+      },
+      "oauth_client": [
         {
           "client_id": "1078843075023-1ho695bb3ba5a2mc1fe2hmbppm5sn280.apps.googleusercontent.com",
           "client_type": 3
