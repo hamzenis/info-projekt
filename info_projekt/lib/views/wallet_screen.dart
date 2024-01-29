@@ -209,6 +209,7 @@ class _TransactionListState extends State<TransactionList> {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat("#,##0.00", "en_US");
+    final dateFormat = DateFormat('dd-MM-yyyy HH:mm:ss');
 
     return ListView.builder(
       itemCount: documentList.length,
@@ -223,9 +224,11 @@ class _TransactionListState extends State<TransactionList> {
             ? '-\$${formatter.format(transaction.amount)}'
             : '\$${formatter.format(transaction.amount)}';
 
+        final dateString = dateFormat.format(transaction.date);
+
         return ListTile(
           title: Text(transaction.description),
-          subtitle: Text(transaction.date.toString()),
+          subtitle: Text(dateString),
           trailing: Text(
             amountString,
             style: TextStyle(color: color),
