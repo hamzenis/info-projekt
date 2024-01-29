@@ -46,13 +46,8 @@ class FirebaseAuthService {
 
       return credential;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        showToast(message: 'The email address is already in use.');
-      } else {
-        showToast(message: 'An error occurred: ${e.code}');
-        rethrow; // TODO: BugFix?
-      }
-      return null; // Stop further execution after handling the exception
+      // showToast(message: 'An error occurred: ${e.code}');
+      rethrow;
     }
   }
 
@@ -101,7 +96,9 @@ class FirebaseAuthService {
   Future<String?> getUidByEmail(String email) async {
     try {
       final result = await _auth.fetchSignInMethodsForEmail(email);
+      print("UID by email: $result");
       if (result.isNotEmpty) {
+        print("UID by email if: ${result[0]}");
         var user = _auth.currentUser;
         return user?.uid;
       }

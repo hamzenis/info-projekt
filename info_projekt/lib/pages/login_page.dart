@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/disableLogIn_service.dart';
@@ -7,6 +9,7 @@ import 'package:info_projekt/pages/sign_up_page.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -184,20 +187,8 @@ class _LoginPageState extends State<LoginPage> {
       UserCredential? credential =
           await _auth.signInWithEmailAndPassword(email, password);
 
-      //Falls der User deaktiviert ist: kein Login
-      // ->
       if (credential != null && credential.user != null) {
-        //zieht infos über disable counter und disable status aus der Datenbank
-        Map<String, dynamic>? userStatus =
-            await _disableLogIn.fetchUserStatus(credential.user!.uid);
-        // Kein Login, wenn der disable-Status true ist
-        if (userStatus != null && userStatus['isDisabled'] == true) {
-          showToast(message: "Your account is disabled.");
-          return;
-        }
-
-        //Reset disableCounter on succesfull Login
-        //das hier funktioniert!
+        // Reset disableCounter on succesfull Login
         await _disableLogIn.updateDisableCounter(credential.user!.uid, 0);
 
         final User user = credential.user!;
@@ -229,44 +220,25 @@ class _LoginPageState extends State<LoginPage> {
       }
     } on FirebaseAuthException catch (e) {
       String email = _emailController.text.trim();
-      String? userId = await _auth.getUidByEmail(email);
 
-      print(e.code);
       if (e.code == 'wrong-password') {
-        showToast(message: 'Invalid passwordi.');
-        print("In if");
-        print(userId);
-        print(email);
-        if (userId != null) {
-          //fetcht Status von DisableCounter und Disable Status
-          Map<String, dynamic>? userStatus =
-              await _disableLogIn.fetchUserStatus(userId);
-
-          if (userStatus != null) {
-            num disableCounter = userStatus['disableCounter'] ?? 0;
-            //erhöhe den Counter um 1 - wenn man hier ist, ist der Login schief gegangen
-            disableCounter++;
-            //ändere den Disable Status bei zu vielen fehlerhaften login-Versuchen
-            if (disableCounter >= 3 && isDisabled == false) {
-              isDisabled = true;
-            }
-
-            await _disableLogIn.updateIsDisabled(userId, isDisabled!);
-            await _disableLogIn.updateDisableCounter(userId, disableCounter);
-
-            if (isDisabled == true) {
-              showToast(
-                  message:
-                      "Your account is disabled after multiple failed login attempts.");
-              return;
-            }
-          }
+        showToast(message: 'Invalid password.');
+        var disableUserUri = Uri.parse(
+            "http://127.0.0.1:5050/wrong_password"); // TODO: Change to server IP
+        try {
+          var response = await http.post(
+            disableUserUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          );
+        } catch (e) {
+          print(e);
         }
       }
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         showToast(message: 'Invalid email or password.');
-      } else {
-        showToast(message: 'Hello: ${e.code}');
+      } else if (e.code == 'too-many-requests' || e.code == 'user-disabled') {
+        showToast(message: 'An error occoured: ${e.code}');
       }
     } finally {
       setState(() {
