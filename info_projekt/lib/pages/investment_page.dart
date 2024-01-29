@@ -26,9 +26,13 @@ class InvestmentPage extends StatefulWidget {
   InvestmentPageState createState() => InvestmentPageState();
 }
 
-class InvestmentPageState extends State<InvestmentPage> {
+class InvestmentPageState extends State<InvestmentPage>
+    with AutomaticKeepAliveClientMixin {
   bool showPercentage = false;
   final portfolioValueNotifierKey = GlobalKey();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -64,6 +68,7 @@ class InvestmentPageState extends State<InvestmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final portfolioValueNotifier =
         Provider.of<PortfolioValueNotifier>(context, listen: false);
     final formatter = NumberFormat("#,##0.00", "en_US");
@@ -187,7 +192,7 @@ class InvestmentPageState extends State<InvestmentPage> {
 
     // If the investment was found, decrease its quantity
     if (soldInvestment.isNotEmpty) {
-      soldInvestment['quantity'] -= amount;
+      //soldInvestment['quantity'] -= amount; // TODO: CHECK IF THIS IS NEEDED
 
       // Get the current price of the stock
       double currentPrice =

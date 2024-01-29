@@ -13,7 +13,11 @@ class WatchlistPage extends StatefulWidget {
   _WatchlistPageState createState() => _WatchlistPageState();
 }
 
-class _WatchlistPageState extends State<WatchlistPage> {
+class _WatchlistPageState extends State<WatchlistPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +29,7 @@ class _WatchlistPageState extends State<WatchlistPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Consumer<WatchlistNotifier>(
         builder: (context, watchlistNotifier, child) {
