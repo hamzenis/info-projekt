@@ -96,7 +96,6 @@ class _WalletScreenState extends State<WalletScreen> {
                             await walletServices.fetchBalance();
                         balance.value = newBalance;
 
-                        // Fetch the transaction history again
                         setState(() {});
                       }
                     }
@@ -120,7 +119,6 @@ class _WalletScreenState extends State<WalletScreen> {
                             forceSafariVC: false, forceWebView: false);
                       }
 
-                      // Fetch the transaction history again
                       setState(() {});
                     }
                   } else {
@@ -133,7 +131,6 @@ class _WalletScreenState extends State<WalletScreen> {
                       double? newBalance = await walletServices.fetchBalance();
                       balance.value = newBalance;
 
-                      // Fetch the transaction history again
                       setState(() {});
                     }
                   }
