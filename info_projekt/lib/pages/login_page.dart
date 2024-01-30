@@ -26,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService firestoreService = FirestoreService();
   final DisableLogIn _disableLogIn = DisableLogIn();
+  final _firestore = FirebaseFirestore.instance;
 
   bool? isDisabled = false;
 
@@ -231,6 +232,20 @@ class _LoginPageState extends State<LoginPage> {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'email': email}),
           );
+
+          if (response.statusCode == 202) {
+            await _firestore.collection("mail").add({
+              'to': email,
+              'template': {
+                'name': "activate",
+                'data': {
+                  'reactivate_link':
+                      "http://127.0.0.1:5050/enable?email=$email", // TODO: Change to server IP
+                },
+              },
+            });
+            print("Email sent");
+          }
         } catch (e) {
           print(e);
         }

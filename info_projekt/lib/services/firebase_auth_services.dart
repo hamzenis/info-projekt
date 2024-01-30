@@ -46,7 +46,6 @@ class FirebaseAuthService {
 
       return credential;
     } on FirebaseAuthException catch (e) {
-      // showToast(message: 'An error occurred: ${e.code}');
       rethrow;
     }
   }
