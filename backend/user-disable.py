@@ -13,6 +13,10 @@ db = firestore.client()
 
 max_attempts = 3
 
+@app.route("/reset", methods=['GET', 'POST'])
+def reset_password():
+    return render_template('change_password.html')
+
 @app.route("/enable", methods=['GET', 'POST'])
 def enable_account():
     email = request.args.get('email')
