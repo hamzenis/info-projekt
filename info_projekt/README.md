@@ -68,7 +68,7 @@ Nach der Erfolgreichen Installation sollte mit dem Befehl `git version` jetzt di
 
 ## Installieren von Flutter SDK
 
-Durch das Installieren von Homebrew im vorherigen [Schritt](https://docs.craft.do/editor/d/71f5e172-8c0d-33f1-7162-82d4f12c0346/76BC0128-0648-47BD-817C-DACE3C6B3DBD/b/9475EEF5-7276-44BC-8EEE-34412F4172CC#BE9B0652-97B9-4EF0-9A04-EFBD419D4A24) kann Flutter mithilfe von Homebrew Installiert werden, falls Homebrew noch nicht Installiert wurde kann dies einfach mit dem Befehl im Terminal passieren:
+Durch das Installieren von Homebrew im vorherigen Schritt kann Flutter mithilfe von Homebrew Installiert werden, falls Homebrew noch nicht Installiert wurde kann dies einfach mit dem Befehl im Terminal passieren:
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -92,7 +92,7 @@ Folgende Haken sollten als gesetzt im flutter doctor sein:
 
 ## Installation von TradeMate
 
-Um TradeMate installieren zu können muss man wie im [Schritt zur Installation von den nötigen Entwicklertools](https://docs.craft.do/editor/d/71f5e172-8c0d-33f1-7162-82d4f12c0346/76BC0128-0648-47BD-817C-DACE3C6B3DBD/b/9475EEF5-7276-44BC-8EEE-34412F4172CC#2883B081-C72E-4E36-BC58-BAA0ADFE75F6) Git installiert haben.
+Um TradeMate installieren zu können muss man wie im Schritt zur Installation von den nötigen Entwicklertools Git installiert haben.
 
 Um ein Klon vom Git Projekt zu machen und um TradeMate auf dein Lokalen Rechner zu Installieren geht man wie folgt im Terminal vor:
 
