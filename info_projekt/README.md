@@ -62,7 +62,8 @@ Folgende Anwendungen werden benötigt, um TradeMate starten zu können:
 1. [Chrome Browser ](https://www.google.com/chrome/dr/download/)
 2. Git (zum Klonen der TradeMate-Applikation)
 Der aktuelle Installationsstatus kann über `git version` im Terminal überprüft werden. 
-Ist Git nicht installiert, informiert ein Popup darüber: 
+Ist Git nicht installiert, informiert ein Popup darüber:
+
 ![Image.png](https://res.craft.do/user/full/71f5e172-8c0d-33f1-7162-82d4f12c0346/doc/76BC0128-0648-47BD-817C-DACE3C6B3DBD/37B0E486-C861-4ED9-84CB-3FDD5E916DE5_2/0zAGouroHDO2fIwqxaKr087YBzUhkRC5cI7K2hPntvYz/Image.png)
 
 Mit einem Klick auf den Button “Installieren” und dem Bestätigen der Lizenzbestimmungen wird die Installation der Entwickler Tools, die Git enthalten, zugestimmt.  
