@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:info_projekt/services/disableLogIn_service.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
