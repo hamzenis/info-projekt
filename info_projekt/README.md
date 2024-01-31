@@ -2,7 +2,7 @@
 
 # Installation auf Mac (Chrome Browser)
 
-Diese Installation erläutert die Schritte für das Installieren unsere TradeMate-Applikation im Betriebssystem MacOS in Verwendung des Chrome Browsers.
+Diese Installation erläutert die Schritte für das Installieren unsere TradeMate-Applikation im Betriebssystem MacOS unter Verwendung des Chrome Browsers.
 
 ## Grundlagen
 
