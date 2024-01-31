@@ -1,44 +1,45 @@
 # Installationsanleitung (TradeMate)
 
-# Installation auf den Mac (Chrome Browser):
+# Installation auf Mac (Chrome Browser)
 
-Diese Installation besitzt schritte für das Installieren unsere TradeMate app im Betriebssystem MacOS in Verwendung mit dem Chrome Browser:
+Diese Installation erläutert die Schritte für das Installieren unsere TradeMate-Applikation im Betriebssystem MacOS in Verwendung des Chrome Browsers.
 
-## Grundlagen:
+## Grundlagen
 
 ### Verifizieren von ZSH als Shell Standard
 
-Die erste Formalie die man erfüllen sollte, ist, dass sichergegangen wird, dass die Shell Konfiguration im Terminal als Standard “zsh” nutzt.
+Zuerst muss sichergestellt werden, dass die Shell Konfiguration im Terminal als Standard “zsh” nutzt.
 
-Die Verifikation vom ganzen wird mit diesem Command sichergestellt:
+Die Verifikation wird mit diesem Command sichergestellt:
 
 ```shell
 dscl . -read ~/ UserShell
 ```
 
-Wenn folgende Zeile vom Terminal ausgegeben wird, dann kann der nächste Schritt zur Installation von ZSH Ignoriert werden:
+Wenn folgende Zeile vom Terminal ausgegeben wird, kann der folgende Schritt zur Installation von ZSH Ignoriert werden:
 
 ```shell
 UserShell: /bin/zsh
 ```
 
-#### Installation von ZSH:
+#### Installation von ZSH
 
-ZSH kann mithilfe von Homebrew Installiert werden, wenn Homebrew noch nicht auf den Mac Installiert ist, kann dies mit folgenden Terminal Command geschehen:
+ZSH kann mithilfe von Homebrew Installiert werden. 
+Falls Homebrew noch nicht auf den Mac Installiert ist, kann dies mit folgenden Terminal Command geschehen:
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-daraufhin kann dann ZSH wie folgt auf den Terminal Installiert werden:
+Daraufhin kann ZSH mit dem folgenden Terminal-Befehl installiert werden:
 
 ```shell
 brew install zsh
 ```
 
-#### ZSH als Standard Shell einstellen:
+#### ZSH als Standard Shell einstellen
 
-Wenn man ZSH als Standard Shell einstellen möchte, dann erfolgt dies mit dem Befehl im Terminal:
+Möchte man ZSH als Standard Shell einstellen, geht das über den folgenden Terminal-Befehl:
 
 ```shell
 chsh -s `which zsh`
@@ -46,33 +47,36 @@ chsh -s `which zsh`
 
 ### Installieren von Rosetta (Apple Silicon Chips)
 
-Wenn der Macbook ein Apple Silicon Prozessor besitzt und kein Intel Prozessor wird für Flutter Rosetta benötigt, diese Software wird simple mit folgendem Befehl im Terminal Installiert:
+Besitzt das Macbook anstelle eines Intel Prozessors einen Apple Silicon Prozessor, wird für Flutter "Rosetta" benötigt. 
+Rosetta wird mit folgendem Befehl im Terminal installiert:
 
 ```shell
 sudo softwareupdate --install-rosetta --agree-to-license
 ```
 
-Das Terminal sollte dann am Ende die Bestätigung ausgeben dass Rosetta erfolgreich Installiert wurde.
+Das Terminal sollte eine Bestätigung ausgeben, dass Rosetta erfolgreich installiert wurde.
 
 ### Benötigte Entwicklertools
 
-Folgende Anwendungen werden benötigt um TradeMate ohne Probleme starten zu können.
-
-Einmal wird der [Chrome Browser ](https://www.google.com/chrome/dr/download/)benötigt und Git um Problemlos die TradeMate Applikation "clonen" zu können. Um zu schauen ob Git schon im Mac installiert ist, muss man `git version` im Terminal eingebe. Wenn Git nicht installier ist sollte folgender PopUp auftauchen:
-
+Folgende Anwendungen werden benötigt, um TradeMate starten zu können:
+1. [Chrome Browser ](https://www.google.com/chrome/dr/download/)
+2. Git (zum Klonen der TradeMate-Applikation)
+Der aktuelle Installationsstatus kann über `git version` im Terminal überprüft werden. 
+Ist Git nicht installiert, informiert ein Popup darüber: 
 ![Image.png](https://res.craft.do/user/full/71f5e172-8c0d-33f1-7162-82d4f12c0346/doc/76BC0128-0648-47BD-817C-DACE3C6B3DBD/37B0E486-C861-4ED9-84CB-3FDD5E916DE5_2/0zAGouroHDO2fIwqxaKr087YBzUhkRC5cI7K2hPntvYz/Image.png)
 
-Mit dem Klick auf dem Button “Installieren” und das bestätigen der Lizenzbestimmung wird das Installieren von den Entwickler Tools für den MacBook Installiert, indem auch Git enthalten ist.
+Mit einem Klick auf den Button “Installieren” und dem Bestätigen der Lizenzbestimmungen wird die Installation der Entwickler Tools, die Git enthalten, zugestimmt.  
 
-Nach der Erfolgreichen Installation sollte mit dem Befehl `git version` jetzt die aktuelle Version von git angezeigt werden.
+Nach erfolgreicher Installation wird mit dem Befehl `git version` die aktuelle Version von Git angezeigt.
 
-## Installieren von Flutter SDK
+## Installieren der Flutter SDK
 
-Durch das Installieren von Homebrew im vorherigen Schritt kann Flutter mithilfe von Homebrew Installiert werden, falls Homebrew noch nicht Installiert wurde kann dies einfach mit dem Befehl im Terminal passieren:
+Falls Homebrew noch nicht installiert wurde, kann die Installation mit folgendem Befehl im Terminal durchgeführt werden: 
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
+
 
 Installieren von Flutter mit Homebrew:
 
@@ -80,9 +84,9 @@ Installieren von Flutter mit Homebrew:
 brew install --cask flutter
 ```
 
-Wenn Homebrew als Meldung dass die Installation erfolgreich war, kann man wie folgt die Installation von Flutter mit `flutter doctor` im Terminal kontrollieren ob irgendwelche Problematik noch Offen sind.
+Meldet Homebrew, dass die Installation erfolgreich war, kann der Installationsstatus von Flutter und den benötigten Komponenten mit der Eingabe von `flutter doctor` im Terminal abgerufen werden. 
 
-Folgende Haken sollten als gesetzt im flutter doctor sein:
+Folgende Haken sollten gesetzt sein: 
 
 ```shell
 [✓] Flutter
@@ -92,43 +96,39 @@ Folgende Haken sollten als gesetzt im flutter doctor sein:
 
 ## Installation von TradeMate
 
-Um TradeMate installieren zu können muss man wie im Schritt zur Installation von den nötigen Entwicklertools Git installiert haben.
+Die Installation von TradeMate erfordert Git. 
+Um Trademate auf einem lokalen Rechner zu installieren, geht man wie folgt vor (Beispiel): 
 
-Um ein Klon vom Git Projekt zu machen und um TradeMate auf dein Lokalen Rechner zu Installieren geht man wie folgt im Terminal vor:
-
-Optional kann entschieden werden in welchen Ordner TradeMate installiert werden soll:
-
-Beispiel:
-
-Im Terminal ein Ordner erstellen und Ihn öffnen mit folgenden Terminal Befehle:
+Erstellen und öffnen eines neuen Ordners: 
 
 ```shell
 mkdir TradeMate && cd TradeMate
 ```
 
-TradeMate wird dann wie folgt von GitHub Runtergeladen:
+Herunterladen des Projekts von Github: 
 
 ```shell
 git clone https://github.com/hamzenis/info-projekt.git
 ```
 
-Wenn Git neu installiert wurde, wird gefragt unter welchen Nutzername man in Github angemeldet ist, bitte hierbei den GitHub Nutzername nutzen, der Zugriff auf die Repo von TradeMate hat.
+Wurde Git neu installiert, ist ein erstmaliges Einloggen erforderlich. Hierzu bitte die Emailadresse nutzen, der durch das TradeMate-Team Zugriff auf das TradeMate-Repository gewährt wurde. 
 
-Wenn der Schritt zur Passwortabfrage geschieht, dann sollte man vorher ein “personal access token” auf github generieren, dies geschieht wie folgt: `Setting → Developer settings → personal access token → tokens (classic) → generate new token → Alle Häkchen setzen und den Verfallsdatum auf` “`no expiration`” `setzen → generate token → generierter Token Kopieren und im Terminal einfügen.`
+Anstelle eines Passworts wird ein sogenannter "Personal Access Token" benötigt. Dieser kann auf Github wiefolgt generiert werden: 
+`Setting → Developer settings → personal access token → tokens (classic) → generate new token → Alle Häkchen setzen und den Verfallsdatum auf` “`no expiration`” `setzen → generate token → generierter Token kopieren und im Terminal einfügen`
 
-Bei Erfolgreiche Auntentifizierung sollte jetzt das Klonen vom TradeMate Projekt geschehen und auf dem gewünschten Ordner (hier TradeMate) installiert sein.
+War die Authentifizierung erfolgreich, wird der TradeMate-Klon im gewünschten Ordner installiert. 
 
 ## Ausführen von TradeMate
 
-Wenn man sich im Terminal im Ordner befindet wo Trademate installiert ist, folgenden Kommandos dann im Terminal einsetzen um TradeMate zu starten:
+Zum Ausführen der Applikation innerhalb des Ordners, in dem TradeMate installiert wurde, das Terminal öffnen und folgendes Kommando eingeben: 
 
 ```shell
 cd info-projekt/info_projekt && flutter run -d web-server --web-port 8080
 ```
 
-> Anmerkung: `flutter run -d web-server --web-port 8080` sorgt dafür dass ein Webserver auf dem Port 8080 im Localhost gestartet wird, dies ist wichtig, weil sonst der Backend Server nicht mit TradeMate kommunizieren kann!
+> Anmerkung: `flutter run -d web-server --web-port 8080` sorgt dafür, dass ein Webserver auf dem Port 8080 im Localhost gestartet wird. Wird ein anderer Port gewählt, kann der Backend-Server nicht korrekt mit TradeMate kommunizieren! 
 
-Wenn alles reibungslos Funktioniert hat, sollte folgende Terminal Meldung ausgegeben werden:
+Sofern alles reibungslos Funktioniert hat, sollte folgende Terminal Meldung ausgegeben werden:
 
 ```shell
 lib/main.dart is being served at http://localhost:8080
@@ -138,6 +138,6 @@ The web-server device requires the Dart Debug Chrome extension for debugging. CO
 for a more detailed help message, press "h". To quit, press "q".
 ```
 
-Die Website sollte jetzt auf Chrome erreichbar sein unter die URL: [`http://localhost:8080`](http://localhost:8080)
+Die Website ist auf Chrome erreichbar unter der URL: [`http://localhost:8080`](http://localhost:8080)
 
 ![Image.png](https://res.craft.do/user/full/71f5e172-8c0d-33f1-7162-82d4f12c0346/doc/76BC0128-0648-47BD-817C-DACE3C6B3DBD/5F593782-ECEA-4CC7-8491-64250B6DB8E2_2/TRIsBUWS77C5YP3HRRiMNQe0uO0W2YlnmM2zIRvdG4cz/Image.png)
