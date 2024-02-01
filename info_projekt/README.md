@@ -16,7 +16,7 @@ Hierzu den folgenden Command in das Terminal eingeben:
 dscl . -read ~/ UserShell
 ```
 
-Wenn folgende Zeile vom Terminal ausgegeben wird, kann der folgende Schritt zur Installation von ZSH Ignoriert werden:
+Wenn folgende Zeile vom Terminal ausgegeben wird, kann der folgende Schritt zur Installation von ZSH ignoriert werden:
 
 ```shell
 UserShell: /bin/zsh
