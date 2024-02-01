@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "TradeMate Logo 2.png",
+      "filename" : "launchimage.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "TradeMate Logo 1.png",
+      "filename" : "launchimage 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "TradeMate Logo.png",
+      "filename" : "launchimage 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
