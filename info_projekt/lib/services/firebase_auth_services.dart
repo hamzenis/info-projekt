@@ -1,8 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_projekt/common/toast.dart';
+import 'package:info_projekt/pages/login_page.dart';
+import 'package:info_projekt/services/firestore_service.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService firestoreService = FirestoreService();
+  final LoginPage logInPage = LoginPage();
+
+  bool? isDisabled = false;
   String? userEmail; // Variable to store the user's email address
 
   Future<User?> signUpWithEmailAndPassword(
@@ -40,12 +46,7 @@ class FirebaseAuthService {
 
       return credential;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        showToast(message: 'The email address is already in use.');
-      } else {
-        showToast(message: 'An error occurred: ${e.code}');
-      }
-      return null; // Stop further execution after handling the exception
+      rethrow;
     }
   }
 
@@ -89,5 +90,21 @@ class FirebaseAuthService {
     } else {
       return false;
     }
+  }
+
+  Future<String?> getUidByEmail(String email) async {
+    try {
+      final result = await _auth.fetchSignInMethodsForEmail(email);
+      print("UID by email: $result");
+      if (result.isNotEmpty) {
+        print("UID by email if: ${result[0]}");
+        var user = _auth.currentUser;
+        return user?.uid;
+      }
+    } catch (e) {
+      print('Error getting UID by email: $e');
+      return null;
+    }
+    return null;
   }
 }

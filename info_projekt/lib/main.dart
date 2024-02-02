@@ -5,7 +5,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:info_projekt/firebase_options.dart';
 import 'package:info_projekt/homepage_new.dart';
 import 'package:info_projekt/pages/payment_page.dart';
-import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/pages/home_page.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
@@ -67,7 +66,7 @@ class MyApp extends StatelessWidget {
         '/homePageNew': (context) => HomePageNew(),
         '/signUp': (context) => const SignUpPage(),
         '/verifyEmail': (context) => VerifyEmailPage(),
-        '/profile': (context) => ProfilePage(),
+        '/profile': (context) => const ProfilePage(),
         '/home': (context) => HomePage(),
         '/wallet': (context) => const WalletScreen(),
         '/payment': (context) => FutureBuilder<String?>(
