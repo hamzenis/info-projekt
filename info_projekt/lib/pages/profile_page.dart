@@ -686,7 +686,7 @@ class ProfilePageState extends State<ProfilePage> {
                     const Icon(Icons.account_balance_wallet),
                     const SizedBox(width: 8),
                     Text(
-                      _iban ?? 'No IBAN found!',
+                      maskIban(_iban),
                       style: const TextStyle(fontSize: 15),
                     ),
                   ],
@@ -759,5 +759,14 @@ class ProfilePageState extends State<ProfilePage> {
         ),
       ),
     );
+  }
+}
+// Method to mask the IBAN number with dots and display the last 4 digits
+String maskIban(String? iban) {
+  if (iban == null || iban.length < 4) {
+    return 'No IBAN found!';
+  } else {
+    String lastFourDigits = iban.substring(iban.length - 4);
+    return '.. $lastFourDigits';
   }
 }
