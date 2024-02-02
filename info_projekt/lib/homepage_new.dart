@@ -36,58 +36,63 @@ class HomePageNewState extends State<HomePageNew> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => PortfolioValueNotifier(uid),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('TradeMate'),
-        ),
-        body: Column(
-          children: [
-            PortfolioOverview(widget.refreshNotifier, uid,
-                key: portfolioValueNotifierKey),
-            Expanded(
-              child: TabBarClass(
-                tabs: const [
-                  Tab(text: 'Investments'),
-                  Tab(text: 'Watchlist'),
-                ],
-                tabBarViews: [
-                  StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: portfolioService.getIndividualInvestmentsStream(
-                        uid: uid),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return InvestmentPage(
-                            ValueNotifier(snapshot.data ?? []),
-                            uid,
-                            widget.refreshNotifier);
-                      }
-                    },
-                  ),
-                  WatchlistPage(uid: uid),
-                ],
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: ChangeNotifierProvider(
+        create: (context) => PortfolioValueNotifier(uid),
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: const Text('TradeMate'),
+          ),
+          body: Column(
+            children: [
+              PortfolioOverview(widget.refreshNotifier, uid,
+                  key: portfolioValueNotifierKey),
+              Expanded(
+                child: TabBarClass(
+                  tabs: const [
+                    Tab(text: 'Investments'),
+                    Tab(text: 'Watchlist'),
+                  ],
+                  tabBarViews: [
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: portfolioService.getIndividualInvestmentsStream(
+                          uid: uid),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          return InvestmentPage(
+                              ValueNotifier(snapshot.data ?? []),
+                              uid,
+                              widget.refreshNotifier);
+                        }
+                      },
+                    ),
+                    WatchlistPage(uid: uid),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        floatingActionButton: MenuButton(
-          distance: 112.0,
-          pageBuilders: [
-            (context) => const SearchPage(),
-            (context) => const NewsPage(),
-            (context) => ProfilePage(),
-            (context) => const WalletScreen(),
-          ],
-          children: const [
-            Icon(Icons.search),
-            Icon(Icons.newspaper),
-            Icon(Icons.person),
-            Icon(Icons.wallet),
-          ],
+            ],
+          ),
+          floatingActionButton: MenuButton(
+            distance: 112.0,
+            pageBuilders: [
+              (context) => const SearchPage(),
+              (context) => const NewsPage(),
+              (context) => ProfilePage(),
+              (context) => const WalletScreen(),
+            ],
+            children: const [
+              Icon(Icons.search),
+              Icon(Icons.newspaper),
+              Icon(Icons.person),
+              Icon(Icons.wallet),
+            ],
+          ),
         ),
       ),
     );
