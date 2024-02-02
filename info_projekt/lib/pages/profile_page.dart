@@ -573,63 +573,110 @@ class ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Button style for uniform size
-    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-      fixedSize: const Size(140, 40),
-    );
+@override
+Widget build(BuildContext context) {
+  // Button style for uniform size
+  final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+    fixedSize: const Size(140, 40),
+    backgroundColor: Color(0xFF1D2671), // Deep blue from the credit card as button color
+    foregroundColor: Colors.white, // Text color on the button for contrast
+  );
 
-    //Feste Nummer von Asteriks, damit die Anzahl keine Information über das Password preisgibt
-    String passwordPlaceholder = '********';
+  // Placeholder text for the password
+  String passwordPlaceholder = '********';
 
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: const Text('User Profile'),
-        actions: [
-          //Relaod der Profilseite
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              _getUserInfo();
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //Transaction-History-Line
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.history),
-                    SizedBox(width: 8),
-                    Text(
-                      'Transaction History',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  style: buttonStyle,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => OwnedStocksPage()),
-                    );
-                  },
-                  child: const Text('Show'),
+  return Scaffold(
+    key: _scaffoldKey,
+    appBar: AppBar(
+      title: const Text('User Profile', style: TextStyle(color: Colors.white)),
+      backgroundColor: Color(0xFF1D2671),
+      iconTheme: IconThemeData(color: Colors.white), // Deep blue from the credit card
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.white),
+          onPressed: () {
+            _getUserInfo();
+          },
+        ),
+      ],
+    ),
+    backgroundColor: Colors.grey[100], // Light background color for contrast
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: ListView( // Changed to ListView for better scrolling experience
+        children: [
+          // IBAN-Line (Credit Card Display)
+          Container(
+            margin: EdgeInsets.only(bottom: 20), // Adjusted margin for alignment
+            height: 200,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1D2671), Color(0xFFC33764)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 4,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
                 ),
               ],
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(height: 20),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Spacer(),
+                  Text(
+                    maskIban(_iban),
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'IBAN Number',
+                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: buttonStyle,
+            onPressed: () => updateIban(context),
+            child: const Text('Update IBAN'),
+          ),
+
+          // Transaction-History-Line
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.history, color: Color(0xFFC33764)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Transaction History',
+                    style: TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                style: buttonStyle,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => OwnedStocksPage()),
+                  );
+                },
+                child: const Text('Show'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
 
             //Email-Line
             Row(
@@ -637,11 +684,11 @@ class ProfilePageState extends State<ProfilePage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.email),
+                    const Icon(Icons.email, color: Color(0xFFC33764)),
                     const SizedBox(width: 8),
                     Text(
                       _email ?? 'No email found!',
-                      style: const TextStyle(fontSize: 15),
+                      style: const TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
                     ),
                   ],
                 ),
@@ -660,40 +707,17 @@ class ProfilePageState extends State<ProfilePage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lock),
+                    const Icon(Icons.lock, color: Color(0xFFC33764)),
                     const SizedBox(width: 8),
                     Text(
                       passwordPlaceholder,
-                      style: const TextStyle(fontSize: 15),
+                      style: const TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
                     ),
                   ],
                 ),
                 ElevatedButton(
                   style: buttonStyle,
                   onPressed: () => updatePassword(context),
-                  child: const Text('Update'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // IBAN-Line
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.account_balance_wallet),
-                    const SizedBox(width: 8),
-                    Text(
-                      maskIban(_iban),
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  style: buttonStyle,
-                  onPressed: () => updateIban(context),
                   child: const Text('Update'),
                 ),
               ],
@@ -711,17 +735,17 @@ class ProfilePageState extends State<ProfilePage> {
                       const Row(
                         children: [
                           Icon(Icons
-                              .calendar_today), // Calendar icon for registration date
+                              .calendar_today, color: Color(0xFFC33764)), // Calendar icon for registration date
                           SizedBox(width: 8),
                           Text(
                             'Date of Registration:',
-                            style: TextStyle(fontSize: 15),
+                            style: TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
                           ),
                         ],
                       ),
                       Text(
                         '        $_registrationDate',
-                        style: const TextStyle(fontSize: 15),
+                        style: const TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
                       ),
                     ],
                   ),
@@ -743,6 +767,7 @@ class ProfilePageState extends State<ProfilePage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
+                primary: Color(0xFFC33764),
               ),
               onPressed: () {
                 FirebaseAuth.instance.signOut();
@@ -752,7 +777,7 @@ class ProfilePageState extends State<ProfilePage> {
               },
               child: const Text(
                 'Sign Out',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: 24, color: Colors.white),
               ),
             ),
           ],
