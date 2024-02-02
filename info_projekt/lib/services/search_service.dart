@@ -24,10 +24,11 @@ class SearchService {
     if (response.statusCode == 200) {
       var results = jsonDecode(response.body);
       var filteredResults = results.where((result) {
-        return !result['symbol'].contains('.');
+        return result['exchangeShortName'] == 'NASDAQ' ||
+            result['exchangeShortName'] == 'NYSE';
       }).toList();
 
-      // Use the callback function to update the search results
+      // Updates the search results
       onSearchResults(filteredResults);
     } else {
       throw Exception('Failed to load search results');
