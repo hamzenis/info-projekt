@@ -578,7 +578,7 @@ Widget build(BuildContext context) {
   // Button style for uniform size
   final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     fixedSize: const Size(140, 40),
-    backgroundColor: Color(0xFF1D2671), // Deep blue from the credit card as button color
+    backgroundColor: const Color(0xFF1D2671), // Deep blue from the credit card as button color
     foregroundColor: Colors.white, // Text color on the button for contrast
   );
 
@@ -589,8 +589,8 @@ Widget build(BuildContext context) {
     key: _scaffoldKey,
     appBar: AppBar(
       title: const Text('User Profile', style: TextStyle(color: Colors.white)),
-      backgroundColor: Color(0xFF1D2671),
-      iconTheme: IconThemeData(color: Colors.white), // Deep blue from the credit card
+      backgroundColor: const Color(0xFF1D2671),
+      iconTheme: const IconThemeData(color: Colors.white), // Deep blue from the credit card
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh, color: Colors.white),
@@ -607,10 +607,10 @@ Widget build(BuildContext context) {
         children: [
           // IBAN-Line (Credit Card Display)
           Container(
-            margin: EdgeInsets.only(bottom: 20), // Adjusted margin for alignment
+            margin: const EdgeInsets.only(bottom: 20), // Adjusted margin for alignment
             height: 200,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient:  const LinearGradient(
                 colors: [Color(0xFF1D2671), Color(0xFFC33764)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -620,22 +620,22 @@ Widget build(BuildContext context) {
                   color: Colors.black.withOpacity(0.3),
                   spreadRadius: 4,
                   blurRadius: 10,
-                  offset: Offset(0, 3),
+                  offset: const Offset(0, 3),
                 ),
               ],
               borderRadius: BorderRadius.circular(15),
             ),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Spacer(),
                   Text(
                     maskIban(_iban),
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Text(
                     'IBAN Number',
                     style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 18),
@@ -767,7 +767,7 @@ Widget build(BuildContext context) {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
-                primary: Color(0xFFC33764),
+                backgroundColor: const Color(0xFFC33764),
               ),
               onPressed: () {
                 FirebaseAuth.instance.signOut();
