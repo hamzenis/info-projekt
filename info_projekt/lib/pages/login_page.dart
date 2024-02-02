@@ -222,7 +222,8 @@ class _LoginPageState extends State<LoginPage> {
       if (e.code == 'wrong-password') {
         showToast(message: 'Invalid password.');
         var disableUserUri = Uri.parse(
-            "http://127.0.0.1:5050/wrong_password"); // TODO: Change to server IP
+            //"http://127.0.0.1:5050/wrong_password");
+            "http://134.119.216.59:5050/wrong_password");
         try {
           var response = await http.post(
             disableUserUri,
@@ -237,7 +238,8 @@ class _LoginPageState extends State<LoginPage> {
                 'name': "activate",
                 'data': {
                   'reactivate_link':
-                      "http://127.0.0.1:5050/enable?email=$email", // TODO: Change to server IP
+                      //"http://127.0.0.1:5050/reset?email=$email",
+                      "http://134.119.216.59:5050/reset?email=$email",
                 },
               },
             });

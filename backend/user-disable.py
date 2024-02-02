@@ -13,10 +13,55 @@ db = firestore.client()
 
 max_attempts = 3
 
+# Returns Completion Dialog Page and changes password
+@app.route("/change_completed", methods=['POST', 'GET'])
+def tester():
+    data = request.get_json()
+    uid = auth.get_user_by_email(data.get("email")).uid
+    enable_user_account(data.get("email"))
+    auth.update_user(
+        uid=uid,
+        password=data.get("password"),
+    )
+    print("Password Changed for ", data.get("email"))
+    return render_template('enable.html', email=data.get("email")), 200
+
+
+# Returns Change Password Form Page
 @app.route("/reset", methods=['GET', 'POST'])
 def reset_password():
-    return render_template('change_password.html')
+    email = request.args.get('email')
+    return render_template('change_password.html', args=email), 200
 
+
+def enable_user_account(email):
+    if email:
+        userRequested = auth.get_user_by_email(email)
+        if userRequested:
+            users_ref = db.collection('Users')
+            result = users_ref.where('UID', '==', userRequested.uid)
+            users = result.stream()
+        
+            for user in users:
+                users_ref = users_ref.document(user.id)
+                users_ref.update({
+                    "isDisabled": False,
+                })
+                auth.update_user(
+                    userRequested.uid,
+                    disabled=False,
+                )
+                return True
+        else:
+            False
+        
+        return False
+
+    else:
+        return False
+
+
+# Enables a user account if the user is disabled
 @app.route("/enable", methods=['GET', 'POST'])
 def enable_account():
     email = request.args.get('email')
@@ -45,7 +90,9 @@ def enable_account():
     else:
         return {}, 404
 
-
+# Disables a user account if the counter is greater than or equal to the max attempts
+# If the user is disabled, the user will be logged out
+# If the user is not disabled, the counter will be incremented
 @app.route("/wrong_password", methods=["POST"])
 def wrong_password():
     data = request.get_json()
@@ -83,7 +130,7 @@ def wrong_password():
         
 
 
-
+# Debug route to print all users
 @app.route("/test_print", methods=["POST, GET"])
 def test_print():
     page = auth.list_users()
@@ -95,5 +142,7 @@ def test_print():
         page = page.get_next_page()
     return {}, 200
 
+
+# Main function
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5050)
