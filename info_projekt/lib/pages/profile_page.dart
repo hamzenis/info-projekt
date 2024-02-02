@@ -687,7 +687,7 @@ Widget build(BuildContext context) {
                     const Icon(Icons.email, color: Color(0xFFC33764)),
                     const SizedBox(width: 8),
                     Text(
-                      _email ?? 'No email found!',
+                      maskEmail(_email),
                       style: const TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
                     ),
                   ],
@@ -793,5 +793,17 @@ String maskIban(String? iban) {
   } else {
     String lastFourDigits = iban.substring(iban.length - 4);
     return '.. $lastFourDigits';
+  }
+}
+// Method to mask the email with dots and display the last 9 characters
+String maskEmail(String? email) {
+  if (email == null) {
+    return 'No email found!';
+  } else if (email.length <= 25) {
+    return email;
+  } else {
+    String firstFour = email.substring(0, 5);
+    String lastNine = email.substring(email.length - 10);
+    return '$firstFour...$lastNine';
   }
 }
