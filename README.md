@@ -6,13 +6,13 @@ Dozentin: Prof. Dr. Ruth Schorr
 
 # Installationsanleitung (TradeMate)
 
-# Installation auf Mac (Chrome Browser)
+## Installation auf Mac (Chrome Browser)
 
 Diese Installation erläutert die Schritte für das Installieren der TradeMate-Applikation im Betriebssystem MacOS unter Verwendung des Chrome Browsers.
 
-## Grundlagen
+### Grundlagen
 
-### Verifizieren von ZSH als Shell Standard
+#### Verifizieren von ZSH als Shell Standard
 
 Zuerst muss sichergestellt werden, dass die Shell-Konfiguration im Terminal als Standard ZSH nutzt.
 
@@ -51,7 +51,7 @@ Möchte man ZSH als Standard Shell einstellen, geht das über den folgenden Term
 chsh -s `which zsh`
 ```
 
-### Installieren von Rosetta (Apple Silicon Chips)
+#### Installieren von Rosetta (Apple Silicon Chips)
 
 Besitzt das Macbook anstelle eines Intel-Prozessors einen Apple Silicon-Prozessor, wird für Flutter "Rosetta" benötigt.
 Rosetta wird mit folgendem Befehl im Terminal installiert:
@@ -62,7 +62,7 @@ sudo softwareupdate --install-rosetta --agree-to-license
 
 Das Terminal sollte eine Bestätigung ausgeben, dass Rosetta erfolgreich installiert wurde.
 
-### Benötigte Entwicklertools
+#### Benötigte Entwicklertools
 
 Folgende Anwendungen werden benötigt, um TradeMate starten zu können:
 
