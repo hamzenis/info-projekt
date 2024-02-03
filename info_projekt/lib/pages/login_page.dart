@@ -20,7 +20,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isSigning = false;
   final FirebaseAuthService _auth = FirebaseAuthService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService firestoreService = FirestoreService();
@@ -80,7 +79,6 @@ class _LoginPageState extends State<LoginPage> {
                     bool isRegistered =
                         await _auth.isEmailRegistered(_emailController.text);
                     if (isRegistered) {
-                      // await _firebaseAuth.sendPasswordResetEmail(email: _emailController.text);
                       changePassword();
                       showToast(message: "Password reset email sent.");
                     } else {
