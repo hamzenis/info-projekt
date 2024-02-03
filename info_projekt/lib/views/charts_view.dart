@@ -6,6 +6,7 @@ import 'package:info_projekt/services/portfolio_service.dart';
 import 'package:info_projekt/services/stockData_service.dart';
 import 'package:info_projekt/widgets/watchlist_button.dart';
 import 'package:info_projekt/widgets/buy_popup.dart';
+import 'package:info_projekt/globals.dart';
 
 class ChartStock extends StatefulWidget {
   final String title;
@@ -24,6 +25,7 @@ class _ChartStockState extends State<ChartStock> {
   List<ChartData>? currentData;
   bool isInWatchlist = false;
   final portfolioService = PortfolioService();
+  bool boolMarketOpen = false;
 
   @override
   void initState() {
@@ -87,6 +89,8 @@ class _ChartStockState extends State<ChartStock> {
             String realTimeQuote = snapshot.data![2];
             currentData = chartDataList;
             String companyAbout = snapshot.data![3];
+            bool isExpanded = false;
+            boolMarketOpen = snapshot.data![6];
 
             return Scaffold(
               appBar: AppBar(
@@ -114,6 +118,9 @@ class _ChartStockState extends State<ChartStock> {
               body: SingleChildScrollView(
                 child: Column(
                   children: [
+                    // Check if the market is open
+                    if (!boolMarketOpen) buildExchangeStatusRow(),
+
                     // Company name Container
                     Container(
                       padding: const EdgeInsets.all(40),
@@ -126,6 +133,8 @@ class _ChartStockState extends State<ChartStock> {
                       ),
                     ),
 
+                    // Chart and Button Container
+                    // StatefulBuilder to rebuild the chart
                     StatefulBuilder(builder: (context, setState) {
                       return Column(
                         children: [
@@ -172,7 +181,43 @@ class _ChartStockState extends State<ChartStock> {
 
                     buildPriceContainer(realTimeQuote),
 
-                    buildAboutContainer(companyAbout),
+                    // About Container with Tap to Expand feature
+                    StatefulBuilder(builder: (context, setState) {
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "About",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isExpanded = !isExpanded;
+                                  print(isExpanded);
+                                });
+                              },
+                              child: Text.rich(
+                                TextSpan(
+                                  text: isExpanded
+                                      ? companyAbout
+                                      : (companyAbout.substring(0, 100) +
+                                          ' ...Tap to Expand'),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -188,7 +233,9 @@ class _ChartStockState extends State<ChartStock> {
                     },
                   );
                 },
-                backgroundColor: Colors.green,
+                backgroundColor: boolMarketOpen || overrideMarketOpen
+                    ? Colors.green
+                    : Colors.grey,
                 icon: const Icon(Icons.attach_money),
                 label: const Text('Buy'),
               ),
@@ -208,6 +255,55 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
+  /// Returns Row with Exchange Opening Status
+  Row buildExchangeStatusRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withOpacity(0.5),
+            border: Border.all(
+              color: Theme.of(context).primaryColor,
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Column(
+            children: [
+              const Text(
+                "Exchange (NYSE) is closed",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  // fontFamily: 'Helvetica Neue',
+                ),
+              ),
+              const Text(
+                "You can place orders when the market reopens",
+                style: TextStyle(
+                  fontSize: 18,
+                  // fontFamily: 'Helvetica Neue',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (overrideMarketOpen)
+                const Text(
+                  "(Override Global active)",
+                  style: TextStyle(
+                    fontSize: 18,
+                    // fontFamily: 'Helvetica Neue',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Gets the chart data based on the selected time range
   /// Load ahead strategy is used to load the chart data
   /// Return: Future<List<dynamic>> snapshot
@@ -219,6 +315,7 @@ class _ChartStockState extends State<ChartStock> {
       getCompanyAbout(widget.title),
       loadDayData(widget.title),
       loadYearData(widget.title),
+      isMarketOpen(),
     ]);
   }
 
@@ -237,6 +334,8 @@ class _ChartStockState extends State<ChartStock> {
 
   /// Returns the list of chart series which need to render
   /// on the update data source chart.
+  /// Opacity is set to 0.7 to make the series color light.
+  /// Color is set to the primary color of the app.
   List<AreaSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
     return <AreaSeries<ChartData, DateTime>>[
       AreaSeries<ChartData, DateTime>(
@@ -247,31 +346,6 @@ class _ChartStockState extends State<ChartStock> {
         yValueMapper: (ChartData data, _) => data.price,
       )
     ];
-  }
-
-  /// Container for the company about
-  Container buildAboutContainer(String companyAbout) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "About",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            companyAbout,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
