@@ -21,9 +21,7 @@ class ChartStock extends StatefulWidget {
 class _ChartStockState extends State<ChartStock> {
   late ZoomPanBehavior _zoomPanBehavior;
   String? uid;
-
   List<ChartData>? currentData;
-  String selectedTimeRange = 'month'; // Default to 'month'
   bool isInWatchlist = false;
   final portfolioService = PortfolioService();
 
@@ -38,6 +36,7 @@ class _ChartStockState extends State<ChartStock> {
     checkIfInWatchlist();
   }
 
+  /// Updates the uid
   void updateUid() {
     final user = FirebaseAuth.instance.currentUser;
     setState(() {
@@ -83,98 +82,126 @@ class _ChartStockState extends State<ChartStock> {
           return Text('Error: ${snapshot.error}');
         } else {
           if (snapshot.data != null) {
-            List<ChartData> spotListMonthly = snapshot.data![0];
+            List<ChartData> chartDataList = snapshot.data![0];
             String companyName = snapshot.data![1];
             String realTimeQuote = snapshot.data![2];
-            currentData = spotListMonthly;
+            currentData = chartDataList;
             String companyAbout = snapshot.data![3];
 
             return Scaffold(
-                appBar: AppBar(
-                  title: Text(widget.title),
-                  actions: <Widget>[
-                    FutureBuilder<bool>(
-                      future: portfolioService.checkIfInWatchlist(
-                          uid!, widget.title),
-                      builder:
-                          (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                        if (snapshot.hasData) {
-                          return WatchlistButton(
-                            isInWatchlist: snapshot.data!,
-                            title: widget.title,
-                            companyName: companyName,
-                            uid: uid!,
-                          );
-                        } else {
-                          return CircularProgressIndicator();
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                body: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Container(
-                        // Company name Container
-                        padding: const EdgeInsets.all(40),
-                        child: Text(
-                          companyName,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+              appBar: AppBar(
+                title: Text(widget.title),
+                actions: <Widget>[
+                  FutureBuilder<bool>(
+                    future:
+                        portfolioService.checkIfInWatchlist(uid!, widget.title),
+                    builder:
+                        (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                      if (snapshot.hasData) {
+                        return WatchlistButton(
+                          isInWatchlist: snapshot.data!,
+                          title: widget.title,
+                          companyName: companyName,
+                          uid: uid!,
+                        );
+                      } else {
+                        return CircularProgressIndicator();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              body: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Company name Container
+                    Container(
+                      padding: const EdgeInsets.all(40),
+                      child: Text(
+                        companyName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Container(
-                        child: _buildChart(),
-                      ),
-                      Row(
-                        // Buttons Row
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    ),
+
+                    StatefulBuilder(builder: (context, setState) {
+                      return Column(
                         children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              _updateChartData('year');
-                            },
-                            child: const Text('Year'),
+                          // Chart Container
+                          Container(
+                            child: _buildChart(),
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              _updateChartData('month');
-                            },
-                            child: const Text('Month'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              _updateChartData('day');
-                            },
-                            child: const Text('Day'),
+                          // Buttons Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    currentData = <ChartData>[];
+                                    currentData = snapshot.data![5];
+                                  });
+                                },
+                                child: const Text('Year'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    currentData = <ChartData>[];
+                                    currentData = snapshot.data![0];
+                                  });
+                                },
+                                child: const Text('Month'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    currentData = <ChartData>[];
+                                    currentData = snapshot.data![4];
+                                  });
+                                },
+                                child: const Text('Day'),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                      buildPriceContainer(realTimeQuote),
-                      buildAboutContainer(companyAbout),
-                    ],
-                  ),
+                      );
+                    }),
+
+                    buildPriceContainer(realTimeQuote),
+
+                    buildAboutContainer(companyAbout),
+                  ],
                 ),
-                floatingActionButton: FloatingActionButton.extended(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return BuyPopup(
-                          stockSymbol: widget.title,
-                        ); // Show the BuyPopup content
-                      },
-                    );
-                  },
-                  backgroundColor: Colors.green,
-                  icon: const Icon(Icons.attach_money),
-                  label: const Text('Buy'),
-                ));
+              ),
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      // Show the BuyPopup content
+                      return BuyPopup(
+                        stockSymbol: widget.title,
+                      );
+                    },
+                  );
+                },
+                backgroundColor: Colors.green,
+                icon: const Icon(Icons.attach_money),
+                label: const Text('Buy'),
+              ),
+            );
           } else {
-            return const Text('No data'); // TODO: Replace with error handling
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(widget.title),
+              ),
+              body: const Center(
+                child: Text('No data available'),
+              ),
+            );
           }
         }
       },
@@ -182,39 +209,17 @@ class _ChartStockState extends State<ChartStock> {
   }
 
   /// Gets the chart data based on the selected time range
+  /// Load ahead strategy is used to load the chart data
+  /// Return: Future<List<dynamic>> snapshot
   Future<List<dynamic>> _getData() async {
-    switch (selectedTimeRange) {
-      case 'year':
-        return Future.wait([
-          loadYearData(widget.title),
-          getCompanyName(widget.title),
-          getCurrentPrice(widget.title),
-          getCompanyAbout(widget.title),
-        ]);
-      case 'month':
-        return Future.wait([
-          loadMonthData(widget.title),
-          getCompanyName(widget.title),
-          getCurrentPrice(widget.title),
-          getCompanyAbout(widget.title),
-        ]);
-      case 'day':
-        return Future.wait([
-          loadDayData(widget.title),
-          getCompanyName(widget.title),
-          getCurrentPrice(widget.title),
-          getCompanyAbout(widget.title),
-        ]);
-      default:
-        return [];
-    }
-  }
-
-  /// Updates the chart data based on the selected time range
-  void _updateChartData(String timeRange) {
-    setState(() {
-      selectedTimeRange = timeRange;
-    });
+    return Future.wait([
+      loadMonthData(widget.title),
+      getCompanyName(widget.title),
+      getCurrentPrice(widget.title),
+      getCompanyAbout(widget.title),
+      loadDayData(widget.title),
+      loadYearData(widget.title),
+    ]);
   }
 
   /// Builds the chart
@@ -232,13 +237,15 @@ class _ChartStockState extends State<ChartStock> {
 
   /// Returns the list of chart series which need to render
   /// on the update data source chart.
-  List<ChartSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
-    return <ChartSeries<ChartData, DateTime>>[
-      // Renders line chart
-      LineSeries<ChartData, DateTime>(
-          dataSource: currentData!,
-          xValueMapper: (ChartData data, _) => data.time,
-          yValueMapper: (ChartData data, _) => data.price)
+  List<AreaSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
+    return <AreaSeries<ChartData, DateTime>>[
+      AreaSeries<ChartData, DateTime>(
+        opacity: 0.7,
+        color: Theme.of(context).primaryColor,
+        dataSource: currentData!,
+        xValueMapper: (ChartData data, _) => data.time,
+        yValueMapper: (ChartData data, _) => data.price,
+      )
     ];
   }
 
