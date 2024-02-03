@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg',
-    appId: '1:1078843075023:android:ecd8d2afc9ce0cdd200aba',
+    appId: '1:1078843075023:android:9b9d1185df7f1f8b200aba',
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
     databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
@@ -64,14 +64,14 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA1SKP5iSNjlVnGdi-Wd3FRKyfPAg97Mqg',
-    appId: '1:1078843075023:ios:71dfaa96bde868c0200aba',
+    appId: '1:1078843075023:ios:32b63ea320e06b69200aba',
     messagingSenderId: '1078843075023',
     projectId: 'informatik-projekt-6e4f5',
     databaseURL: 'https://informatik-projekt-6e4f5-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'informatik-projekt-6e4f5.appspot.com',
     androidClientId: '1078843075023-7sa9ua2r346hu8qbt19phbj53rqruogg.apps.googleusercontent.com',
-    iosClientId: '1078843075023-2e0s2rj8lfhlcspplharnugbap162qda.apps.googleusercontent.com',
-    iosBundleId: 'com.example.infoProjekt',
+    iosClientId: '1078843075023-dj5spaap2r4ns48gr6uk7o7j0t27d1ft.apps.googleusercontent.com',
+    iosBundleId: 'de.frauas.trademate',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
