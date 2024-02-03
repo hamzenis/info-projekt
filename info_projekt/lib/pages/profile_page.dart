@@ -35,6 +35,7 @@ class ProfilePageState extends State<ProfilePage> {
     _getUserInfo();
   }
 
+//fetch information about the user from the database
   Future<void> _getUserInfo() async {
     _user = _auth.currentUser;
 
@@ -49,6 +50,7 @@ class ProfilePageState extends State<ProfilePage> {
     }
   }
 
+//exchange the old password with a new password
   Future<void> updatePassword(BuildContext context) async {
     String? oldPassword;
     String? newPassword1;
@@ -137,6 +139,9 @@ class ProfilePageState extends State<ProfilePage> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    //new password can't be the same as old password or empty/null,
+                    //must contain: uppercase and lowercase characters, special character, number
+                    //must at least be 8 characters long
                     if (newPassword1 == newPassword2 &&
                         newPassword1 != oldPassword &&
                         newPassword1 != null &&
@@ -196,6 +201,8 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
+//exchange current email with a new email adress
+//new email has to be confirmed via confirmation link (equivalent to sign in)
   Future<void> updateEmail(BuildContext context) async {
     String? newEmail1;
     String? password;
@@ -316,19 +323,18 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
+//save a new IBAN or update your current IBAN for wallet-operations
   Future<void> updateIban(BuildContext context) async {
     String? iban;
     bool passwordVisible = false;
     String? password;
 
     ibanservice.fetchIban().then((currentIban) async {
-      // Perform your IBAN checks here
       if (currentIban == null || currentIban.isEmpty) {
         showToast(message: "Current IBAN not available");
         return;
       }
 
-      // Show the dialog
       await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -370,23 +376,21 @@ class ProfilePageState extends State<ProfilePage> {
                     return;
                   }
 
-                  // Close the IBAN dialog
                   Navigator.of(context).pop();
 
-                  // Show password confirmation dialog
                   await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return StatefulBuilder(
                         builder: (BuildContext context, StateSetter setState) {
                           return AlertDialog(
-                            title: const Text('Confirm With Password!'),
+                            title: const Text('Confirm with Password'),
                             content: SingleChildScrollView(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                      'Please enter your current password to proceed:'),
+                                  /*const Text(
+                                      'Please enter your current password to proceed:'),*/
                                   TextFormField(
                                     decoration: InputDecoration(
                                       labelText: 'Password',
@@ -418,26 +422,22 @@ class ProfilePageState extends State<ProfilePage> {
                               ),
                               TextButton(
                                 onPressed: () async {
-// Close the password confirmation dialog
                                   Navigator.of(context).pop();
-                                  // Check if password is null or empty
+
                                   if (password == null || password!.isEmpty) {
                                     showToast(
-                                        message: "Password cannot be empty.");
+                                        message: "Password cannot be empty");
                                     return;
                                   }
 
                                   try {
-                                    // Assuming _user is a valid Firebase User instance
                                     User? user =
                                         FirebaseAuth.instance.currentUser;
 
-                                    // Assuming firestoreService and ibanservice are defined and properly initialized
                                     String? documentID =
                                         await firestoreService.getDocumentId();
                                     if (documentID == null) {
-                                      showToast(
-                                          message: "User document not found.");
+                                      showToast(message: "User Doc not found");
                                       return;
                                     }
 
@@ -451,7 +451,7 @@ class ProfilePageState extends State<ProfilePage> {
                                     await ibanservice.updateIban(
                                         iban!, documentID);
                                     showToast(
-                                        message: "IBAN updated successfully!");
+                                        message: "IBAN updated successfully");
                                   } catch (e) {
                                     showToast(
                                         message: "Error updating IBAN: $e");
@@ -477,27 +477,27 @@ class ProfilePageState extends State<ProfilePage> {
     });
   }
 
+//delete the user profile
+//also deletes all data from the database (authentification and firestore)
   Future<void> deleteProfile(BuildContext context) async {
-    bool deleteConfirmed = false;
+    bool deleteConf = false;
     String? password;
     bool passwordVisible = false;
     String? documentID = await firestoreService.getDocumentId();
 
-    // Function to show the confirmation dialog
-    Future<bool> showDeleteConfirmationDialog() async {
+    Future<bool> DeleteConf() async {
       return await showDialog<bool>(
             context: context,
             builder: (BuildContext dialogContext) {
               return StatefulBuilder(
                 builder: (BuildContext context, StateSetter setState) {
                   return AlertDialog(
-                    title: const Text('Confirm With Password'),
+                    title: const Text('Confirm with Password'),
                     content: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                              'Are you sure you want to delete your profile? If so, enter your password:'),
+                          const Text('Are you sure?'),
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
@@ -538,23 +538,20 @@ class ProfilePageState extends State<ProfilePage> {
           false;
     }
 
-    // Show the dialog and get the confirmation result
-    deleteConfirmed = await showDeleteConfirmationDialog();
+    deleteConf = await DeleteConf();
 
-    // If delete is confirmed, proceed with the deletion logic
-    if (deleteConfirmed) {
+    if (deleteConf == true) {
       try {
         bool userDeleted =
             await deleteservice.deleteUser(documentID, password!);
-        if (userDeleted) {
+        if (userDeleted == true) {
           User? user = FirebaseAuth.instance.currentUser;
           await user!.delete();
 
-          // Use the current context from the scaffold key
-          Navigator.of(_scaffoldKey.currentContext!).pop(); // Close the dialog
+          Navigator.of(_scaffoldKey.currentContext!).pop();
           Navigator.of(_scaffoldKey.currentContext!)
               .pushReplacementNamed('/login');
-          showToast(message: "Profile deletion successful!");
+          showToast(message: "Profile deleted succesfully!");
         } else {
           showToast(
               message:
@@ -568,7 +565,6 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Button style for uniform size
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
       fixedSize: const Size(140, 40),
       backgroundColor: const Color(
@@ -600,12 +596,9 @@ class ProfilePageState extends State<ProfilePage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
-          // Changed to ListView for better scrolling experience
           children: [
-            // IBAN-Line (Credit Card Display)
             Container(
-              margin: const EdgeInsets.only(
-                  bottom: 20), // Adjusted margin for alignment
+              margin: const EdgeInsets.only(bottom: 20),
               height: 200,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -758,7 +751,6 @@ class ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   ),
-                  // Reset the PortfolioValueNotifier
                 ),
                 ElevatedButton(
                   style: buttonStyle,
