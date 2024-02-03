@@ -20,14 +20,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isSigning = false;
   final FirebaseAuthService _auth = FirebaseAuthService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService firestoreService = FirestoreService();
   final DisableLogIn _disableLogIn = DisableLogIn();
   final _firestore = FirebaseFirestore.instance;
-
-  bool? isDisabled = false;
 
   @override
   void dispose() {
@@ -82,8 +79,7 @@ class _LoginPageState extends State<LoginPage> {
                     bool isRegistered =
                         await _auth.isEmailRegistered(_emailController.text);
                     if (isRegistered) {
-                      await _firebaseAuth.sendPasswordResetEmail(
-                          email: _emailController.text);
+                      changePassword();
                       showToast(message: "Password reset email sent.");
                     } else {
                       showToast(
@@ -176,9 +172,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _signIn() async {
-    setState(() {
-      _isSigning = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isSigning = true;
+      });
+    }
 
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -256,9 +254,30 @@ class _LoginPageState extends State<LoginPage> {
         showToast(message: 'An error occoured: ${e.code}');
       }
     } finally {
-      setState(() {
-        _isSigning = false;
+      if (mounted) {
+        setState(() {
+          _isSigning = false;
+        });
+      }
+    }
+  }
+
+  void changePassword() async {
+    String email = _emailController.text.trim();
+    try {
+      await _firestore.collection("mail").add({
+        'to': email,
+        'template': {
+          'name': "changePassword",
+          'data': {
+            'changePasswordLink':
+                //"http://127.0.0.1:5050/reset?email=$email",
+                "http://134.119.216.59:5050/reset?email=$email",
+          },
+        },
       });
+    } catch (e) {
+      print(e);
     }
   }
 }

@@ -24,7 +24,7 @@ def tester():
         password=data.get("password"),
     )
     print("Password Changed for ", data.get("email"))
-    return render_template('enable.html', email=data.get("email")), 200
+    return render_template('change_password_confirmation.html', email=data.get("email")), 200
 
 
 # Returns Change Password Form Page
@@ -33,7 +33,7 @@ def reset_password():
     email = request.args.get('email')
     return render_template('change_password.html', args=email), 200
 
-
+# Helper function to enable user account and set isDisabled to False
 def enable_user_account(email):
     if email:
         userRequested = auth.get_user_by_email(email)
@@ -81,7 +81,7 @@ def enable_account():
                     userRequested.uid,
                     disabled=False,
                 )
-                return render_template('enable.html', email=email)
+                return render_template('change_password_confirmation.html', email=email)
         else:
             return {}, 404
         
