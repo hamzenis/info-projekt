@@ -104,6 +104,8 @@ class WalletServices {
                   errorDialogInvalidInput(context);
                 } else if (amount < 10) {
                   errorDialogAmountTooSmall(context);
+                } else if (amount > 999999.99) {
+                  errorAmountToHigh(context);
                 } else {
                   Navigator.of(context).pop(amount);
                 }
@@ -134,6 +136,26 @@ class WalletServices {
         );
       },
     );
+  }
+
+  /// Function that alerts the user via a popup that the amount he wants to deposit is too high.
+  void errorAmountToHigh(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Amount to high!'),
+            content: const Text(
+                'The maximum amount you can deposit is \$999,999.99'),
+            actions: [
+              TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  })
+            ],
+          );
+        });
   }
 
   /// Function that alerts the user via a popup that the input he entered is invalid.
