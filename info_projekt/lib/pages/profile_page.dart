@@ -645,6 +645,7 @@ class ProfilePageState extends State<ProfilePage> {
               onPressed: () => updateIban(context),
               child: const Text('Update IBAN'),
             ),
+            const SizedBox(height: 20),
 
             // Transaction-History-Line
             Row(
@@ -786,7 +787,10 @@ class ProfilePageState extends State<ProfilePage> {
 
 // Method to mask the IBAN number with dots and display the last 4 digits
 String maskIban(String? iban) {
-  if (iban == null || iban.length < 4) {
+  if (iban == null ||
+      iban.length < 4 ||
+      iban.isEmpty ||
+      iban == "No IBAN provided") {
     return 'No IBAN found!';
   } else {
     String lastFourDigits = iban.substring(iban.length - 4);
