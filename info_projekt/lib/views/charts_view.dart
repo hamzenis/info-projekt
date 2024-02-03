@@ -199,7 +199,6 @@ class _ChartStockState extends State<ChartStock> {
                               onTap: () {
                                 setState(() {
                                   isExpanded = !isExpanded;
-                                  print(isExpanded);
                                 });
                               },
                               child: Text.rich(
@@ -235,7 +234,7 @@ class _ChartStockState extends State<ChartStock> {
                 },
                 backgroundColor: boolMarketOpen || overrideMarketOpen
                     ? Colors.green
-                    : Colors.grey,
+                    : Colors.green.withAlpha(100),
                 icon: const Icon(Icons.attach_money),
                 label: const Text('Buy'),
               ),
