@@ -1,7 +1,7 @@
 # TradeMate
 
-Ein Projekt für das Modul "Informatik Projekt" an der Frankfurt University of Applied Sciences.\\
-WS 2023/2024\\
+Ein Projekt für das Modul "Informatik Projekt" an der Frankfurt University of Applied Sciences. <br />
+WS 2023/2024 <br />
 Dozentin: Prof. Dr. Ruth Schorr
 
 ## Installation auf Mac (Chrome Browser)
