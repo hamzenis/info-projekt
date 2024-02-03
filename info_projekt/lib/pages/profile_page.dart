@@ -605,6 +605,7 @@ class ProfilePageState extends State<ProfilePage> {
                     SizedBox(width: 8),
                     Text(
                       'Transaction History',
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 15),
                     ),
                   ],
@@ -634,7 +635,8 @@ class ProfilePageState extends State<ProfilePage> {
                     const SizedBox(width: 8),
                     Text(
                       _email ?? 'No email found!',
-                      style: const TextStyle(fontSize: 15),
+                      overflow: TextOverflow.fade,
+                      //style: TextStyle(fontSize: 15),
                     ),
                   ],
                 ),
@@ -657,6 +659,7 @@ class ProfilePageState extends State<ProfilePage> {
                     const SizedBox(width: 8),
                     Text(
                       passwordPlaceholder,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 15),
                     ),
                   ],

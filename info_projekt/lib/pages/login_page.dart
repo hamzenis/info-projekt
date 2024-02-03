@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:info_projekt/services/disableLogIn_service.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/sign_up_page.dart';
+import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,9 +20,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isSigning = false;
   final FirebaseAuthService _auth = FirebaseAuthService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FirestoreService firestoreService = FirestoreService();
+  final DisableLogIn _disableLogIn = DisableLogIn();
+  final _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
@@ -51,6 +57,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
+                inputType: TextInputType.emailAddress,
               ),
               const SizedBox(
                 height: 10,
@@ -59,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
+                inputType: TextInputType.visiblePassword,
               ),
               InkWell(
                 onTap: () async {
@@ -70,12 +78,8 @@ class _LoginPageState extends State<LoginPage> {
                     // Check if the email is registered
                     bool isRegistered =
                         await _auth.isEmailRegistered(_emailController.text);
-                    print(
-                        "Is email registered: $isRegistered"); // Debugging log
-
                     if (isRegistered) {
-                      await _firebaseAuth.sendPasswordResetEmail(
-                          email: _emailController.text);
+                      changePassword();
                       showToast(message: "Password reset email sent.");
                     } else {
                       showToast(
@@ -83,7 +87,6 @@ class _LoginPageState extends State<LoginPage> {
                     }
                   } catch (e) {
                     showToast(message: "An error occurred: $e");
-                    print("Error: $e"); // Debugging log
                   }
                 },
                 child: Container(
@@ -169,9 +172,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _signIn() async {
-    setState(() {
-      _isSigning = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isSigning = true;
+      });
+    }
 
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -181,19 +186,23 @@ class _LoginPageState extends State<LoginPage> {
           await _auth.signInWithEmailAndPassword(email, password);
 
       if (credential != null && credential.user != null) {
+        // Reset disableCounter on succesfull Login
+        await _disableLogIn.updateDisableCounter(credential.user!.uid, 0);
+
         final User user = credential.user!;
 
         if (!user.emailVerified) {
+          if (!mounted) return;
           // Email is not verified
           await showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text("Email not verified"),
-              content: Text(
+              title: const Text("Email not verified"),
+              content: const Text(
                   "A verification email has been sent to your email address. Please verify your email and try to login again."),
               actions: <Widget>[
                 TextButton(
-                  child: Text("Resend Email"),
+                  child: const Text("Resend Email"),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -202,21 +211,73 @@ class _LoginPageState extends State<LoginPage> {
 
           await _auth.resendVerificationEmail();
         } else {
-          Navigator.pushReplacementNamed(context, "/homePageNew");
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, "/homePageNew");
+          }
         }
       }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' ||
-          e.code == 'wrong-password' ||
-          e.code == 'invalid-credential') {
+      String email = _emailController.text.trim();
+
+      if (e.code == 'wrong-password') {
+        showToast(message: 'Invalid password.');
+        var disableUserUri = Uri.parse(
+            //"http://127.0.0.1:5050/wrong_password");
+            "http://134.119.216.59:5050/wrong_password");
+        try {
+          var response = await http.post(
+            disableUserUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          );
+
+          if (response.statusCode == 202) {
+            await _firestore.collection("mail").add({
+              'to': email,
+              'template': {
+                'name': "activate",
+                'data': {
+                  'reactivate_link':
+                      //"http://127.0.0.1:5050/reset?email=$email",
+                      "http://134.119.216.59:5050/reset?email=$email",
+                },
+              },
+            });
+          }
+        } catch (e) {
+          print(e);
+        }
+      }
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         showToast(message: 'Invalid email or password.');
-      } else {
-        showToast(message: 'An error occurred: ${e.code}');
+      } else if (e.code == 'too-many-requests' || e.code == 'user-disabled') {
+        showToast(message: 'An error occoured: ${e.code}');
       }
     } finally {
-      setState(() {
-        _isSigning = false;
+      if (mounted) {
+        setState(() {
+          _isSigning = false;
+        });
+      }
+    }
+  }
+
+  void changePassword() async {
+    String email = _emailController.text.trim();
+    try {
+      await _firestore.collection("mail").add({
+        'to': email,
+        'template': {
+          'name': "changePassword",
+          'data': {
+            'changePasswordLink':
+                //"http://127.0.0.1:5050/reset?email=$email",
+                "http://134.119.216.59:5050/reset?email=$email",
+          },
+        },
       });
+    } catch (e) {
+      print(e);
     }
   }
 }
