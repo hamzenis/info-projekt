@@ -4,8 +4,6 @@ Ein Projekt für das Modul "Informatik Projekt" an der Frankfurt University of A
 WS 2023/2024
 Dozentin: Prof. Dr. Ruth Schorr
 
-# Installationsanleitung (TradeMate)
-
 ## Installation auf Mac (Chrome Browser)
 
 Diese Installation erläutert die Schritte für das Installieren der TradeMate-Applikation im Betriebssystem MacOS unter Verwendung des Chrome Browsers.
