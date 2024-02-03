@@ -1,14 +1,11 @@
-// ignore_for_file: slash_for_doc_comments
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/portfolio_service.dart';
-import '../services/stockData_service.dart';
-import '../widgets/watchlist_button.dart';
-
-import '../widgets/buy_popup.dart';
+import 'package:info_projekt/services/portfolio_service.dart';
+import 'package:info_projekt/services/stockData_service.dart';
+import 'package:info_projekt/widgets/watchlist_button.dart';
+import 'package:info_projekt/widgets/buy_popup.dart';
 
 class ChartStock extends StatefulWidget {
   final String title;
@@ -30,15 +27,12 @@ class _ChartStockState extends State<ChartStock> {
   bool isInWatchlist = false;
   final portfolioService = PortfolioService();
 
-  /** 
-  *  
-  *
-  */
   @override
   void initState() {
+    // Enables pinch zooming
     _zoomPanBehavior = ZoomPanBehavior(
-        // Enables pinch zooming
-        enablePinching: true);
+      enablePinching: true,
+    );
     super.initState();
     updateUid();
     checkIfInWatchlist();
@@ -51,11 +45,8 @@ class _ChartStockState extends State<ChartStock> {
     });
   }
 
-  /**
-  *   TODO: Rewrite as Container not Widget
-  *   Build price container under chart
-  */
-  Widget buildPriceContainer(String realTimeQuote) {
+  /// Container for the price
+  Container buildPriceContainer(String realTimeQuote) {
     return Container(
       padding: const EdgeInsets.all(40),
       child: Text(
@@ -68,24 +59,16 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
+  /// Check if the stock is in the watchlist
   Future<void> checkIfInWatchlist() async {
-    isInWatchlist =
-        await portfolioService.checkIfInWatchlist(uid!, widget.title);
+    isInWatchlist = await portfolioService.checkIfInWatchlist(
+      uid!,
+      widget.title,
+    );
   }
 
-  /**
-  *
-  *
-  *
-  *
-  *   
-  */
   @override
   Widget build(BuildContext context) {
-    /*
-    *
-    *
-    */
     return FutureBuilder<List<dynamic>>(
       future: _getData(),
       builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
@@ -198,15 +181,7 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-  /**
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   */
+  /// Gets the chart data based on the selected time range
   Future<List<dynamic>> _getData() async {
     switch (selectedTimeRange) {
       case 'year':
@@ -235,26 +210,14 @@ class _ChartStockState extends State<ChartStock> {
     }
   }
 
-  /**
-   * 
-   * 
-   * 
-   * Function to call the API and get the data
-   * 
-   */
+  /// Updates the chart data based on the selected time range
   void _updateChartData(String timeRange) {
     setState(() {
       selectedTimeRange = timeRange;
     });
   }
 
-  /**
-   * 
-   * 
-   * 
-   * 
-   * Builds the chart widget
-   */
+  /// Builds the chart
   SfCartesianChart _buildChart() {
     return SfCartesianChart(
       primaryXAxis: DateTimeCategoryAxis(), // Date axis
@@ -267,13 +230,8 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-  /**
-   * 
-   * 
-   * 
-   * Returns the list of chart series which need to render
-   * on the update data source chart.
-   */
+  /// Returns the list of chart series which need to render
+  /// on the update data source chart.
   List<ChartSeries<ChartData, DateTime>> _getUpdateDataSourceSeries() {
     return <ChartSeries<ChartData, DateTime>>[
       // Renders line chart
@@ -284,11 +242,7 @@ class _ChartStockState extends State<ChartStock> {
     ];
   }
 
-/**
- * 
- * 
- * 
- */
+  /// Container for the company about
   Container buildAboutContainer(String companyAbout) {
     return Container(
       padding: const EdgeInsets.all(10),
@@ -304,7 +258,7 @@ class _ChartStockState extends State<ChartStock> {
           ),
           Text(
             companyAbout,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
             ),
           ),
@@ -313,12 +267,6 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-  /**
-   * 
-   * 
-   * 
-   * 
-   */
   @override
   void dispose() {
     currentData!.clear();
