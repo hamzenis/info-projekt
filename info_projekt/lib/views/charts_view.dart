@@ -21,14 +21,6 @@ class ChartStock extends StatefulWidget {
   State<ChartStock> createState() => _ChartStockState();
 }
 
-/*
-*   Meine Augen brennen bitte nicht alles auf einen Fleck
-*
-* TODO: Add error handling
-* TODO: Refactor for better readability
-* TODO: Add comments
-*/
-
 class _ChartStockState extends State<ChartStock> {
   late ZoomPanBehavior _zoomPanBehavior;
   String? uid;
