@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/disableLogIn_service.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
@@ -45,7 +46,12 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(),
+              Image.asset(
+                'lib/assets/tradematelogo_long.png',
+                height: kIsWeb ? 100 : 50,
+                width: 500,
+              ),
+              SizedBox(height: 20),
               const Text(
                 "Login",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
@@ -163,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-              const Spacer(flex: 2),
+              const Spacer(flex: 4),
             ],
           ),
         ),
