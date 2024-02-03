@@ -1,3 +1,9 @@
+# TradeMate
+
+Ein Projekt für das Modul "Informatik Projekt" an der Frankfurt University of Applied Sciences.
+WS 2023/2024
+Dozentin: Prof. Dr. Ruth Schorr
+
 # Installationsanleitung (TradeMate)
 
 # Installation auf Mac (Chrome Browser)
@@ -143,3 +149,12 @@ for a more detailed help message, press "h". To quit, press "q".
 Die Website ist auf Chrome erreichbar unter der URL: [`http://localhost:8080`](http://localhost:8080)
 
 ![Image.png](https://res.craft.do/user/full/71f5e172-8c0d-33f1-7162-82d4f12c0346/doc/76BC0128-0648-47BD-817C-DACE3C6B3DBD/5F593782-ECEA-4CC7-8491-64250B6DB8E2_2/TRIsBUWS77C5YP3HRRiMNQe0uO0W2YlnmM2zIRvdG4cz/Image.png)
+
+## Support
+
+Bei Fragen oder Problemen, kontaktiere uns unter:
+
+- [Hamzenis Kryeziu](mailto:hamzenis.kryeziu@stud.fra-uas.de)
+- [Dominique Conceicao Rosario](mailto:dominique.conceicaorosario@stud.fra-uas.de)
+- [Jaqueline Brossart](mailto:jaqueline.brossart@stud.fra-uas.de)
+- [Ebrahim Al Numayri](mailto:ebrahim.alnumayri@stud.fra-uas.de)
