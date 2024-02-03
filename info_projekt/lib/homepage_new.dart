@@ -6,11 +6,11 @@ import 'package:info_projekt/pages/profile_page.dart';
 import 'package:info_projekt/pages/watchlist_page.dart';
 import 'package:info_projekt/provider/portfolio.dart';
 import 'package:info_projekt/views/wallet_screen.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:provider/provider.dart';
 import 'views/search_view.dart';
 import 'views/newspage.dart';
 import 'services/portfolio_service.dart';
-import 'widgets/menubutton.dart';
 import 'widgets/tab_bar.dart';
 
 /// The home page of the app aka. the portfolio page of the user.<br />
@@ -36,58 +36,88 @@ class HomePageNewState extends State<HomePageNew> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => PortfolioValueNotifier(uid),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('TradeMate'),
-        ),
-        body: Column(
-          children: [
-            PortfolioOverview(widget.refreshNotifier, uid,
-                key: portfolioValueNotifierKey),
-            Expanded(
-              child: TabBarClass(
-                tabs: const [
-                  Tab(text: 'Investments'),
-                  Tab(text: 'Watchlist'),
-                ],
-                tabBarViews: [
-                  StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: portfolioService.getIndividualInvestmentsStream(
-                        uid: uid),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return InvestmentPage(
-                            ValueNotifier(snapshot.data ?? []),
-                            uid,
-                            widget.refreshNotifier);
-                      }
-                    },
-                  ),
-                  WatchlistPage(uid: uid),
-                ],
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: ChangeNotifierProvider(
+        create: (context) => PortfolioValueNotifier(uid),
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: const Text('TradeMate'),
+          ),
+          body: Column(
+            children: [
+              PortfolioOverview(widget.refreshNotifier, uid,
+                  key: portfolioValueNotifierKey),
+              Expanded(
+                child: TabBarClass(
+                  tabs: const [
+                    Tab(text: 'Investments'),
+                    Tab(text: 'Watchlist'),
+                  ],
+                  tabBarViews: [
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: portfolioService.getIndividualInvestmentsStream(
+                          uid: uid),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          return InvestmentPage(
+                              ValueNotifier(snapshot.data ?? []),
+                              uid,
+                              widget.refreshNotifier);
+                        }
+                      },
+                    ),
+                    WatchlistPage(uid: uid),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        floatingActionButton: MenuButton(
-          distance: 112.0,
-          pageBuilders: [
-            (context) => const SearchPage(),
-            (context) => const NewsPage(),
-            (context) => ProfilePage(),
-            (context) => const WalletScreen(),
-          ],
-          children: const [
-            Icon(Icons.search),
-            Icon(Icons.newspaper),
-            Icon(Icons.person),
-            Icon(Icons.wallet),
-          ],
+            ],
+          ),
+          floatingActionButton: SpeedDial(
+            animatedIcon: AnimatedIcons.menu_close,
+            animatedIconTheme: const IconThemeData(size: 22.0),
+            overlayColor: Colors.black,
+            overlayOpacity: 0.5,
+            children: [
+              SpeedDialChild(
+                child: const Icon(Icons.search),
+                label: 'Search',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SearchPage()),
+                ),
+              ),
+              SpeedDialChild(
+                child: const Icon(Icons.newspaper),
+                label: 'News',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NewsPage()),
+                ),
+              ),
+              SpeedDialChild(
+                child: const Icon(Icons.person),
+                label: 'Profile',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                ),
+              ),
+              SpeedDialChild(
+                child: const Icon(Icons.wallet),
+                label: 'Wallet',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WalletScreen()),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

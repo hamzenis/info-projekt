@@ -4,14 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/portfolio_service.dart';
 import '../services/stockData_service.dart';
 import '../widgets/watchlist_button.dart';
 
 import '../widgets/buy_popup.dart';
-
-final user = FirebaseAuth.instance.currentUser;
 
 class ChartStock extends StatefulWidget {
   final String title;
@@ -34,6 +31,7 @@ class ChartStock extends StatefulWidget {
 
 class _ChartStockState extends State<ChartStock> {
   late ZoomPanBehavior _zoomPanBehavior;
+  String? uid;
 
   List<ChartData>? currentData;
   String selectedTimeRange = 'month'; // Default to 'month'
@@ -50,7 +48,15 @@ class _ChartStockState extends State<ChartStock> {
         // Enables pinch zooming
         enablePinching: true);
     super.initState();
+    updateUid();
     checkIfInWatchlist();
+  }
+
+  void updateUid() {
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      uid = user?.uid;
+    });
   }
 
   /**
@@ -72,7 +78,7 @@ class _ChartStockState extends State<ChartStock> {
 
   Future<void> checkIfInWatchlist() async {
     isInWatchlist =
-        await portfolioService.checkIfInWatchlist(user!.uid, widget.title);
+        await portfolioService.checkIfInWatchlist(uid!, widget.title);
   }
 
   /**
@@ -114,7 +120,7 @@ class _ChartStockState extends State<ChartStock> {
                   actions: <Widget>[
                     FutureBuilder<bool>(
                       future: portfolioService.checkIfInWatchlist(
-                          user!.uid, widget.title),
+                          uid!, widget.title),
                       builder:
                           (BuildContext context, AsyncSnapshot<bool> snapshot) {
                         if (snapshot.hasData) {
@@ -122,7 +128,7 @@ class _ChartStockState extends State<ChartStock> {
                             isInWatchlist: snapshot.data!,
                             title: widget.title,
                             companyName: companyName,
-                            uid: user!.uid,
+                            uid: uid!,
                           );
                         } else {
                           return CircularProgressIndicator();

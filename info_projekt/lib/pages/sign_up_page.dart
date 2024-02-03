@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
@@ -39,7 +40,6 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text("SignUp"),
       ),
       body: Center(
         child: Padding(
@@ -47,6 +47,12 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Image.asset(
+                'lib/assets/tradematelogo_long.png',
+                height: kIsWeb ? 100 : 50,
+                width: 500,
+              ),
+              SizedBox(height: 20),
               const Text(
                 "Sign Up",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
@@ -124,9 +130,10 @@ class _SignUpPageState extends State<SignUpPage> {
                       style: TextStyle(
                           color: Colors.blue, fontWeight: FontWeight.bold),
                     ),
-                  )
+                  ),
                 ],
-              )
+              ),
+              Spacer(),
             ],
           ),
         ),
