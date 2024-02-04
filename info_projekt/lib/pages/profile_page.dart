@@ -791,7 +791,7 @@ String maskIban(String? iban) {
       iban.length < 4 ||
       iban.isEmpty ||
       iban == "No IBAN provided") {
-    return 'No IBAN found!';
+    return 'No IBAN provided!';
   } else {
     String lastFourDigits = iban.substring(iban.length - 4);
     return '.. $lastFourDigits';

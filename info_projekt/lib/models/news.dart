@@ -1,12 +1,13 @@
 import 'dart:convert';
 
+//Shows the news in the "News"-category in the app
+
 List<News> postFromJson(String str) =>
     List<News>.from(json.decode(str).map((x) => News.fromJson(x)));
 
 String postToJson(List<News> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-//late-Stichwort: Variablen werden hier nicht initialisiert
 class News {
   String? symbol;
   String publishedDate;

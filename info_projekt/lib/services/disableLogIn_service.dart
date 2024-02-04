@@ -27,31 +27,7 @@ class DisableLogIn {
     return null;
   }
 
-  /* Future<bool?> fetchDisabledStatus(bool isDisabled) async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      try {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('Users')
-            .where('UID', isEqualTo: user.uid)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot userDocument = querySnapshot.docs.first;
-
-          bool isDisabled = userDocument.get('isDisabled');
-          return isDisabled;
-        }
-      } catch (e) {
-        print('Error fetching isDisabled: $e');
-      }
-    }
-    return null;
-  }
-
-  */
-
+//fetches the number of failed login attempts from the database (for blocking login)
   Future<num?> fetchDisabledCounter(String userId) async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -75,6 +51,7 @@ class DisableLogIn {
     return null;
   }
 
+//updates the disable-status of a user
   Future<void> updateIsDisabled(String userId, bool isDisabled) async {
     String? docId = await _firestoreService.getDocumentId();
     await _firestore.collection('Users').doc(docId).update({
@@ -82,6 +59,7 @@ class DisableLogIn {
     });
   }
 
+//updates the disable-counter of a user
   Future<void> updateDisableCounter(String userId, num disableCounter) async {
     String? docId = await _firestoreService.getDocumentId();
     await _firestore.collection('Users').doc(docId).update({

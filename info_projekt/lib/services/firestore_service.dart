@@ -14,6 +14,7 @@ class FirestoreService {
   bool isDisabled = false;
   num disableCounter = 0;
 
+//stores a new user in the database
   Future<void> saveUserDataToFirestore(
       String userName, String registrationDate) async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -55,7 +56,6 @@ class FirestoreService {
   }
 
 //notwendig für die Änderung von z. B. Passwort und Iban
-
   Future<String?> getDocumentId() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -85,6 +85,7 @@ class FirestoreService {
     return credentials;
   }
 
+//gets shown in the profile page
   Future<String?> fetchRegistrationDate() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -114,6 +115,7 @@ class FirestoreService {
     return null;
   }
 
+/*
   Future<bool?> fetchDisabledStatus(bool isDisabled) async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -177,4 +179,5 @@ class FirestoreService {
     }
     return null;
   }
+  */
 }
