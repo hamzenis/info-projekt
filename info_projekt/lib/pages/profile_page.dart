@@ -303,9 +303,9 @@ class ProfilePageState extends State<ProfilePage> {
                                 "Change successful, please verify your Email!");
                         await firebaseAuth.signOut();
 
-                        // Use the current context from the scaffold key
+                       
                         Navigator.of(scaffoldKey.currentContext!)
-                            .pop(); // Close the dialog
+                            .pop(); 
                         Navigator.of(scaffoldKey.currentContext!)
                             .pushReplacementNamed('/login');
                       }
