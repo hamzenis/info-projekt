@@ -45,6 +45,7 @@ class HomePageNewState extends State<HomePageNew> {
           appBar: AppBar(
             automaticallyImplyLeading: false,
             title: const Text('TradeMate'),
+            backgroundColor: const Color.fromRGBO(126, 192, 238, 1),
           ),
           body: Column(
             children: [

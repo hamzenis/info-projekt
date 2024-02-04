@@ -8,6 +8,7 @@ import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
 
 //this is the class that shows the contents of the user profile
 //in the user profile, the user can change his IBAN, password and email,
@@ -303,9 +304,7 @@ class ProfilePageState extends State<ProfilePage> {
                                 "Change successful, please verify your Email!");
                         await firebaseAuth.signOut();
 
-                       
-                        Navigator.of(scaffoldKey.currentContext!)
-                            .pop(); 
+                        Navigator.of(scaffoldKey.currentContext!).pop();
                         Navigator.of(scaffoldKey.currentContext!)
                             .pushReplacementNamed('/login');
                       }
@@ -333,8 +332,6 @@ class ProfilePageState extends State<ProfilePage> {
 //save a new IBAN or update your current IBAN for wallet-operations
   Future<void> updateIban(BuildContext context) async {
     String? iban;
-    bool passwordVisible = false;
-    String? password;
 
     ibanservice.fetchIban().then((currentIban) async {
       if (currentIban == null || currentIban.isEmpty) {
@@ -385,93 +382,36 @@ class ProfilePageState extends State<ProfilePage> {
 
                   Navigator.of(context).pop();
 
-                  await showDialog(
+                  String? password = await showDialog<String>(
                     context: context,
                     builder: (BuildContext context) {
-                      return StatefulBuilder(
-                        builder: (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: const Text('Confirm with Password'),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  /*const Text(
-                                      'Please enter your current password to proceed:'),*/
-                                  TextFormField(
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          passwordVisible
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            passwordVisible = !passwordVisible;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    obscureText: !passwordVisible,
-                                    onChanged: (value) => password = value,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-
-                                  if (password == null || password!.isEmpty) {
-                                    showToast(
-                                        message: "Password cannot be empty");
-                                    return;
-                                  }
-
-                                  try {
-                                    User? user =
-                                        FirebaseAuth.instance.currentUser;
-
-                                    String? documentID =
-                                        await firestoreService.getDocumentId();
-                                    if (documentID == null) {
-                                      showToast(message: "User Doc not found");
-                                      return;
-                                    }
-
-                                    AuthCredential credentials =
-                                        EmailAuthProvider.credential(
-                                            email: user!.email!,
-                                            password: password!);
-
-                                    await user.reauthenticateWithCredential(
-                                        credentials);
-                                    await ibanservice.updateIban(
-                                        iban!, documentID);
-                                    showToast(
-                                        message: "IBAN updated successfully");
-                                  } catch (e) {
-                                    showToast(
-                                        message: "Error updating IBAN: $e");
-                                  }
-                                },
-                                child: const Text('Save'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
+                      return PasswordDialog();
                     },
                   );
+
+                  if (password == null || password.isEmpty) {
+                    showToast(message: "Password cannot be empty");
+                    return;
+                  }
+
+                  try {
+                    User? user = FirebaseAuth.instance.currentUser;
+
+                    String? documentID = await firestoreService.getDocumentId();
+                    if (documentID == null) {
+                      showToast(message: "User Doc not found");
+                      return;
+                    }
+
+                    AuthCredential credentials = EmailAuthProvider.credential(
+                        email: user!.email!, password: password);
+
+                    await user.reauthenticateWithCredential(credentials);
+                    await ibanservice.updateIban(iban!, documentID);
+                    showToast(message: "IBAN updated successfully");
+                  } catch (e) {
+                    showToast(message: "Error updating IBAN: $e");
+                  }
                 },
                 child: const Text('Save'),
               ),
@@ -499,12 +439,12 @@ class ProfilePageState extends State<ProfilePage> {
               return StatefulBuilder(
                 builder: (BuildContext context, StateSetter setState) {
                   return AlertDialog(
-                    title: const Text('Confirm with Password'),
+                    title: const Text('Delete Profile'),
                     content: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Are you sure?'),
+                          const Text('Confirm with password to continue'),
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
@@ -574,8 +514,7 @@ class ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
       fixedSize: const Size(140, 40),
-      backgroundColor: const Color.fromARGB(255, 222, 214, 214),
-      foregroundColor: const Color.fromARGB(255, 148, 32, 121),
+      backgroundColor: const Color.fromRGBO(57, 183, 205, 0.8),
     );
 
     // Placeholder text for the password
@@ -586,7 +525,7 @@ class ProfilePageState extends State<ProfilePage> {
       key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Profile', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 148, 32, 121),
+        backgroundColor: const Color.fromRGBO(126, 192, 238, 1),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -607,7 +546,10 @@ class ProfilePageState extends State<ProfilePage> {
               height: 200,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1D2671), Color(0xFFC33764)],
+                  colors: [
+                    Color.fromRGBO(126, 192, 238, 1),
+                    Color.fromRGBO(57, 183, 205, 0.8),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -648,20 +590,33 @@ class ProfilePageState extends State<ProfilePage> {
             ElevatedButton(
               style: buttonStyle,
               onPressed: () => updateIban(context),
-              child: const Text('Update IBAN'),
+              child: const Text(
+                'Update IBAN',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white,
+                ),
+              ),
             ),
             const SizedBox(height: 20),
+
             // Transaction-History-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.history, color: Color(0xFFC33764)),
+                    Icon(
+                      Icons.history,
+                      color: Color.fromRGBO(57, 183, 205, 0.8),
+                    ),
                     SizedBox(width: 8),
                     Text(
                       'Transaction History',
-                      style: TextStyle(fontSize: 15, color: Color(0xFF1D2671)),
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
@@ -674,7 +629,13 @@ class ProfilePageState extends State<ProfilePage> {
                           builder: (context) => OwnedStocksPage()),
                     );
                   },
-                  child: const Text('Show'),
+                  child: const Text(
+                    'Show',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -686,19 +647,30 @@ class ProfilePageState extends State<ProfilePage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.email, color: Color(0xFFC33764)),
+                    const Icon(
+                      Icons.email,
+                      color: Color.fromRGBO(57, 183, 205, 0.8),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       maskEmail(_email),
                       style: const TextStyle(
-                          fontSize: 15, color: Color(0xFF1D2671)),
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
                 ElevatedButton(
                   style: buttonStyle,
                   onPressed: () => updateEmail(context),
-                  child: const Text('Update'),
+                  child: const Text(
+                    'Update',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -710,19 +682,30 @@ class ProfilePageState extends State<ProfilePage> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lock, color: Color(0xFFC33764)),
+                    const Icon(
+                      Icons.lock,
+                      color: Color.fromRGBO(57, 183, 205, 0.8),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       passwordPlaceholder,
                       style: const TextStyle(
-                          fontSize: 15, color: Color(0xFF1D2671)),
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
                 ElevatedButton(
                   style: buttonStyle,
                   onPressed: () => updatePassword(context),
-                  child: const Text('Update'),
+                  child: const Text(
+                    'Update',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -738,27 +721,44 @@ class ProfilePageState extends State<ProfilePage> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.calendar_today, color: Color(0xFFC33764)),
+                          Icon(
+                            Icons.calendar_today,
+                            color: Color.fromRGBO(57, 183, 205, 0.8),
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Date of Registration:',
                             style: TextStyle(
-                                fontSize: 15, color: Color(0xFF1D2671)),
+                              fontSize: 15,
+                              color: Colors.black,
+                            ),
                           ),
                         ],
                       ),
                       Text(
                         '        $_registrationDate',
                         style: const TextStyle(
-                            fontSize: 15, color: Color(0xFF1D2671)),
+                          fontSize: 15,
+                          color: Colors.black,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 ElevatedButton(
-                  style: buttonStyle,
+                  // style: buttonStyle,
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: const Size(140, 40),
+                    backgroundColor: Colors.red.shade500,
+                  ),
                   onPressed: () => deleteProfile(context),
-                  child: const Text('Delete Profile'),
+                  child: const Text(
+                    'Delete Profile',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -767,7 +767,7 @@ class ProfilePageState extends State<ProfilePage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
-                backgroundColor: const Color(0xFFC33764),
+                backgroundColor: const Color.fromRGBO(37, 132, 148, 0.8),
               ),
               onPressed: () {
                 FirebaseAuth.instance.signOut();

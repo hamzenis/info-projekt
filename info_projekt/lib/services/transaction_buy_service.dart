@@ -52,6 +52,8 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         // Increment price of stock by fee
         singlePrice = singlePrice + (fee / amount);
 
+        taxPot = double.parse(taxPot.toStringAsFixed(2));
+        totalCost = double.parse(totalCost.toStringAsFixed(2));
         await _firestore.collection('Users').doc(userDoc.id).update({
           'balance': FieldValue.increment(-totalCost),
           // update tax_pot: subtract the fee from the tax pot

@@ -35,7 +35,8 @@ class _NewsPage extends State<NewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Stock News"),
+        title: const Text('Stock News'),
+        backgroundColor: const Color.fromRGBO(126, 192, 238, 1),
       ),
       body: contentLoaded
           ? ListView.builder(

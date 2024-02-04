@@ -83,92 +83,100 @@ class InvestmentPageState extends State<InvestmentPage>
             valueListenable: widget.investments,
             builder: (context, value, child) {
               return ListView.builder(
-                itemCount: value.length,
+                itemCount: value.length + 1,
                 itemBuilder: (context, index) {
+                  if (index == value.length) {
+                    return Container(
+                        height: MediaQuery.of(context).size.height / 4);
+                  }
                   var investment = value[index];
                   bool isInvestmentProfit = investment['profitOrLoss'] > 0;
                   bool isZero = investment['profitOrLoss'] == 0.00;
 
                   return GestureDetector(
-                    onTap: () async {
-                      int? amount =
-                          await _showAmountDialog(context, investment);
-                      if (amount != null) {
-                        bool success = await _sellStock(context, amount,
-                            investment, portfolioValueNotifier);
-                        if (success) {
-                          await _updateInvestment(context, amount, investment,
-                              portfolioValueNotifier);
-                        }
-                      }
-                    },
-                    child: ListTile(
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(investment['name']),
-                          ),
-                          Text(
-                            '\$${formatter.format(investment['totalValue'])}',
-                            style: TextStyle(
-                              color: isInvestmentProfit
-                                  ? Colors.green
-                                  : (isZero ? Colors.grey : Colors.red),
+                    child: Card(
+                      child: ListTile(
+                        title: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(investment['name']),
                             ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Quantity: ${intFormatter.format(investment['quantity'].toDouble().toInt())}',
+                            Text(
+                              '\$${formatter.format(investment['totalValue'])}',
+                              style: TextStyle(
+                                color: isInvestmentProfit
+                                    ? Colors.green
+                                    : (isZero ? Colors.grey : Colors.red),
                               ),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                showPercentage = !showPercentage;
-                              });
-                            },
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ],
+                        ),
+                        subtitle: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      isInvestmentProfit
-                                          ? Icons.keyboard_arrow_up
-                                          : (isZero
-                                              ? Icons.keyboard_arrow_right
-                                              : Icons.keyboard_arrow_down),
-                                      color: isInvestmentProfit
-                                          ? Colors.green
-                                          : (isZero ? Colors.grey : Colors.red),
-                                    ),
-                                    Text(
-                                      showPercentage
-                                          ? '${investment['percentageGainOrLoss'] != null ? percentFormatter.format(investment['percentageGainOrLoss']) : '0.00'}%'
-                                          : '\$${formatter.format(investment['profitOrLoss'])}',
-                                      style: TextStyle(
+                                Text(
+                                  'Quantity: ${intFormatter.format(investment['quantity'].toDouble().toInt())}',
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  showPercentage = !showPercentage;
+                                });
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        isInvestmentProfit
+                                            ? Icons.keyboard_arrow_up
+                                            : (isZero
+                                                ? Icons.keyboard_arrow_right
+                                                : Icons.keyboard_arrow_down),
                                         color: isInvestmentProfit
                                             ? Colors.green
                                             : (isZero
                                                 ? Colors.grey
                                                 : Colors.red),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                      Text(
+                                        showPercentage
+                                            ? '${investment['percentageGainOrLoss'] != null ? percentFormatter.format(investment['percentageGainOrLoss']) : '0.00'}%'
+                                            : '\$${formatter.format(investment['profitOrLoss'])}',
+                                        style: TextStyle(
+                                          color: isInvestmentProfit
+                                              ? Colors.green
+                                              : (isZero
+                                                  ? Colors.grey
+                                                  : Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        onTap: () async {
+                          int? amount =
+                              await _showAmountDialog(context, investment);
+                          if (amount != null) {
+                            bool success = await _sellStock(context, amount,
+                                investment, portfolioValueNotifier);
+                            if (success) {
+                              await _updateInvestment(context, amount,
+                                  investment, portfolioValueNotifier);
+                            }
+                          }
+                        },
                       ),
                     ),
                   );
@@ -240,18 +248,24 @@ class InvestmentPageState extends State<InvestmentPage>
       builder: (context) {
         final TextEditingController controller = TextEditingController();
         return AlertDialog(
-          title: const Text('How many shares do you want to sell?'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.allow(
-                RegExp(r'[0-9]'),
+          title: Text('${investment['name']}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('How many shares do you want to sell?'),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[0-9]'),
+                  ),
+                ],
+                decoration: InputDecoration(
+                  hintText: 'Amount',
+                ),
               ),
             ],
-            decoration: const InputDecoration(
-              hintText: 'Amount',
-            ),
           ),
           actions: <Widget>[
             Row(
