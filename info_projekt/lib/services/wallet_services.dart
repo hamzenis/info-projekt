@@ -8,7 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:info_projekt/pages/profile_page.dart'; // Replace 'your_project' with your actual project name
+import 'package:info_projekt/pages/profile_page.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart'; // Replace 'your_project' with your actual project name
 
 /// This is the Brain of the Wallet Screen.
 /// This class works with the [WalletScreen] class to deposit and withdraw money.
@@ -183,36 +184,14 @@ class WalletServices {
   /// Function that was created for the withdraw button.
   /// It creates a popup with the password of the user.
   /// It acts as security feature, so that only the user that knows the password can withdraw money.
-  Future<String?> getUserPassword(BuildContext context) async {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Enter your password'),
-          content: TextField(
-            controller: controller,
-            obscureText: true,
-            decoration: const InputDecoration(hintText: 'Password'),
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+Future<String?> getUserPassword(BuildContext context) async {
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      return PasswordDialog();
+    },
+  );
+}
 
   /// Function that alerts the user via a popup that the withdraw amount is higher than the balance he have.
   void errorDialogWithdrawAmount(BuildContext context) {
