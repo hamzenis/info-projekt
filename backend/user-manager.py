@@ -46,7 +46,6 @@ def update_passsword_flow():
 @app.route("/reset", methods=['GET', 'POST'])
 def reset_password():
     email = request.args.get('email')
-    print("ABC")
     return render_template('change_password.html', args=email), 200
 
 # Helper function to enable user account and set isDisabled to False
