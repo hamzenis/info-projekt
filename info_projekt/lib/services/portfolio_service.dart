@@ -75,8 +75,12 @@ class PortfolioService {
       totalProfitOrLoss += investment['profitOrLoss'];
     }
 
-    totalPercentageGainOrLoss = totalCurrentValue * 100 / totalCostBasis - 100;
-
+    if (totalCostBasis != 0) {
+      totalPercentageGainOrLoss =
+          totalCurrentValue * 100 / totalCostBasis - 100;
+    } else {
+      totalPercentageGainOrLoss = 0.0;
+    }
     return Portfolio(
       portfolioValue: totalCurrentValue,
       profitOrLoss: totalProfitOrLoss,
