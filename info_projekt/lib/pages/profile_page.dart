@@ -10,6 +10,11 @@ import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
 import 'package:info_projekt/widgets/password_input_widget.dart';
 
+//this is the class that shows the contents of the user profile
+//in the user profile, the user can change his IBAN, password and email,
+//delete his profile and view his transaction history.
+//it is also the place where the user can logout of the application.
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -18,8 +23,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirestoreService firestoreService = FirestoreService();
   DeleteProfile deleteservice = DeleteProfile();
   UpdateEmail updateservice = UpdateEmail();
@@ -38,7 +43,7 @@ class ProfilePageState extends State<ProfilePage> {
 
 //fetch information about the user from the database
   Future<void> _getUserInfo() async {
-    _user = _auth.currentUser;
+    _user = firebaseAuth.currentUser;
 
     if (_user != null) {
       String? registrationDate = await firestoreService.fetchRegistrationDate();
@@ -52,6 +57,8 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
 //exchange the old password with a new password
+//new password can't be old password or empty, has to be 8 characters long
+//contain uppercase and lowercase letters, at least one special character and a number
   Future<void> updatePassword(BuildContext context) async {
     String? oldPassword;
     String? newPassword1;
@@ -155,7 +162,7 @@ class ProfilePageState extends State<ProfilePage> {
                         newPassword1!.length >= 8) {
                       try {
                         UserCredential userCredential =
-                            await _auth.signInWithEmailAndPassword(
+                            await firebaseAuth.signInWithEmailAndPassword(
                           email: _user!.email!,
                           password: oldPassword!,
                         );
@@ -163,12 +170,12 @@ class ProfilePageState extends State<ProfilePage> {
                         User? user = userCredential.user;
                         if (user != null) {
                           await user.updatePassword(newPassword1!);
-                          await _auth.signOut();
+                          await firebaseAuth.signOut();
 
                           showToast(message: "Password changed successfully!");
 
-                          Navigator.of(_scaffoldKey.currentContext!).pop();
-                          Navigator.of(_scaffoldKey.currentContext!)
+                          Navigator.of(scaffoldKey.currentContext!).pop();
+                          Navigator.of(scaffoldKey.currentContext!)
                               .pushReplacementNamed('/login');
                         }
                       } catch (e) {
@@ -205,7 +212,7 @@ class ProfilePageState extends State<ProfilePage> {
 //exchange current email with a new email adress
 //new email has to be confirmed via confirmation link (equivalent to sign in)
   Future<void> updateEmail(BuildContext context) async {
-    String? newEmail1;
+    String? newEmail;
     String? password;
     bool passwordVisible = false;
 
@@ -226,7 +233,7 @@ class ProfilePageState extends State<ProfilePage> {
                     TextFormField(
                       decoration:
                           const InputDecoration(labelText: 'New Email:'),
-                      onChanged: (value) => newEmail1 = value,
+                      onChanged: (value) => newEmail = value,
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -265,14 +272,14 @@ class ProfilePageState extends State<ProfilePage> {
                         return;
                       }
 
-                      if (_user!.email == newEmail1) {
+                      if (_user!.email == newEmail) {
                         showToast(
                             message:
                                 "Old Email can't be the same as new Email");
                         return;
                       }
 
-                      if (newEmail1!.isEmpty) {
+                      if (newEmail!.isEmpty) {
                         showToast(message: "Please provide a new Email");
                       }
 
@@ -280,27 +287,25 @@ class ProfilePageState extends State<ProfilePage> {
                           firestoreService.getCredentials(password!);
                       await _user!.reauthenticateWithCredential(credentials);
 
-                      await _user!.updateEmail(newEmail1!);
+                      await _user!.updateEmail(newEmail!);
 
                       User? updatedUser = FirebaseAuth.instance.currentUser;
                       if (updatedUser != null &&
-                          updatedUser.email == newEmail1) {
+                          updatedUser.email == newEmail) {
                         await updatedUser.sendEmailVerification();
 
                         String? documentID =
                             await firestoreService.getDocumentId();
                         await updateservice.updateEmailFirestore(
-                            newEmail1!, documentID);
+                            newEmail!, documentID);
 
                         showToast(
                             message:
                                 "Change successful, please verify your Email!");
-                        await _auth.signOut();
+                        await firebaseAuth.signOut();
 
-                        // Use the current context from the scaffold key
-                        Navigator.of(_scaffoldKey.currentContext!)
-                            .pop(); // Close the dialog
-                        Navigator.of(_scaffoldKey.currentContext!)
+                        Navigator.of(scaffoldKey.currentContext!).pop();
+                        Navigator.of(scaffoldKey.currentContext!)
                             .pushReplacementNamed('/login');
                       }
                     } on FirebaseAuthException catch (e) {
@@ -311,7 +316,7 @@ class ProfilePageState extends State<ProfilePage> {
                         showToast(message: "An error occurred: ${e.message}");
                       }
                     } catch (e) {
-                      showToast(message: "An unexpected error occurred: $e");
+                      showToast(message: "An error occurred: $e");
                     }
                   },
                   child: const Text('Save'),
@@ -330,7 +335,7 @@ class ProfilePageState extends State<ProfilePage> {
 
     ibanservice.fetchIban().then((currentIban) async {
       if (currentIban == null || currentIban.isEmpty) {
-        showToast(message: "Current IBAN not available");
+        showToast(message: "Current IBAN cannot be fetched");
         return;
       }
 
@@ -490,8 +495,8 @@ class ProfilePageState extends State<ProfilePage> {
           User? user = FirebaseAuth.instance.currentUser;
           await user!.delete();
 
-          Navigator.of(_scaffoldKey.currentContext!).pop();
-          Navigator.of(_scaffoldKey.currentContext!)
+          Navigator.of(scaffoldKey.currentContext!).pop();
+          Navigator.of(scaffoldKey.currentContext!)
               .pushReplacementNamed('/login');
           showToast(message: "Profile deleted succesfully!");
         } else {
@@ -513,10 +518,11 @@ class ProfilePageState extends State<ProfilePage> {
     );
 
     // Placeholder text for the password
+    //actual length should not be shown due to it being information about the length of the password
     String passwordPlaceholder = '********';
 
     return Scaffold(
-      key: _scaffoldKey,
+      key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Profile', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromRGBO(126, 192, 238, 1),
@@ -563,7 +569,7 @@ class ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Spacer(),
+                    const Spacer(),
                     Text(
                       maskIban(_iban),
                       style: const TextStyle(
@@ -705,7 +711,7 @@ class ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // Registration Date- und Profil-löschen-Line
+            // Registration Date- and Delete Profile -Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
