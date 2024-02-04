@@ -35,6 +35,7 @@ class _NewsPageState extends State<NewsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stock News'),
+        backgroundColor: const Color.fromRGBO(126, 192, 238, 1),
       ),
       body: Visibility(
         visible: isLoaded,

@@ -175,6 +175,9 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       // Update balance and tax_pot in Firestore
       double newBalance = double.tryParse(userDoc['balance'].toString()) ?? 0.0;
       newBalance += addToBalance;
+
+      newBalance = double.parse(newBalance.toStringAsFixed(2));
+      newTaxPot = double.parse(newTaxPot.toStringAsFixed(2));
       await _firestore.collection('Users').doc(userDoc.id).update({
         'balance': newBalance,
         'tax_pot': newTaxPot,

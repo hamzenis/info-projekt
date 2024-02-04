@@ -222,15 +222,17 @@ class _ChartStockState extends State<ChartStock> {
               ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      // Show the BuyPopup content
-                      return BuyPopup(
-                        stockSymbol: widget.title,
-                      );
-                    },
-                  );
+                  if (boolMarketOpen || overrideMarketOpen) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        // Show the BuyPopup content
+                        return BuyPopup(
+                          stockSymbol: widget.title,
+                        );
+                      },
+                    );
+                  }
                 },
                 backgroundColor: boolMarketOpen || overrideMarketOpen
                     ? Colors.green
@@ -278,14 +280,12 @@ class _ChartStockState extends State<ChartStock> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      // fontFamily: 'Helvetica Neue',
                     ),
                   ),
                   const Text(
                     "You can place orders when the market reopens",
                     style: TextStyle(
                       fontSize: 18,
-                      // fontFamily: 'Helvetica Neue',
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -294,7 +294,6 @@ class _ChartStockState extends State<ChartStock> {
                       "(Override Global active)",
                       style: TextStyle(
                         fontSize: 18,
-                        // fontFamily: 'Helvetica Neue',
                       ),
                       textAlign: TextAlign.center,
                     ),
