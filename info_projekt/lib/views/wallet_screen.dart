@@ -231,7 +231,8 @@ class _TransactionListState extends State<TransactionList> {
           subtitle: Text(dateString),
           trailing: Text(
             amountString,
-            style: TextStyle(color: color),
+            style: TextStyle(color: color,
+                fontSize: 18.0),
           ),
         );
       },
