@@ -11,6 +11,9 @@ import 'package:info_projekt/widgets/form_container_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
+//This class handles the login into the application.
+//To log in, the user email and the password is required.
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -51,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
                 height: kIsWeb ? 100 : 50,
                 width: 500,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               const Text(
                 "Login",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
@@ -192,14 +195,15 @@ class _LoginPageState extends State<LoginPage> {
           await _auth.signInWithEmailAndPassword(email, password);
 
       if (credential != null && credential.user != null) {
-        // Reset disableCounter on succesfull Login
+//if the login is successfull, the counter for unsuccessfull tries to log is set to 0 for the user
         await _disableLogIn.updateDisableCounter(credential.user!.uid, 0);
 
         final User user = credential.user!;
 
+//In case the user hasn't verified his/her email adress, he/her gets asked to verify
+//it here. It's also possible to send the mail again in case the link in the sent email is not valid anymore.
         if (!user.emailVerified) {
           if (!mounted) return;
-          // Email is not verified
           await showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -223,6 +227,8 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } on FirebaseAuthException catch (e) {
+      //if the user fails to log in three times in a row, his user account gets disabled and an email
+      //is sent to the user email. The email contains a link to set a new password for log in.
       String email = _emailController.text.trim();
 
       if (e.code == 'wrong-password') {

@@ -4,7 +4,7 @@ import 'package:info_projekt/common/toast.dart';
 import '../homepage_new.dart';
 
 // DO NOT DELTED THIS FILE, IT IS USED FOR TESTING WHEN HOTRELOADING
-/*Brauchen wir eigentlich nicht mehr, ist durch HomePageNew ersetzt worden (steht in Widgets)*/
+/*Brauchen wir eigentlich nicht mehr, ist durch HomePageNew ersetzt worden*/
 
 class HomePage extends StatelessWidget {
   @override

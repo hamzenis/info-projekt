@@ -5,8 +5,9 @@ import 'package:info_projekt/services/firebase_auth_services.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:info_projekt/services/firestore_service.dart';
+
+//This class handles the sign-up of a new user to the application
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -16,14 +17,13 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  //FirestoreService notwendig für Datenbank
   FirestoreService firestoreService = FirestoreService();
   final FirebaseAuthService _auth = FirebaseAuthService();
 
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _confirmPasswordController =
-      TextEditingController(); // New controller
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool isSigningUp = false;
 
@@ -31,7 +31,7 @@ class _SignUpPageState extends State<SignUpPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose(); // Dispose the new controller
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -52,7 +52,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 height: kIsWeb ? 100 : 50,
                 width: 500,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               const Text(
                 "Sign Up",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
@@ -141,6 +141,8 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+//checks for the validity of the user password. password has to fullfill the following criteria:
+//at least 8 characters long, contain uppercase and lowercase letters, special character, number
   bool isPasswordValid(String password) {
     bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
     bool hasDigits = password.contains(RegExp(r'[0-9]'));
@@ -164,10 +166,9 @@ class _SignUpPageState extends State<SignUpPage> {
     String email = _emailController.text;
     String password = _passwordController.text;
     String confirmPassword = _confirmPasswordController.text;
-    //notwendig für Datenbank
+    //Registration date gets stored in the database and shown in profile
     DateTime now = DateTime.now();
     String registrationDate = now.toString();
-    //
 
     if (password != confirmPassword) {
       showToast(message: "Passwords do not match.");
@@ -188,6 +189,8 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
+    final NavigatorState navigator = Navigator.of(context);
+
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
     setState(() {
@@ -200,13 +203,13 @@ class _SignUpPageState extends State<SignUpPage> {
           message:
               "Registration successful! Please check your email to verify your account.",
         );
-        Navigator.pushNamed(context, "/verifyEmail");
+        navigator.pushNamed("/verifyEmail");
 
-        //speichert Daten in der Datenbank
         await firestoreService.saveUserDataToFirestore(email, registrationDate);
       } else {
         showToast(message: "Email already verified. Please log in.");
-        Navigator.pushNamed(context, "/login");
+        // Use the captured NavigatorState
+        navigator.pushNamed("/login");
       }
     } else {
       // Error handling is already done in the signUpWithEmailAndPassword method.
