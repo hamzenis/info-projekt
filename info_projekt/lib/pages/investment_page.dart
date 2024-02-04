@@ -94,18 +94,6 @@ class InvestmentPageState extends State<InvestmentPage>
                   bool isZero = investment['profitOrLoss'] == 0.00;
 
                   return GestureDetector(
-                    onTap: () async {
-                      int? amount =
-                          await _showAmountDialog(context, investment);
-                      if (amount != null) {
-                        bool success = await _sellStock(context, amount,
-                            investment, portfolioValueNotifier);
-                        if (success) {
-                          await _updateInvestment(context, amount, investment,
-                              portfolioValueNotifier);
-                        }
-                      }
-                    },
                     child: Card(
                       child: ListTile(
                         title: Row(
@@ -177,6 +165,18 @@ class InvestmentPageState extends State<InvestmentPage>
                             ),
                           ],
                         ),
+                        onTap: () async {
+                          int? amount =
+                              await _showAmountDialog(context, investment);
+                          if (amount != null) {
+                            bool success = await _sellStock(context, amount,
+                                investment, portfolioValueNotifier);
+                            if (success) {
+                              await _updateInvestment(context, amount,
+                                  investment, portfolioValueNotifier);
+                            }
+                          }
+                        },
                       ),
                     ),
                   );

@@ -50,20 +50,18 @@ class _WatchlistPageState extends State<WatchlistPage>
                         );
                       }
                       return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChartStock(
-                                title: watchlist[index]['symbol'],
-                              ),
-                            ),
-                          );
-                        },
                         child: Card(
                           child: ListTile(
                             title: Text(watchlist[index]['name']),
                             subtitle: Text(watchlist[index]['symbol']),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChartStock(
+                                  title: watchlist[index]['symbol'],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       );
