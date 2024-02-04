@@ -254,52 +254,56 @@ class _ChartStockState extends State<ChartStock> {
     );
   }
 
-  /// Returns Row with Exchange Opening Status
-  Row buildExchangeStatusRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: MediaQuery.of(context).size.width * 0.8,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.5),
-            border: Border.all(
-              color: Theme.of(context).primaryColor,
-              width: 2.0,
-            ),
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: Column(
-            children: [
-              const Text(
-                "Exchange (NYSE) is closed",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  // fontFamily: 'Helvetica Neue',
+  /// Returns Exchange Opening Status
+  LayoutBuilder buildExchangeStatusRow() {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: constraints.maxWidth * 0.8,
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.5),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor,
+                  width: 2.0,
                 ),
+                borderRadius: BorderRadius.circular(10.0),
               ),
-              const Text(
-                "You can place orders when the market reopens",
-                style: TextStyle(
-                  fontSize: 18,
-                  // fontFamily: 'Helvetica Neue',
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (overrideMarketOpen)
-                const Text(
-                  "(Override Global active)",
-                  style: TextStyle(
-                    fontSize: 18,
-                    // fontFamily: 'Helvetica Neue',
+              child: Column(
+                children: [
+                  const Text(
+                    "Exchange (NYSE) is closed",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      // fontFamily: 'Helvetica Neue',
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-            ],
-          ),
-        ),
-      ],
+                  const Text(
+                    "You can place orders when the market reopens",
+                    style: TextStyle(
+                      fontSize: 18,
+                      // fontFamily: 'Helvetica Neue',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (overrideMarketOpen)
+                    const Text(
+                      "(Override Global active)",
+                      style: TextStyle(
+                        fontSize: 18,
+                        // fontFamily: 'Helvetica Neue',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

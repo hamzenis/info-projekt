@@ -54,7 +54,6 @@ class BuyPopup extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // TODO: Rewrite onPressed in a seperate function
                   int enteredAmount = int.tryParse(amountController.text) ?? 0;
                   if (enteredAmount == 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
