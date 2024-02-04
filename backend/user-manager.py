@@ -1,7 +1,9 @@
+import json
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from flask import Flask, render_template, request
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__, template_folder="template")
 CORS(app)
@@ -11,13 +13,26 @@ default_app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
+FIREBASE_WEB_API_KEY = 'AIzaSyDlCgRwCCcNDs1pXRC3-e2yAp91mabh0cg' 
+
+
 max_attempts = 3
 
 # Returns Completion Dialog Page and changes password
+# If password is the same as the old password, the password will not be changed
+# and the user will be redirected to the same page with an error message
 @app.route("/change_completed", methods=['POST', 'GET'])
-def tester():
+def update_passsword_flow():
     data = request.get_json()
     uid = auth.get_user_by_email(data.get("email")).uid
+    
+    oldPasswordSameCheck = sign_in_with_email_and_password(data.get("email"), data.get("password"))
+    
+    # If in this json response, there is a field called "error", then the password is not the same as the old password
+    # Check if the field 'error' is not in the Json response
+    if "error" not in oldPasswordSameCheck:
+        return render_template('change_password_same.html', email=data.get("email")), 200
+
     enable_user_account(data.get("email"))
     auth.update_user(
         uid=uid,
@@ -31,6 +46,7 @@ def tester():
 @app.route("/reset", methods=['GET', 'POST'])
 def reset_password():
     email = request.args.get('email')
+    print("ABC")
     return render_template('change_password.html', args=email), 200
 
 # Helper function to enable user account and set isDisabled to False
@@ -59,6 +75,19 @@ def enable_user_account(email):
 
     else:
         return False
+    
+    
+# Helper function to sign in with email and password, because Firebase Admin SDK Python
+# does not have a method to sign in with email and password
+def sign_in_with_email_and_password(email, password, return_secure_token=True):
+    payload = json.dumps({"email":email, "password":password, "return_secure_token":return_secure_token})
+    rest_api_url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword"
+
+    r = requests.post(rest_api_url,params={"key": FIREBASE_WEB_API_KEY}, data=payload)
+    
+    print("In Function")
+
+    return r.json()
 
 
 # Enables a user account if the user is disabled

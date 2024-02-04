@@ -10,6 +10,7 @@ import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/widgets/form_container_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import 'package:info_projekt/globals.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -227,9 +228,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (e.code == 'wrong-password') {
         showToast(message: 'Invalid password.');
-        var disableUserUri = Uri.parse(
-            //"http://127.0.0.1:5050/wrong_password");
-            "http://134.119.216.59:5050/wrong_password");
+        var disableUserUri = Uri.parse("$userManagerDomain/wrong_password");
         try {
           var response = await http.post(
             disableUserUri,
@@ -243,9 +242,7 @@ class _LoginPageState extends State<LoginPage> {
               'template': {
                 'name': "activate",
                 'data': {
-                  'reactivate_link':
-                      //"http://127.0.0.1:5050/reset?email=$email",
-                      "http://134.119.216.59:5050/reset?email=$email",
+                  'reactivate_link': "$userManagerDomain/reset?email=$email",
                 },
               },
             });
@@ -276,9 +273,7 @@ class _LoginPageState extends State<LoginPage> {
         'template': {
           'name': "changePassword",
           'data': {
-            'changePasswordLink':
-                //"http://127.0.0.1:5050/reset?email=$email",
-                "http://134.119.216.59:5050/reset?email=$email",
+            'changePasswordLink': "$userManagerDomain/reset?email=$email",
           },
         },
       });
