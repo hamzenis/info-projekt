@@ -42,7 +42,8 @@ class DeleteProfile {
       List<String> subcollections = [
         'stock_transaction_history',
         'portfolio',
-        'balance_history'
+        'balance_history',
+        'watchlist'
       ];
       for (String subcollection in subcollections) {
         var collectionRef = _firestore
