@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:info_projekt/services/firestore_service.dart';
 
 class UpdateEmail {
   User? user = FirebaseAuth.instance.currentUser;

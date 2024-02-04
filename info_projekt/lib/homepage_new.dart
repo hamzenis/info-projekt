@@ -86,7 +86,7 @@ class HomePageNewState extends State<HomePageNew> {
             children: [
               SpeedDialChild(
                 child: const Icon(Icons.search),
-                label: 'Search',
+                label: 'Shares',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SearchPage()),

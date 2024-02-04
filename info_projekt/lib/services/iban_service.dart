@@ -23,6 +23,7 @@ class IbanService {
         return null;
       }
     }
+    return null;
   }
 
   Future<void> updateIban(String iban, String? documentID) async {
@@ -33,9 +34,9 @@ class IbanService {
   }
 
   bool checkIban(String iban) {
-    // IBAN muss in Deutschland 22 Zeichen haben. Möchte man ausländische IBANs miteinbeziehen,
-    //muss man das Land abfragen und entsprechend konditionale Bedingungen einbauen.
-    //Algorithmus: https://en.wikipedia.org/wiki/International_Bank_Account_Number#Algorithms
+    // IBAN has to have 22 characters in germany, staying with german IBAN
+    //for simplicity reasons.
+    //Algoritm: https://en.wikipedia.org/wiki/International_Bank_Account_Number#Algorithms
     if (iban.length != 22) {
       return false;
     }

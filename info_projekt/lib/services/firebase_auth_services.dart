@@ -9,7 +9,7 @@ class FirebaseAuthService {
   final LoginPage logInPage = LoginPage();
 
   bool? isDisabled = false;
-  String? userEmail; // Variable to store the user's email address
+  String? userEmail;
 
   Future<User?> signUpWithEmailAndPassword(
       String email, String password) async {
@@ -19,7 +19,6 @@ class FirebaseAuthService {
         password: password,
       );
 
-      //access user object from outside
       User? user = credential.user;
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
@@ -92,6 +91,7 @@ class FirebaseAuthService {
     }
   }
 
+  //allows to identify user with his ID by email
   Future<String?> getUidByEmail(String email) async {
     try {
       final result = await _auth.fetchSignInMethodsForEmail(email);
