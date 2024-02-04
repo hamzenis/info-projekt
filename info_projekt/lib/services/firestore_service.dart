@@ -7,11 +7,15 @@ class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   User? user = FirebaseAuth.instance.currentUser;
 
-  //DateTime registrationDate = DateTime.now();
+  //necessary for transactions
   String iban = 'No IBAN provided';
+  //Verlustrechnung für Freibetrag an Steuerabzügen
   num tax_pot = 0;
+  //shows the wallet balance
   num balance = 0;
+  //disable status (necessary for blocking login)
   bool isDisabled = false;
+  //number of failed login attempts (in a row, necessary for blocking login)
   num disableCounter = 0;
 
 //stores a new user in the database
@@ -24,6 +28,7 @@ class FirestoreService {
       'email': userName,
       'registrationDate': DateTime.now(),
       'iban': iban,
+      //user identification number
       'UID': UID,
       'tax_pot': tax_pot,
       'balance': balance,
@@ -55,7 +60,7 @@ class FirestoreService {
     }
   }
 
-//notwendig für die Änderung von z. B. Passwort und Iban
+//necessary for e.g. changing the IBAN and the password
   Future<String?> getDocumentId() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -85,7 +90,7 @@ class FirestoreService {
     return credentials;
   }
 
-//gets shown in the profile page
+//fetches registration date from the database and formats it (gets shown in the profile page)
   Future<String?> fetchRegistrationDate() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -114,70 +119,4 @@ class FirestoreService {
     }
     return null;
   }
-
-/*
-  Future<bool?> fetchDisabledStatus(bool isDisabled) async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      try {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('Users')
-            .where('UID', isEqualTo: user.uid)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot userDocument = querySnapshot.docs.first;
-
-          bool isDisabled = userDocument.get('isDisabled');
-          return isDisabled;
-        }
-      } catch (e) {
-        print('Error fetching isDisabled: $e');
-      }
-    }
-    return null;
-  }
-
-  Future<num?> fetchDisabledCounter(num disableDCounter) async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      try {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('Users')
-            .where('UID', isEqualTo: user.uid)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot userDocument = querySnapshot.docs.first;
-
-          num disableCounter = userDocument.get('disableCounter');
-          return disableCounter;
-        }
-      } catch (e) {
-        print('Error fetching disableCounter: $e');
-      }
-    }
-    return null;
-  }
-
-  Future<Map<String, dynamic>?> fetchUserStatus(String userId) async {
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Users')
-          .where('UID', isEqualTo: user!.uid)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        DocumentSnapshot userDocument = querySnapshot.docs.first;
-        return userDocument.data() as Map<String, dynamic>?;
-      }
-    } catch (e) {
-      print('Error fetching user status: $e');
-      return null;
-    }
-    return null;
-  }
-  */
 }
