@@ -3,14 +3,18 @@ import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/pages/login_page.dart';
 import 'package:info_projekt/services/firestore_service.dart';
 
+//this class handles the authentification of a user in the database.
+
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirestoreService firestoreService = FirestoreService();
-  final LoginPage logInPage = LoginPage();
+  final LoginPage logInPage = const LoginPage();
 
+//counts failed tries (in a row) to log in; reset when successfull log in
   bool? isDisabled = false;
   String? userEmail;
 
+//handles the sign up and checks if there is already a user registered with the email adress
   Future<User?> signUpWithEmailAndPassword(
       String email, String password) async {
     try {
@@ -30,7 +34,7 @@ class FirebaseAuthService {
       } else {
         showToast(message: 'An error occurred: ${e.code}');
       }
-      return null; // Immediately return to avoid executing further lines
+      return null;
     }
   }
 
@@ -41,7 +45,7 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
-      userEmail = email; // Store the email when user signs in
+      userEmail = email;
 
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -60,10 +64,10 @@ class FirebaseAuthService {
     try {
       final List<String> userSignInMethods =
           await _auth.fetchSignInMethodsForEmail(email);
-      print("User sign-in methods: $userSignInMethods");
+      //print("User sign-in methods: $userSignInMethods");
       return userSignInMethods.isNotEmpty;
     } catch (e) {
-      print("Firebase error: $e");
+      //print("Firebase error: $e");
       return false;
     }
   }
@@ -95,14 +99,14 @@ class FirebaseAuthService {
   Future<String?> getUidByEmail(String email) async {
     try {
       final result = await _auth.fetchSignInMethodsForEmail(email);
-      print("UID by email: $result");
+      //print("UID by email: $result");
       if (result.isNotEmpty) {
-        print("UID by email if: ${result[0]}");
+        // print("UID by email if: ${result[0]}");
         var user = _auth.currentUser;
         return user?.uid;
       }
     } catch (e) {
-      print('Error getting UID by email: $e');
+      //print('Error getting UID by email: $e');
       return null;
     }
     return null;

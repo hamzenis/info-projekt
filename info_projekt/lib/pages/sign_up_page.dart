@@ -133,7 +133,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ],
               ),
-              Spacer(),
+              const Spacer(),
             ],
           ),
         ),
@@ -208,7 +208,6 @@ class _SignUpPageState extends State<SignUpPage> {
         await firestoreService.saveUserDataToFirestore(email, registrationDate);
       } else {
         showToast(message: "Email already verified. Please log in.");
-        // Use the captured NavigatorState
         navigator.pushNamed("/login");
       }
     } else {

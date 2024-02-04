@@ -274,6 +274,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+//for password change as disabled user
   void changePassword() async {
     String email = _emailController.text.trim();
     try {
