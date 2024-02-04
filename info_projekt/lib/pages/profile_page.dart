@@ -571,9 +571,8 @@ class ProfilePageState extends State<ProfilePage> {
     // Button style for uniform size
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
       fixedSize: const Size(140, 40),
-      backgroundColor: const Color(
-          0xFF1D2671), // Deep blue from the credit card as button color
-      foregroundColor: Colors.white, // Text color on the button for contrast
+      backgroundColor: const Color.fromARGB(255, 222, 214, 214), // Deep blue from the credit card as button color
+      foregroundColor: const Color.fromARGB(255, 148, 32, 121), // Text color on the button for contrast
     );
 
     // Placeholder text for the password
@@ -583,8 +582,8 @@ class ProfilePageState extends State<ProfilePage> {
       key: _scaffoldKey,
       appBar: AppBar(
         title:
-            const Text('User Profile', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1D2671),
+            const Text('Profile', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 148, 32, 121),
         iconTheme: const IconThemeData(
             color: Colors.white), // Deep blue from the credit card
         actions: [
@@ -652,7 +651,7 @@ class ProfilePageState extends State<ProfilePage> {
               onPressed: () => updateIban(context),
               child: const Text('Update IBAN'),
             ),
-
+            const SizedBox(height: 20),
             // Transaction-History-Line
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -794,8 +793,8 @@ class ProfilePageState extends State<ProfilePage> {
 
 // Method to mask the IBAN number with dots and display the last 4 digits
 String maskIban(String? iban) {
-  if (iban == null || iban.length < 4) {
-    return 'No IBAN found!';
+  if (iban == null || iban.isEmpty || iban.length < 15 || !iban.startsWith(RegExp(r'[A-Z]{2}'))) {
+    return iban ?? 'No IBAN Provided'; // return the message from the database if it exists, otherwise return 'No IBAN provided'
   } else {
     String lastFourDigits = iban.substring(iban.length - 4);
     return '.. $lastFourDigits';
