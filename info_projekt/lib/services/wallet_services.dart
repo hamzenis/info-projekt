@@ -31,7 +31,8 @@ class WalletServices {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Your IBAN: $iban'),
+              Text(
+                  'Your IBAN: ${iban.length > 4 ? '****' + iban.substring(iban.length - 4) : iban}'),
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
