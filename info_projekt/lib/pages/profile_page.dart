@@ -8,6 +8,7 @@ import 'package:info_projekt/services/firestore_service.dart';
 import 'package:info_projekt/common/toast.dart';
 import 'package:info_projekt/services/deleteProfile_service.dart';
 import 'package:info_projekt/services/updateEmail_service.dart';
+import 'package:info_projekt/widgets/password_input_widget.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -325,157 +326,98 @@ class ProfilePageState extends State<ProfilePage> {
 
 //save a new IBAN or update your current IBAN for wallet-operations
   Future<void> updateIban(BuildContext context) async {
-    String? iban;
-    bool passwordVisible = false;
-    String? password;
+  String? iban;
 
-    ibanservice.fetchIban().then((currentIban) async {
-      if (currentIban == null || currentIban.isEmpty) {
-        showToast(message: "Current IBAN not available");
-        return;
-      }
+  ibanservice.fetchIban().then((currentIban) async {
+    if (currentIban == null || currentIban.isEmpty) {
+      showToast(message: "Current IBAN not available");
+      return;
+    }
 
-      await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Update IBAN'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'New IBAN:'),
-                    onChanged: (value) => iban = value,
-                  ),
-                ],
-              ),
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update IBAN'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(labelText: 'New IBAN:'),
+                  onChanged: (value) => iban = value,
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  if (iban == null || iban!.isEmpty) {
-                    showToast(message: "IBAN cannot be empty");
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (iban == null || iban!.isEmpty) {
+                  showToast(message: "IBAN cannot be empty");
+                  return;
+                }
+
+                if (iban == currentIban) {
+                  showToast(
+                      message: "New IBAN can't be the same as old IBAN");
+                  return;
+                }
+
+                if (!ibanservice.checkIban(iban!)) {
+                  showToast(message: "IBAN is not valid");
+                  return;
+                }
+
+                Navigator.of(context).pop();
+
+                String? password = await showDialog<String>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PasswordDialog();
+                  },
+                );
+
+                if (password == null || password.isEmpty) {
+                  showToast(message: "Password cannot be empty");
+                  return;
+                }
+
+                try {
+                  User? user = FirebaseAuth.instance.currentUser;
+
+                  String? documentID = await firestoreService.getDocumentId();
+                  if (documentID == null) {
+                    showToast(message: "User Doc not found");
                     return;
                   }
 
-                  if (iban == currentIban) {
-                    showToast(
-                        message: "New IBAN can't be the same as old IBAN");
-                    return;
-                  }
+                  AuthCredential credentials = EmailAuthProvider.credential(
+                      email: user!.email!, password: password);
 
-                  if (!ibanservice.checkIban(iban!)) {
-                    showToast(message: "IBAN is not valid");
-                    return;
-                  }
-
-                  Navigator.of(context).pop();
-
-                  await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return StatefulBuilder(
-                        builder: (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: const Text('Confirm with Password'),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  /*const Text(
-                                      'Please enter your current password to proceed:'),*/
-                                  TextFormField(
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          passwordVisible
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            passwordVisible = !passwordVisible;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    obscureText: !passwordVisible,
-                                    onChanged: (value) => password = value,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-
-                                  if (password == null || password!.isEmpty) {
-                                    showToast(
-                                        message: "Password cannot be empty");
-                                    return;
-                                  }
-
-                                  try {
-                                    User? user =
-                                        FirebaseAuth.instance.currentUser;
-
-                                    String? documentID =
-                                        await firestoreService.getDocumentId();
-                                    if (documentID == null) {
-                                      showToast(message: "User Doc not found");
-                                      return;
-                                    }
-
-                                    AuthCredential credentials =
-                                        EmailAuthProvider.credential(
-                                            email: user!.email!,
-                                            password: password!);
-
-                                    await user.reauthenticateWithCredential(
-                                        credentials);
-                                    await ibanservice.updateIban(
-                                        iban!, documentID);
-                                    showToast(
-                                        message: "IBAN updated successfully");
-                                  } catch (e) {
-                                    showToast(
-                                        message: "Error updating IBAN: $e");
-                                  }
-                                },
-                                child: const Text('Save'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-    }).catchError((error) {
-      showToast(message: "Error fetching IBAN: $error");
-    });
-  }
+                  await user.reauthenticateWithCredential(credentials);
+                  await ibanservice.updateIban(iban!, documentID);
+                  showToast(message: "IBAN updated successfully");
+                } catch (e) {
+                  showToast(message: "Error updating IBAN: $e");
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }).catchError((error) {
+    showToast(message: "Error fetching IBAN: $error");
+  });
+}
 
 //delete the user profile
 //also deletes all data from the database (authentification and firestore)
