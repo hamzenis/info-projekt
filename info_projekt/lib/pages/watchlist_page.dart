@@ -42,8 +42,13 @@ class _WatchlistPageState extends State<WatchlistPage>
                     style: TextStyle(color: Colors.grey),
                   )
                 : ListView.builder(
-                    itemCount: watchlist.length,
+                    itemCount: watchlist.length + 1,
                     itemBuilder: (BuildContext context, int index) {
+                      if (index == watchlist.length) {
+                        return Container(
+                          height: MediaQuery.of(context).size.height / 4,
+                        );
+                      }
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -55,9 +60,11 @@ class _WatchlistPageState extends State<WatchlistPage>
                             ),
                           );
                         },
-                        child: ListTile(
-                          title: Text(watchlist[index]['name']),
-                          subtitle: Text(watchlist[index]['symbol']),
+                        child: Card(
+                          child: ListTile(
+                            title: Text(watchlist[index]['name']),
+                            subtitle: Text(watchlist[index]['symbol']),
+                          ),
                         ),
                       );
                     },
