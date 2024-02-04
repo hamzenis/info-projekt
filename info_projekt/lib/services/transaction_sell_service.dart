@@ -137,11 +137,11 @@ Future<bool> startSellStockFlow(int amount, String stockSymbol) async {
       double fee = 1;
       totalProfit -= fee;
 
-      // Calculate taxed profit TODO: Rewrite this
+      // Calculate taxed profit
       switch (totalProfit) {
         case < 0:
           newTaxPot = oldTaxPot + totalProfit;
-          addToBalance += revenue;
+          addToBalance += revenue - fee;
           break;
 
         case > 0:

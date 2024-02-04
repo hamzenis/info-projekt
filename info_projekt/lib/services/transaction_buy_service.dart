@@ -49,6 +49,9 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         // Subtract fee from taxPot
         taxPot -= fee;
 
+        // Increment price of stock by fee
+        singlePrice = singlePrice + (fee / amount);
+
         await _firestore.collection('Users').doc(userDoc.id).update({
           'balance': FieldValue.increment(-totalCost),
           // update tax_pot: subtract the fee from the tax pot
@@ -85,7 +88,8 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
         // Send Mail to user
         final DateTime now = DateTime.now();
         Random random = Random();
-        int receiptID = 10000 + random.nextInt(90000);
+        int receiptID =
+            10000 + random.nextInt(90000); // Generate random receiptID
         await _firestore.collection("mail").add({
           'to': user.email,
           'template': {
@@ -99,7 +103,8 @@ Future<void> startBuyStockFlow(int amount, String stockSymbol) async {
               'singlePrice': NumberFormat.currency(
                 locale: 'en_US',
                 symbol: '\$',
-              ).format(singlePrice),
+              ).format(singlePrice -
+                  (fee / amount)), // Subtract fee from singlePrice for the mail
               'fee': NumberFormat.currency(
                 locale: 'en_US',
                 symbol: '\$',
