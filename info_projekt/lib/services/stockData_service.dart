@@ -95,12 +95,10 @@ Future<List<ChartData>> loadDayData(String stockSymbol) async {
   switch (today.weekday) {
     case == DateTime.sunday:
       today = today.subtract(Duration(days: 2));
-      print("Sunday Case : $today");
       break;
 
     case == DateTime.saturday:
       today = today.subtract(Duration(days: 1));
-      print("Saturday Case : $today");
       break;
 
     case == DateTime.monday:
@@ -117,8 +115,6 @@ Future<List<ChartData>> loadDayData(String stockSymbol) async {
   try {
     String url =
         'https://financialmodelingprep.com/api/v3/historical-chart/15min/$stockSymbol?from=$todayString&to=$todayString&apikey=$fmgApiKey';
-
-    print("URL: $url");
 
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $fmgApiKey'});
