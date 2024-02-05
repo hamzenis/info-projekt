@@ -87,13 +87,39 @@ Future<String> getCompanyName(String stockSymbol) async {
 /// Return: List<ChartData> spotList (Close Price and Timestamp for each 15 minutes)
 Future<List<ChartData>> loadDayData(String stockSymbol) async {
   List<ChartData> spotList = [];
-  DateTime todaya = DateTime.now();
-  DateTime today = todaya.subtract(Duration(days: 2));
-  String todayString = today.toString().substring(0, 10);
+  DateTime today = DateTime.now();
 
+  // Api dont give data for weekends or when its Monday before 9:30 AM GMT-5
+  // So we need to check if its weekend or if its Monday before 9:30 AM GMT-5
+  // If it is, we need to get data from Friday
+  switch (today.weekday) {
+    case == DateTime.sunday:
+      today = today.subtract(Duration(days: 2));
+      print("Sunday Case : $today");
+      break;
+
+    case == DateTime.saturday:
+      today = today.subtract(Duration(days: 1));
+      print("Saturday Case : $today");
+      break;
+
+    case == DateTime.monday:
+      // In our time zone (GMT+1) the NYSE market opens at 15:30
+      if (today.hour < 15 || (today.hour == 15 && today.minute < 30)) {
+        today = today.subtract(Duration(days: 3));
+      }
+      break;
+
+    default:
+      break;
+  }
+  String todayString = today.toString().substring(0, 10);
   try {
     String url =
         'https://financialmodelingprep.com/api/v3/historical-chart/15min/$stockSymbol?from=$todayString&to=$todayString&apikey=$fmgApiKey';
+
+    print("URL: $url");
+
     http.Response response = await http
         .get(Uri.parse(url), headers: {'Authorization': 'Bearer $fmgApiKey'});
     List<dynamic> jsonDataList = json.decode(response.body);
